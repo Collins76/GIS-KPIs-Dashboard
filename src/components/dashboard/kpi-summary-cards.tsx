@@ -1,5 +1,6 @@
 import type { Kpi } from '@/lib/types';
-import { BarChart, CheckCircle2, AlertTriangle, Loader, TrendingUp, TrendingDown } from 'lucide-react';
+import { BarChart, CheckCircle2, AlertTriangle, Loader, TrendingUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type KpiSummaryCardsProps = {
   kpis: Kpi[];
@@ -32,12 +33,12 @@ export default function KpiSummaryCards({ kpis }: KpiSummaryCardsProps) {
               <p className="text-gray-400 text-sm font-rajdhani">{item.title}</p>
               <p className={`text-4xl font-bold text-white mt-2 font-orbitron`}>{item.value}</p>
                <div className={`flex items-center text-sm mt-3 ${item.color}`}>
-                  <item.subIcon className={`mr-2 h-4 w-4 ${item.title === 'In Progress' ? 'animate-spin' : ''}`} />
+                  <item.subIcon className={cn('mr-2 h-4 w-4', item.title === 'In Progress' && 'animate-spin')} />
                   <span className="font-semibold">{item.subText}</span>
                 </div>
             </div>
             <div className={`w-16 h-16 bg-gradient-to-br rounded-xl flex items-center justify-center shadow-lg ${item.progressColor.replace('bg-', 'from-')}/50 ${item.progressColor.replace('bg-', 'to-')}/70`} style={{ animation: 'pulseGlow 2s ease infinite' }}>
-              <item.icon className={`text-white text-3xl animate-float ${item.title === 'In Progress' ? 'animate-spin' : ''}`} />
+              <item.icon className={cn('text-white text-3xl animate-float', item.title === 'In Progress' && 'animate-spin')} />
             </div>
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2">
