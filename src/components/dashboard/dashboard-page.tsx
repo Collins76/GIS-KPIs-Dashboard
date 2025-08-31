@@ -114,6 +114,10 @@ export default function DashboardPage() {
         return Math.round((totalProgress / totalPossibleProgress) * 100);
     }, [kpiData]);
 
+    const completedKpis = useMemo(() => {
+        return kpiData.filter(kpi => kpi.status === 'Completed').length;
+    }, [kpiData]);
+
   const safeToggleChartType = (chartName: 'category' | 'trend') => {
     if (typeof window.toggleChartType === 'function') {
       window.toggleChartType(chartName);
@@ -305,14 +309,22 @@ export default function DashboardPage() {
                         <div className="lg:col-span-2 glow-container p-6">
                             <h3 className="text-white font-bold text-lg font-orbitron mb-4">⚡ Performance Gauge</h3>
                             <div className="chart-container" style={{ height: '300px' }}>
-                                <canvas id="performanceGauge" data-performance={overallPerformance}></canvas>
+                                <canvas 
+                                  id="performanceGauge" 
+                                  data-target={kpiData.length} 
+                                  data-completed={completedKpis}>
+                                </canvas>
                             </div>
                             <div className="text-center mt-4">
                                 <div className="text-3xl font-bold text-yellow-400 font-orbitron">{overallPerformance}%</div>
                                 <div className="text-sm text-gray-400">Overall Performance</div>
+                                <div className="flex justify-center gap-4 text-sm mt-2">
+                                    <span><span className="text-red-500 font-bold">Target:</span> {kpiData.length} KPIs</span>
+                                    <span><span className="text-green-500 font-bold">Completed:</span> {completedKpis} KPIs</span>
+                                </div>
                             </div>
                         </div>
-                        <div className="glow-container p-6 flex flex-col">
+                        <div className="glow-container p-6 flex flex-col h-[420px]">
                              <AiInsights kpis={filteredKpis} role={selectedRole} />
                         </div>
                     </div>
