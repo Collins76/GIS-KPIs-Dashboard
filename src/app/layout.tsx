@@ -24,8 +24,9 @@ export default function RootLayout({
         {children}
         <Toaster />
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script src="/charts.js"></script>
+        <script src="/js/charts.js"></script>
         <script src="/js/map.js"></script>
+        <script src="/js/upload.js"></script>
       </body>
     </html>
   );
