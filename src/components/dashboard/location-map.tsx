@@ -20,7 +20,7 @@ const getKpisForBusinessUnit = (buId: string, allKpis: Kpi[]): Kpi[] => {
     return allKpis.filter((_, index) => (index % businessUnits.length) + 1 === buIndex);
 };
 
-const LocationCard = ({ unit, kpis }: { unit: BusinessUnit, kpis: Kpi[] }) => {
+const LocationCard = ({ unit, kpis, icon: CardIcon }: { unit: BusinessUnit, kpis: Kpi[], icon: React.ElementType }) => {
     
     const totalKpis = kpis.length;
     const completedKpis = kpis.filter(k => k.status === 'Completed').length;
@@ -34,9 +34,6 @@ const LocationCard = ({ unit, kpis }: { unit: BusinessUnit, kpis: Kpi[] }) => {
         if (perf >= 60) return 'text-yellow-400';
         return 'text-red-400';
     };
-
-    const icons = [Building, Zap, Globe, Layers, LocateFixed, Zap, Globe];
-    const CardIcon = icons[parseInt(unit.id.replace('bu',''))-1] || Building;
 
     return (
         <div className="location-card">
@@ -99,6 +96,8 @@ export default function LocationMap() {
     const { toast } = useToast();
     const totalKpis = kpis.length;
     const avgPerformance = totalKpis > 0 ? Math.round(kpis.reduce((acc, kpi) => acc + kpi.progress, 0) / totalKpis) : 0;
+    
+    const icons = [Building, Zap, Globe, Layers, LocateFixed, Zap, Globe];
 
     return (
     <div className="space-y-8">
@@ -110,8 +109,8 @@ export default function LocationMap() {
         </div>
        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {businessUnits.map((bu) => (
-                <LocationCard key={bu.id} unit={bu} kpis={getKpisForBusinessUnit(bu.id, kpis)} />
+            {businessUnits.map((bu, index) => (
+                <LocationCard key={bu.id} unit={bu} kpis={getKpisForBusinessUnit(bu.id, kpis)} icon={icons[index % icons.length]} />
             ))}
         </div>
         
