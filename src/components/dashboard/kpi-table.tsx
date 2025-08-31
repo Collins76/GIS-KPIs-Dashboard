@@ -21,7 +21,9 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { roles } from '@/lib/data';
 import type { Role, KpiStatus, Kpi } from '@/lib/types';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { KpiUpdateDialog } from './kpi-update-dialog';
+import { Edit } from 'lucide-react';
 
 type KpiTableProps = {
   kpiData: Kpi[];
@@ -34,7 +36,6 @@ type KpiTableProps = {
 };
 
 export default function KpiTable({
-  kpiData,
   onKpiUpdate,
   selectedRole,
   setSelectedRole,
@@ -42,13 +43,9 @@ export default function KpiTable({
   setSelectedStatus,
   filteredKpis,
 }: KpiTableProps) {
-  const [editingKpiId, setEditingKpiId] = useState<string | null>(null);
-  const [editingValue, setEditingValue] = useState<string>('');
+  const [selectedKpi, setSelectedKpi] = useState<Kpi | null>(null);
 
-  const handleProgressChange = (kpiId: string, newProgress: number) => {
-    const kpi = kpiData.find(k => k.id === kpiId);
-    if (!kpi) return;
-
+  const handleProgressChange = (kpi: Kpi, newProgress: number) => {
     let newStatus: KpiStatus;
     if (newProgress > 75) newStatus = 'On Track';
     else if (newProgress > 40) newStatus = 'At Risk';
@@ -58,24 +55,14 @@ export default function KpiTable({
     onKpiUpdate({ ...kpi, progress: newProgress, status: newStatus });
   };
   
-  const handleEdit = (kpi: Kpi) => {
-    setEditingKpiId(kpi.id);
-    setEditingValue(kpi.progress.toString());
+  const handleOpenDialog = (kpi: Kpi) => {
+    setSelectedKpi(kpi);
   };
-
-  const handleBlur = (kpiId: string) => {
-    const newProgress = parseInt(editingValue, 10);
-    if (!isNaN(newProgress) && newProgress >= 0 && newProgress <= 100) {
-      handleProgressChange(kpiId, newProgress);
-    }
-    setEditingKpiId(null);
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>, kpiId: string) => {
-    if (event.key === 'Enter') {
-      handleBlur(kpiId);
-    }
-  };
+  
+  const handleUpdate = (kpi: Kpi, progress: number) => {
+    handleProgressChange(kpi, progress);
+    setSelectedKpi(null);
+  }
 
   const getStatusVariant = (status: KpiStatus) => {
     switch (status) {
@@ -94,84 +81,87 @@ export default function KpiTable({
   }
 
   return (
-    <Card className="card-glow">
-      <CardHeader>
-        <CardTitle className="text-glow">KPIs Status & Tracking</CardTitle>
-        <div className="flex items-center space-x-4 pt-4">
-          <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as Role | 'All')}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filter by Role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">All Roles</SelectItem>
-              {roles.map(role => (
-                <SelectItem key={role} value={role}>{role}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as KpiStatus | 'All')}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filter by Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">All Statuses</SelectItem>
-              <SelectItem value="Not Started">Not Started</SelectItem>
-              <SelectItem value="On Track">On Track</SelectItem>
-              <SelectItem value="At Risk">At Risk</SelectItem>
-              <SelectItem value="Off Track">Off Track</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[40%]">KPI</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Progress</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredKpis.length > 0 ? (
-              filteredKpis.map(kpi => (
-                <TableRow key={kpi.id}>
-                  <TableCell className="font-medium">{kpi.title}</TableCell>
-                  <TableCell>{kpi.role}</TableCell>
-                  <TableCell>{kpi.category}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                       <Progress value={kpi.progress} indicatorClassName={getProgressColor(kpi.progress)} className="w-[60%]" />
-                       {editingKpiId === kpi.id ? (
-                          <Input
-                            type="number"
-                            value={editingValue}
-                            onChange={(e) => setEditingValue(e.target.value)}
-                            onBlur={() => handleBlur(kpi.id)}
-                            onKeyDown={(e) => handleKeyDown(e, kpi.id)}
-                            className="w-16 h-8"
-                            autoFocus
-                          />
-                       ) : (
-                         <span onClick={() => handleEdit(kpi)} className="cursor-pointer">{kpi.progress}%</span>
-                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusVariant(kpi.status)}>{kpi.status}</Badge>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
+    <>
+      <Card className="card-glow">
+        <CardHeader>
+          <CardTitle className="text-glow">KPIs Status & Tracking</CardTitle>
+          <div className="flex items-center space-x-4 pt-4">
+            <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as Role | 'All')}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filter by Role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Roles</SelectItem>
+                {roles.map(role => (
+                  <SelectItem key={role} value={role}>{role}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as KpiStatus | 'All')}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filter by Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Statuses</SelectItem>
+                <SelectItem value="Not Started">Not Started</SelectItem>
+                <SelectItem value="On Track">On Track</SelectItem>
+                <SelectItem value="At Risk">At Risk</SelectItem>
+                <SelectItem value="Off Track">Off Track</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} className="text-center">No KPIs found for the selected filters.</TableCell>
+                <TableHead className="w-[35%]">KPI</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Progress</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+            </TableHeader>
+            <TableBody>
+              {filteredKpis.length > 0 ? (
+                filteredKpis.map(kpi => (
+                  <TableRow key={kpi.id}>
+                    <TableCell className="font-medium">{kpi.title}</TableCell>
+                    <TableCell>{kpi.role}</TableCell>
+                    <TableCell>{kpi.category}</TableCell>
+                    <TableCell onClick={() => handleOpenDialog(kpi)} className="cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <Progress value={kpi.progress} indicatorClassName={getProgressColor(kpi.progress)} className="w-[80%]" />
+                        <span>{kpi.progress}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusVariant(kpi.status)}>{kpi.status}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(kpi)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center">No KPIs found for the selected filters.</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      {selectedKpi && (
+        <KpiUpdateDialog
+          kpi={selectedKpi}
+          onUpdate={handleUpdate}
+          onClose={() => setSelectedKpi(null)}
+        />
+      )}
+    </>
   );
 }
