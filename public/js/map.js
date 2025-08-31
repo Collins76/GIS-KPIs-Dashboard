@@ -1,4 +1,3 @@
-
 // 🌍 Advanced Location Management with Google Maps Integration
 let googleMap = null;
 let currentLocationData = null;
@@ -599,11 +598,13 @@ function showNotification(message, type = 'info') {
     }, 4000);
 }
 
-// Export functions
-window.initializeMap = initializeMap;
-window.openAddressModal = openAddressModal;
-window.closeAddressModal = closeAddressModal;
-window.viewOnGoogleMaps = viewOnGoogleMaps;
-window.closeMapView = closeMapView;
-window.initGoogleMaps = initGoogleMaps;
-window.copyCoordinates = copyCoordinates;
+// Export functions to window object
+if (typeof window !== 'undefined') {
+    window.initializeMap = initializeMap;
+    window.openAddressModal = openAddressModal;
+    window.closeAddressModal = closeAddressModal;
+    window.viewOnGoogleMaps = viewOnGoogleMaps;
+    window.closeMapView = closeMapView;
+    window.initGoogleMaps = initGoogleMaps;
+    window.copyCoordinates = copyCoordinates;
+}

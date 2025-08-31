@@ -49,16 +49,20 @@ export default function DashboardPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (typeof window.initializeCharts !== 'function' || typeof window.initializeComparisonChart !== 'function') {
+    const initCharts = () => {
+      if (typeof window.initializeCharts !== 'function' || typeof window.initializeComparisonChart !== 'function') {
+        setTimeout(initCharts, 100); // Retry after a short delay
         return;
-    }
-
-    if (activeTab === 'overview') {
-      window.initializeCharts();
-    }
-    if (activeTab === 'trends') {
-        setTimeout(window.initializeComparisonChart, 0);
-    }
+      }
+      
+      if (activeTab === 'overview') {
+        window.initializeCharts();
+      }
+      if (activeTab === 'trends') {
+          setTimeout(window.initializeComparisonChart, 0);
+      }
+    };
+    initCharts();
   }, [activeTab]);
 
   const handleKpiUpdate = (updatedKpi: Kpi) => {
@@ -77,6 +81,14 @@ export default function DashboardPage() {
       (selectedCategory === 'All' || kpi.category === selectedCategory)
     );
   }, [kpiData, selectedRole, selectedStatus, selectedCategory]);
+  
+  const safeToggleChartType = (chartName: 'category' | 'trend') => {
+    if (typeof window.toggleChartType === 'function') {
+      window.toggleChartType(chartName);
+    } else {
+      console.warn('toggleChartType function not available');
+    }
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-black">
@@ -163,7 +175,7 @@ export default function DashboardPage() {
                         <div className="glow-container p-6">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-white font-bold text-lg font-orbitron">📊 KPI Performance by Category</h3>
-                                <button onClick={() => window.toggleChartType('category')} className="text-yellow-400 hover:text-yellow-300">
+                                <button onClick={() => safeToggleChartType('category')} className="text-yellow-400 hover:text-yellow-300">
                                     <i className="fas fa-sync-alt"></i>
                                 </button>
                             </div>
@@ -175,7 +187,7 @@ export default function DashboardPage() {
                         <div className="glow-container p-6">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-white font-bold text-lg font-orbitron">📈 Monthly Progress Trend</h3>
-                                <button onClick={() => window.toggleChartType('trend')} className="text-yellow-400 hover:text-yellow-300">
+                                <button onClick={() => safeToggleChartType('trend')} className="text-yellow-400 hover:text-yellow-300">
                                     <i className="fas fa-chart-line"></i>
                                 </button>
                             </div>

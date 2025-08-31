@@ -23,10 +23,9 @@ export default function RootLayout({
       <body className={cn('min-h-screen bg-black font-space antialiased text-white')}>
         {children}
         <Toaster />
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script src="/js/charts.js"></script>
-        <script src="/js/map.js"></script>
-        <script src="/js/upload.js"></script>
+        <script src="/js/charts.js" defer></script>
+        <script src="/js/map.js" defer></script>
+        <script src="/js/upload.js" defer></script>
       </body>
     </html>
   );
