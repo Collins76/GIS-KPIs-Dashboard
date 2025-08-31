@@ -1,8 +1,8 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Clock as ClockIcon } from 'lucide-react';
+import { MapPin, Calendar } from 'lucide-react';
 
 export default function Clock() {
   const [time, setTime] = useState(new Date());
@@ -12,22 +12,19 @@ export default function Clock() {
     return () => clearInterval(timerId);
   }, []);
 
-  const formattedTime = time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+  const formattedTime = time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
   const formattedDate = time.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
-    <Card className="card-glow">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-glow">Real-time Clock</CardTitle>
-        <ClockIcon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-4xl font-bold text-primary">{formattedTime}</div>
-        <p className="flex items-center text-xs text-muted-foreground pt-2">
-          <Calendar className="mr-2 h-4 w-4" />
-          {formattedDate}
+    <div className="glow-container p-4">
+        <div id="digitalClock" className="digital-clock text-center">{formattedTime}</div>
+        <p className="text-xs text-yellow-400 font-rajdhani tracking-widest mt-2 text-center">
+            <MapPin className="mr-1 inline-block h-3 w-3" />LAGOS, NIGERIA
         </p>
-      </CardContent>
-    </Card>
+        <div className="text-xs text-gray-400 mt-1 font-space text-center">
+            <Calendar className="mr-1 inline-block h-3 w-3" />
+            <span id="currentDate">{formattedDate}</span>
+        </div>
+    </div>
   );
 }

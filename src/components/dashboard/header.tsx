@@ -1,43 +1,49 @@
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { PanelLeft, Search, Bot } from 'lucide-react';
+
+"use client"
+
+import { LogOut, Zap } from 'lucide-react';
 import UserProfile from '@/components/dashboard/user-profile';
-import MainNav from '@/components/dashboard/main-nav';
+import Clock from '@/components/dashboard/clock';
+import WeatherForecast from '@/components/dashboard/weather-forecast';
+import { Button } from '../ui/button';
 
 export default function Header() {
-  return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button size="icon" variant="outline" className="sm:hidden">
-            <PanelLeft className="h-5 w-5" />
-            <span className="sr-only">Toggle Menu</span>
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="sm:max-w-xs">
-          <nav className="grid gap-6 text-lg font-medium">
-             <Link
-                href="#"
-                className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
-              >
-                <Bot className="h-5 w-5 transition-all group-hover:scale-110" />
-                <span className="sr-only">Ikeja Electric</span>
-              </Link>
-            <MainNav isCollapsed={false} />
-          </nav>
-        </SheetContent>
-      </Sheet>
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+        localStorage.removeItem('gis-user-profile');
+        window.location.href = '/login';
+    }
+  }
 
-      <div className="relative ml-auto flex-1 md:grow-0">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="Search..."
-          className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
-        />
+  return (
+    <header className="glow-container shadow-lg relative z-20">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg relative overflow-hidden animate-pulse-glow">
+              <Zap className="text-white text-2xl animate-float" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 animate-sweep"></div>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white font-orbitron animate-neon-glow">Ikeja Electric Plc</h1>
+              <p className="text-xs text-yellow-400 font-rajdhani tracking-wide">⚡ GIS KPI Dashboard ⚡</p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-6">
+            <div className="text-center hidden md:block">
+                <Clock />
+            </div>
+            <div className="hidden lg:block">
+              <WeatherForecast />
+            </div>
+            <UserProfile />
+            <Button onClick={handleLogout} variant="destructive" size="icon">
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
-      <UserProfile />
     </header>
   );
 }

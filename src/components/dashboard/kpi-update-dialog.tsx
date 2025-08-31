@@ -34,28 +34,28 @@ export function KpiUpdateDialog({ kpi, onUpdate, onClose }: KpiUpdateDialogProps
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="glow-modal sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Update KPI Progress</DialogTitle>
-          <DialogDescription>
-            Update the progress for: <span className="font-semibold text-foreground">{kpi.title}</span>
+          <DialogTitle className="font-orbitron text-2xl text-yellow-400 animate-neon-glow">Update KPI Progress</DialogTitle>
+          <DialogDescription className="font-rajdhani text-base">
+            Update the progress for: <span className="font-semibold text-white">{kpi.title}</span>
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-            <div className="space-y-2">
-                <h4 className="font-medium">KPI Details</h4>
-                <div className="p-4 border rounded-lg bg-muted/50 space-y-3 text-sm">
-                    <p><strong className="font-semibold">Role:</strong> {kpi.role}</p>
-                    <p><strong className="font-semibold">Category:</strong> <Badge variant="secondary">{kpi.category}</Badge></p>
-                    <p><strong className="font-semibold">Target:</strong> {kpi.target}</p>
-                    <p><strong className="font-semibold">Metric:</strong> {kpi.metric}</p>
-                    <p><strong className="font-semibold">Data Source:</strong> {kpi.dataSource}</p>
+        <div className="space-y-6 py-4">
+            <div className="glow-container p-4 rounded-lg">
+                <h4 className="text-white font-bold mb-4 font-orbitron text-lg">KPI Details</h4>
+                <div className="space-y-3 text-sm text-gray-300">
+                    <p><strong className="font-semibold text-yellow-400 w-24 inline-block">Role:</strong> {kpi.role}</p>
+                    <p><strong className="font-semibold text-yellow-400 w-24 inline-block">Category:</strong> <Badge variant="secondary">{kpi.category}</Badge></p>
+                    <p><strong className="font-semibold text-yellow-400 w-24 inline-block">Target:</strong> {kpi.target}</p>
+                    <p><strong className="font-semibold text-yellow-400 w-24 inline-block">Metric:</strong> {kpi.metric}</p>
+                    <p><strong className="font-semibold text-yellow-400 w-24 inline-block">Data Source:</strong> {kpi.dataSource}</p>
                 </div>
             </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="progress">Progress: {progress}%</Label>
-            <div className="flex items-center gap-4">
+          <div className="glow-container p-4 rounded-lg">
+             <Label htmlFor="progress" className="font-orbitron text-lg text-white">Progress: {progress}%</Label>
+            <div className="flex items-center gap-4 mt-4">
               <Slider
                 id="progress"
                 min={0}
@@ -69,16 +69,16 @@ export function KpiUpdateDialog({ kpi, onUpdate, onClose }: KpiUpdateDialogProps
                 type="number"
                 value={progress}
                 onChange={(e) => setProgress(Math.max(0, Math.min(100, Number(e.target.value))))}
-                className="w-20"
+                className="glow-input w-24 text-center"
               />
             </div>
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:justify-end">
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="button" onClick={handleSave}>
+          <Button type="button" onClick={handleSave} className="glow-button">
             Save Changes
           </Button>
         </DialogFooter>
