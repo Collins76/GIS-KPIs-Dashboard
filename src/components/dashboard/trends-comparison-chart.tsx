@@ -41,7 +41,7 @@ const getUserByRole = (role: string, loggedInUser: User | null): User => {
     // Fallback to generating a mock user for other roles
     const baseEmail = `${role.toLowerCase().replace(/\s+/g, '.')}@ikejaelectric.com`;
     return {
-        name: role.split(' ')[0], // Use first name for brevity
+        name: role, // Use the full role name as username
         email: baseEmail,
         role: role as User['role'],
         location: 'CHQ',
@@ -92,6 +92,7 @@ export default function TrendsComparisonChart({ kpis, type }: TrendsComparisonCh
             innerRadius={80}
             outerRadius={150}
             paddingAngle={5}
+            animationDuration={800}
           >
             {doughnutData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -113,14 +114,15 @@ export default function TrendsComparisonChart({ kpis, type }: TrendsComparisonCh
           tickLine={false}
           tickMargin={10}
           axisLine={false}
+          tickFormatter={(value) => value.split(' ').map((s: string) => s.charAt(0)).join('')}
         />
         <ChartTooltip
           cursor={false}
           content={<ChartTooltipContent indicator="dashed" />}
         />
         <ChartLegend />
-        <Bar dataKey="target" fill="var(--color-target)" radius={4} />
-        <Bar dataKey="achieved" fill="var(--color-achieved)" radius={4} />
+        <Bar dataKey="target" fill="var(--color-target)" radius={4} animationDuration={500} />
+        <Bar dataKey="achieved" fill="var(--color-achieved)" radius={4} animationDuration={500} />
       </BarChart>
     </ChartContainer>
   );
