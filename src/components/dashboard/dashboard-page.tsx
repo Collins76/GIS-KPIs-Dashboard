@@ -111,6 +111,16 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-black">
+        <div className="scrolling-text-container overflow-hidden relative">
+            <div className="animate-scroll whitespace-nowrap">
+            <span className="inline-block px-6 py-3 scrolling-text-content">
+                This GIS KPI Dashboard was designed by Collins Anyanwu - A Guru in GIS, Data Engineering/Analytics and Data Science 🚀 Expert in Geospatial Technologies, Advanced Analytics, and Business Intelligence Solutions.
+            </span>
+            <span className="inline-block px-6 py-3 scrolling-text-content">
+                This GIS KPI Dashboard was designed by Collins Anyanwu - A Guru in GIS, Data Engineering/Analytics and Data Science 🚀 Expert in Geospatial Technologies, Advanced Analytics, and Business Intelligence Solutions.
+            </span>
+            </div>
+      </div>
       <Header />
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         
