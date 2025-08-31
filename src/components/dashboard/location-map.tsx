@@ -4,12 +4,12 @@
 import { useState, useEffect }from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { businessUnits as initialBusinessUnits, kpis } from "@/lib/data";
 import type { BusinessUnit, Kpi } from '@/lib/types';
-import { MapPin, CheckCircle2, Loader, AlertTriangle, Edit, Globe, RefreshCw } from "lucide-react";
+import { MapPin, CheckCircle2, Loader, AlertTriangle, Globe, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 
@@ -39,10 +39,7 @@ const LocationCard = ({ unit, onEditAddress, onViewMap }: { unit: BusinessUnit, 
         <>
             <div className="location-card">
                 <div className="flex justify-between items-center mb-4">
-                     <h3 className="text-white font-bold font-orbitron text-lg">{unit.name}</h3>
-                     <Button variant="ghost" size="icon" onClick={() => setAddressModalOpen(true)}>
-                        <Edit className="w-4 h-4 text-yellow-400"/>
-                     </Button>
+                     <h3 className="text-white font-bold font-orbitron text-xl">{unit.name}</h3>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 text-center text-xs mb-4">
@@ -66,7 +63,9 @@ const LocationCard = ({ unit, onEditAddress, onViewMap }: { unit: BusinessUnit, 
                 <div className="space-y-3 text-sm text-gray-300 mb-4">
                     <div>
                         <p className="text-xs text-gray-400">Address</p>
-                        <p className="font-semibold truncate">{unit.address || 'No address set'}</p>
+                        <p onClick={() => setAddressModalOpen(true)} className="font-semibold truncate cursor-pointer hover:text-yellow-400">
+                          {unit.address || 'Click to set address'}
+                        </p>
                     </div>
                     <div>
                         <p className="text-xs text-gray-400">Coordinates</p>
@@ -107,20 +106,17 @@ export default function LocationMap() {
     const [businessUnits, setBusinessUnits] = useState<BusinessUnit[]>(initialBusinessUnits);
     const [selectedUnit, setSelectedUnit] = useState<BusinessUnit | null>(null);
     
-    // Simulate fetching updated data on mount
     useEffect(() => {
         const storedUnits = localStorage.getItem('gis-business-units');
         if (storedUnits) {
             setBusinessUnits(JSON.parse(storedUnits));
         } else {
-            // On first load, clear placeholder addresses
             const clearedUnits = initialBusinessUnits.map(u => ({...u, address: '', coordinates: {lat: 0, lng: 0}}));
             setBusinessUnits(clearedUnits);
         }
     }, []);
 
     const handleEditAddress = (unit: BusinessUnit, address: string) => {
-        // Simulate geocoding
         const newLat = 6.5 + Math.random() * 0.2;
         const newLng = 3.3 + Math.random() * 0.2;
 
