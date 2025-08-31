@@ -125,4 +125,3 @@ export default function TrendsComparisonChart({ kpis, type }: TrendsComparisonCh
     </ChartContainer>
   );
 }
-
