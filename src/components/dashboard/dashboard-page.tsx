@@ -197,7 +197,7 @@ export default function DashboardPage() {
                         <div className="glow-container p-6">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-white font-bold text-lg font-orbitron">📈 Monthly Progress Trend</h3>
-                                <button onClick={() => safeToggleChartType('trend')} className="text-yellow-400 hover:text-yellow-300">
+                                <button className="text-yellow-400 hover:text-yellow-300">
                                     <i className="fas fa-chart-line"></i>
                                 </button>
                             </div>
