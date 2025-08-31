@@ -26,7 +26,7 @@ import WeatherForecast from '@/components/dashboard/weather-forecast';
 import { useToast } from '@/hooks/use-toast';
 
 export default function DashboardPage() {
-  const [kpiData, setKpiData] = useState<Kpi[]>(() => allKpis.map(kpi => ({...kpi, progress: 0, status: 'Off Track'})));
+  const [kpiData, setKpiData] = useState<Kpi[]>(() => allKpis.map(kpi => ({...kpi, progress: 0, status: 'Not Started'})));
   const [selectedRole, setSelectedRole] = useState<Role | 'All'>('GIS Coordinator');
   const [selectedStatus, setSelectedStatus] = useState<KpiStatus | 'All'>('All');
   const { toast } = useToast();

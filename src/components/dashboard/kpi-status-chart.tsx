@@ -19,12 +19,14 @@ export default function KpiStatusChart({ kpis }: KpiStatusChartProps) {
   const onTrack = kpis.filter((kpi) => kpi.status === 'On Track').length;
   const atRisk = kpis.filter((kpi) => kpi.status === 'At Risk').length;
   const offTrack = kpis.filter((kpi) => kpi.status === 'Off Track').length;
+  const notStarted = kpis.filter((kpi) => kpi.status === 'Not Started').length;
 
   const chartData = [
     { name: "On Track", value: onTrack, fill: "hsl(var(--chart-2))" },
     { name: "At Risk", value: atRisk, fill: "hsl(var(--chart-4))" },
     { name: "Off Track", value: offTrack, fill: "hsl(var(--destructive))" },
-  ]
+    { name: "Not Started", value: notStarted, fill: "hsl(var(--muted))" },
+  ].filter(d => d.value > 0);
 
   const id = "pie-interactive"
   const [activeIndex, setActiveIndex] = React.useState(0)
@@ -35,6 +37,14 @@ export default function KpiStatusChart({ kpis }: KpiStatusChartProps) {
     },
     [setActiveIndex]
   )
+    
+  if (kpis.every(kpi => kpi.status === 'Not Started')) {
+    return (
+      <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+        No status to display. Start updating KPI progress.
+      </div>
+    );
+  }
 
   return (
     <ChartContainer

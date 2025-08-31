@@ -52,7 +52,8 @@ export default function KpiTable({
     let newStatus: KpiStatus;
     if (newProgress > 75) newStatus = 'On Track';
     else if (newProgress > 40) newStatus = 'At Risk';
-    else newStatus = 'Off Track';
+    else if (newProgress > 0) newStatus = 'Off Track';
+    else newStatus = 'Not Started';
 
     onKpiUpdate({ ...kpi, progress: newProgress, status: newStatus });
   };
@@ -88,7 +89,8 @@ export default function KpiTable({
   const getProgressColor = (progress: number) => {
     if (progress > 75) return 'bg-green-500';
     if (progress > 40) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (progress > 0) return 'bg-red-500';
+    return 'bg-gray-400';
   }
 
   return (
@@ -113,6 +115,7 @@ export default function KpiTable({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="All">All Statuses</SelectItem>
+              <SelectItem value="Not Started">Not Started</SelectItem>
               <SelectItem value="On Track">On Track</SelectItem>
               <SelectItem value="At Risk">At Risk</SelectItem>
               <SelectItem value="Off Track">Off Track</SelectItem>

@@ -29,9 +29,13 @@ export default function KpiSummaryCards({ kpis }: KpiSummaryCardsProps) {
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${item.color}`}>{item.value}</div>
-            <p className="text-xs text-muted-foreground">
-              {((item.value / totalKpis) * 100).toFixed(0)}% of total
-            </p>
+            {totalKpis > 0 && item.title !== 'Total KPIs' ? (
+                 <p className="text-xs text-muted-foreground">
+                    {((item.value / totalKpis) * 100).toFixed(0)}% of total
+                 </p>
+            ) : item.title === 'Total KPIs' ? <p className="text-xs text-muted-foreground">KPIs for selected role</p> : <p className="text-xs text-muted-foreground">
+              0% of total
+            </p> }
           </CardContent>
         </Card>
       ))}

@@ -6,7 +6,7 @@ export type Role =
   | 'GIS Analyst';
 
 export type KpiCategory = 'Business Growth' | 'People Development' | 'Operational Process' | 'Customer';
-export type KpiStatus = 'On Track' | 'At Risk' | 'Off Track';
+export type KpiStatus = 'On Track' | 'At Risk' | 'Off Track' | 'Not Started';
 
 export interface Kpi {
   id: string;
