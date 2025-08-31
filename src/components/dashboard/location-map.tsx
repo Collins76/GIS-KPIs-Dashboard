@@ -33,7 +33,7 @@ const LocationCard = ({ unit, onEditAddress, onViewMap }: { unit: BusinessUnit, 
         setAddressModalOpen(false);
     }
     
-    const coordinatesString = unit.address ? `${unit.coordinates.lat.toFixed(4)}, ${unit.coordinates.lng.toFixed(4)}` : 'N/A';
+    const coordinatesString = unit.address && unit.coordinates.lat !== 0 ? `${unit.coordinates.lat.toFixed(4)}, ${unit.coordinates.lng.toFixed(4)}` : 'N/A';
 
     return (
         <>
@@ -60,7 +60,7 @@ const LocationCard = ({ unit, onEditAddress, onViewMap }: { unit: BusinessUnit, 
                     </div>
                 </div>
 
-                <div className="space-y-3 text-sm text-gray-300 mb-4">
+                <div className="space-y-3 text-sm text-gray-300 mb-4 min-h-[70px]">
                     <div>
                         <p className="text-xs text-gray-400">Address</p>
                         <p onClick={() => setAddressModalOpen(true)} className="font-semibold truncate cursor-pointer hover:text-yellow-400">
@@ -73,7 +73,7 @@ const LocationCard = ({ unit, onEditAddress, onViewMap }: { unit: BusinessUnit, 
                     </div>
                 </div>
 
-                <Button className="w-full glow-button" onClick={() => onViewMap(unit)} disabled={!unit.address}>
+                <Button className="w-full glow-button" onClick={() => onViewMap(unit)} disabled={!unit.address || unit.coordinates.lat === 0}>
                     <MapPin className="w-4 h-4 mr-2"/>
                     View on Google Map
                 </Button>
@@ -105,6 +105,7 @@ export default function LocationMap() {
     const { toast } = useToast();
     const [businessUnits, setBusinessUnits] = useState<BusinessUnit[]>(initialBusinessUnits);
     const [selectedUnit, setSelectedUnit] = useState<BusinessUnit | null>(null);
+    const [mapUrl, setMapUrl] = useState('');
     
     useEffect(() => {
         const storedUnits = localStorage.getItem('gis-business-units');
@@ -113,10 +114,12 @@ export default function LocationMap() {
         } else {
             const clearedUnits = initialBusinessUnits.map(u => ({...u, address: '', coordinates: {lat: 0, lng: 0}}));
             setBusinessUnits(clearedUnits);
+            localStorage.setItem('gis-business-units', JSON.stringify(clearedUnits));
         }
     }, []);
 
     const handleEditAddress = (unit: BusinessUnit, address: string) => {
+        // Simulate geocoding
         const newLat = 6.5 + Math.random() * 0.2;
         const newLng = 3.3 + Math.random() * 0.2;
 
@@ -133,7 +136,34 @@ export default function LocationMap() {
     
     const handleViewMap = (unit: BusinessUnit) => {
         setSelectedUnit(unit);
+        setMapUrl(`https://www.openstreetmap.org/export/embed.html?bbox=${unit.coordinates.lng - 0.01},${unit.coordinates.lat - 0.01},${unit.coordinates.lng + 0.01},${unit.coordinates.lat + 0.01}&layer=mapnik&marker=${unit.coordinates.lat},${unit.coordinates.lng}`);
     }
+    
+    const handleMapTypeChange = (type: 'osm' | 'satellite' | 'terrain') => {
+        if (selectedUnit) {
+            let newUrl = '';
+            const { lat, lng } = selectedUnit.coordinates;
+            switch(type) {
+                case 'osm':
+                    newUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=mapnik&marker=${lat},${lng}`;
+                    break;
+                case 'satellite':
+                    // Using a different provider that has satellite view embeddable via query params
+                     newUrl = `https://www.google.com/maps/embed/v1/view?key=YOUR_API_KEY&center=${lat},${lng}&zoom=15&maptype=satellite`;
+                     // Note: Google Maps embed requires an API key. For this demo, we'll use a placeholder URL that might not work.
+                     // A better approach for a real app is a library like Leaflet with different tile layers.
+                     // Since I cannot add libraries, I will show a message about the API key.
+                     toast({ variant: 'destructive', title: "API Key Needed", description: "Displaying live Google Satellite view requires an API key." });
+                     newUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=cyclosm&marker=${lat},${lng}`;
+                    break;
+                case 'terrain':
+                     newUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=cyclemap&marker=${lat},${lng}`;
+                    break;
+            }
+            setMapUrl(newUrl);
+        }
+    }
+
 
     return (
     <div className="space-y-8">
@@ -144,7 +174,7 @@ export default function LocationMap() {
             </h2>
         </div>
        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {businessUnits.map((unit) => (
                 <LocationCard 
                     key={unit.id} 
@@ -158,23 +188,29 @@ export default function LocationMap() {
         {selectedUnit && (
              <div className="network-map-display p-6 flex flex-col items-center justify-center text-center relative">
                  <div className="absolute top-4 right-4 flex space-x-2">
-                    <Button id="satellite-btn" className="bg-blue-500 hover:bg-blue-600 text-white font-semibold">Satellite</Button>
-                    <Button id="terrain-btn" className="bg-green-500 hover:bg-green-600 text-white font-semibold">Terrain</Button>
-                     <Button id="osm-btn" className="bg-orange-500 hover:bg-orange-600 text-white font-semibold">OSM</Button>
-                    <Button id="refresh-btn" className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold"><RefreshCw className="w-4 h-4"/></Button>
+                    <Button onClick={() => handleMapTypeChange('satellite')} className="bg-blue-500 hover:bg-blue-600 text-white font-semibold">Satellite</Button>
+                    <Button onClick={() => handleMapTypeChange('terrain')} className="bg-green-500 hover:bg-green-600 text-white font-semibold">Terrain</Button>
+                    <Button onClick={() => handleMapTypeChange('osm')} className="bg-orange-500 hover:bg-orange-600 text-white font-semibold">OSM</Button>
                 </div>
 
-                <div className="mb-4">
-                    <MapPin className="w-12 h-12 text-red-500 animate-bounce"/>
+                <div className="w-full h-[400px] bg-gray-800 rounded-lg overflow-hidden mt-4">
+                     <iframe
+                        width="100%"
+                        height="100%"
+                        frameBorder="0"
+                        scrolling="no"
+                        marginHeight={0}
+                        marginWidth={0}
+                        src={mapUrl}
+                        style={{ border: 0 }}
+                        allowFullScreen
+                      ></iframe>
                 </div>
-                <h3 className="text-2xl font-bold text-white font-orbitron mb-2">Map for {selectedUnit.name}</h3>
-                <p className="text-gray-400 max-w-lg mx-auto mb-6">
-                    Displaying map for address: <span className="text-white">{selectedUnit.address}</span>
-                </p>
-
-                <div className="text-yellow-400 text-xs font-semibold animate-pulse-glow">
-                    💡 Map interaction is simulated in this environment. <br/>
-                    <span className="text-gray-500 font-normal">Controls for zoom and map type are for demonstration purposes.</span>
+                 <div className="mt-4">
+                    <h3 className="text-2xl font-bold text-white font-orbitron mb-2">Map for {selectedUnit.name}</h3>
+                    <p className="text-gray-400 max-w-lg mx-auto">
+                        Displaying map for address: <span className="text-white">{selectedUnit.address}</span>
+                    </p>
                 </div>
              </div>
         )}
