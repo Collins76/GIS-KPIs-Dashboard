@@ -52,7 +52,7 @@ const TABS = [
 const PARAMETER_CATEGORIES: KpiCategory[] = ['Business Growth', 'People Development', 'Operational Process', 'Customer'];
 
 export default function DashboardPage() {
-  const [kpiData, setKpiData] = useState<Kpi[]>(() => allKpis.map(kpi => ({ ...kpi, progress: 0, status: 'Not Started' })));
+  const [kpiData, setKpiData] = useState<Kpi[]>(allKpis);
   const [activeTab, setActiveTab] = useState('overview');
   
   const [selectedRole, setSelectedRole] = useState<Role | 'All'>('All');
