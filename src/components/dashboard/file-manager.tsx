@@ -4,6 +4,8 @@
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { FileUp, List, Trash2, RotateCcw, LayoutGrid, Undo, FolderOpen, Link, Pencil, Download, Eye, Search } from 'lucide-react';
 
 // Helper to safely call window functions
@@ -132,7 +134,7 @@ export default function FileManager() {
                       <div className="bg-cyan-500 bg-opacity-20 text-cyan-400 px-2 py-1 rounded text-xs font-semibold">KML</div>
                   </div>
                   
-                  <input type="file" id="fileInput" className="hidden" multiple accept=".csv,.xlsx,.pdf,.jpg,.jpeg,.png,.docx,.doc,.shp,.gdb,.ppt,.pptx,.kmz,.kml" />
+                  <Input type="file" id="fileInput" className="hidden" multiple accept=".csv,.xlsx,.pdf,.jpg,.jpeg,.png,.docx,.doc,.shp,.gdb,.ppt,.pptx,.kmz,.kml" />
                   <div className="flex justify-center space-x-4">
                       <Button onClick={() => callWindowFunc('triggerBrowseFiles')} className="glow-button text-lg px-8 py-3">
                           <FolderOpen className="mr-2 h-5 w-5" />Browse Files
@@ -182,7 +184,7 @@ export default function FileManager() {
                       <Label htmlFor="fileUrl" className="block text-sm font-medium text-gray-300 mb-2 font-space">
                           <Link className="inline-block mr-2 text-blue-400 h-4 w-4" />File URL
                       </Label>
-                      <input 
+                      <Input 
                           type="url" 
                           id="fileUrl"
                           placeholder="https://example.com/file.pdf"
@@ -194,7 +196,7 @@ export default function FileManager() {
                       <Label htmlFor="customFileName" className="block text-sm font-medium text-gray-300 mb-2 font-space">
                          <Pencil className="inline-block mr-2 text-green-400 h-4 w-4" />File Name (Optional)
                       </Label>
-                      <input 
+                      <Input 
                           type="text" 
                           id="customFileName"
                           placeholder="Leave empty to use original name"
