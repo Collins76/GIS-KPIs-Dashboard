@@ -139,7 +139,10 @@ export default function FileManager() {
                       <Button onClick={() => callWindowFunc('triggerBrowseFiles')} className="glow-button text-lg px-8 py-3">
                           <FolderOpen className="mr-2 h-5 w-5" />Browse Files
                       </Button>
-                      <Button onClick={() => callWindowFunc('uploadFromUrl')} variant="secondary" className="px-8 py-3 text-lg">
+                      <Button 
+                        onClick={() => callWindowFunc('uploadFromUrl')} 
+                        variant="secondary" 
+                        className="px-8 py-3 text-lg bg-blue-600 hover:bg-blue-700 text-white border-blue-700">
                           <Link className="mr-2 h-5 w-5" />Upload from URL
                       </Button>
                   </div>
@@ -185,6 +188,14 @@ export default function FileManager() {
                           required
                       />
                   </div>
+                   <div>
+                        <Input
+                            type="text"
+                            id="fileName"
+                            placeholder="Optional: Enter file name"
+                            className="glow-input w-full text-center text-lg h-12"
+                        />
+                    </div>
                   <div className="flex space-x-4 pt-4">
                       <Button type="button" onClick={() => callWindowFunc('closeUrlUploadModal')} className="flex-1 py-3 text-lg" variant="outline">
                           Cancel
@@ -223,6 +234,7 @@ declare global {
         triggerBrowseFiles: () => void;
         editSelectedFile: (event?: MouseEvent) => void;
         deleteSelectedFile: (event?: MouseEvent) => void;
+        handleUrlUpload: (e: Event) => void;
     }
 }
 
