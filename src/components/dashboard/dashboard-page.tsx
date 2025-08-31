@@ -122,12 +122,9 @@ export default function DashboardPage() {
             </div>
       </div>
       <Header />
-       <div className="scrolling-text-container-slow py-2">
-            <div className="animate-scroll-slow whitespace-nowrap">
-                <span className="inline-block px-4 py-1 scrolling-text-content-green">
-                    Powered by the GIS Team
-                </span>
-                <span className="inline-block px-4 py-1 scrolling-text-content-green">
+       <div className="scrolling-text-container-slow">
+            <div className="animate-scroll-slow">
+                <span className="scrolling-text-content-green">
                     Powered by the GIS Team
                 </span>
             </div>
@@ -314,3 +311,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

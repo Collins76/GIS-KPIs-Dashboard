@@ -1319,22 +1319,26 @@ input[type="file"] {
 .scrolling-text-container-slow {
     overflow: hidden;
     position: relative;
-    height: 24px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 @keyframes scroll-slow {
     0% {
-        transform: translateX(0);
+        transform: translateX(100%);
     }
     100% {
-        transform: translateX(-50%);
+        transform: translateX(-100%);
     }
 }
 
 .animate-scroll-slow {
     animation: scroll-slow 50s linear infinite; /* Slower speed */
-    display: flex;
-    align-items: center;
+    display: inline-block;
+    white-space: nowrap;
+    padding-left: 100%;
 }
 
 .scrolling-text-content-green {
@@ -1347,6 +1351,7 @@ input[type="file"] {
     letter-spacing: 0.05em;
     font-family: 'Space Grotesk', sans-serif;
     animation: textGlowGreen 3s ease-in-out infinite;
+    display: inline-block;
 }
 
 @keyframes textGlowGreen {
@@ -1363,3 +1368,5 @@ input[type="file"] {
             0 0 36px rgba(16, 185, 129, 0.3);
     }
 }
+
+    
