@@ -151,7 +151,7 @@ export default function DashboardPage() {
                         <SelectTrigger className="glow-input w-full text-sm">
                             <SelectValue placeholder="All Roles" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-black text-white border-yellow-400">
                             <SelectItem value="All">All Roles</SelectItem>
                             {roles.map(role => (
                                 <SelectItem key={role} value={role}>{role}</SelectItem>
@@ -167,7 +167,7 @@ export default function DashboardPage() {
                         <SelectTrigger className="glow-input w-full text-sm">
                            <SelectValue placeholder="All Categories" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-black text-white border-yellow-400">
                           <SelectItem value="All">All Categories</SelectItem>
                            {PARAMETER_CATEGORIES.map(cat => (
                             <SelectItem key={cat} value={cat}>{cat}</SelectItem>
@@ -183,12 +183,11 @@ export default function DashboardPage() {
                         <SelectTrigger className="glow-input w-full text-sm">
                            <SelectValue placeholder="All Status" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-black text-white border-yellow-400">
                           <SelectItem value="All">All Statuses</SelectItem>
-                          <SelectItem value="Not Started">Not Started</SelectItem>
-                          <SelectItem value="On Track">On Track</SelectItem>
+                          <SelectItem value="Completed">Completed</SelectItem>
+                          <SelectItem value="On Track">In Progress</SelectItem>
                           <SelectItem value="At Risk">At Risk</SelectItem>
-                          <SelectItem value="Off Track">Off Track</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

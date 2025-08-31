@@ -36,7 +36,8 @@ export default function KpiTable({
 
   const handleProgressChange = (kpi: Kpi, newProgress: number) => {
     let newStatus: KpiStatus;
-    if (newProgress > 75) newStatus = 'On Track';
+    if (newProgress === 100) newStatus = 'Completed'
+    else if (newProgress > 75) newStatus = 'On Track';
     else if (newProgress > 40) newStatus = 'At Risk';
     else if (newProgress > 0) newStatus = 'Off Track';
     else newStatus = 'Not Started';
@@ -55,6 +56,7 @@ export default function KpiTable({
 
   const getStatusVariant = (status: KpiStatus) => {
     switch (status) {
+      case 'Completed': return 'default';
       case 'On Track': return 'default';
       case 'At Risk': return 'secondary';
       case 'Off Track': return 'destructive';
