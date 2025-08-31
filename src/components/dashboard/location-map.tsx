@@ -1,192 +1,187 @@
 
 "use client";
 
-import { useState } from 'react';
-import Image from "next/image";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect }from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { businessUnits, kpis } from "@/lib/data";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { businessUnits as initialBusinessUnits, kpis } from "@/lib/data";
 import type { BusinessUnit, Kpi } from '@/lib/types';
-import { MapPin, Copy, AlertTriangle, Globe, Building, Zap, Plus, Layers, LocateFixed, RefreshCw } from "lucide-react";
+import { MapPin, CheckCircle2, Loader, AlertTriangle, Edit, Globe, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from '@/lib/utils';
+import Image from "next/image";
 
-// Helper to associate KPIs with business units. In a real app, this link would exist in the data.
-// For now, we'll distribute KPIs somewhat evenly for demonstration.
+// Helper to associate KPIs with business units.
 const getKpisForBusinessUnit = (buId: string, allKpis: Kpi[]): Kpi[] => {
-    // This is a mock distribution.
     const buIndex = parseInt(buId.replace('bu', ''), 10);
-    return allKpis.filter((_, index) => (index % businessUnits.length) + 1 === buIndex);
+    return allKpis.filter((_, index) => (index % initialBusinessUnits.length) + 1 === buIndex);
 };
 
-const LocationCard = ({ unit, kpis, icon: IconComponent, onCopy }: { unit: BusinessUnit, kpis: Kpi[], icon: React.ElementType, onCopy: (text: string) => void }) => {
+const LocationCard = ({ unit, onEditAddress, onViewMap }: { unit: BusinessUnit, onEditAddress: (unit: BusinessUnit, address: string) => void, onViewMap: (unit: BusinessUnit) => void }) => {
+    const unitKpis = getKpisForBusinessUnit(unit.id, kpis);
+    const completedKpis = unitKpis.filter(k => k.status === 'Completed').length;
+    const inProgressKpis = unitKpis.filter(k => k.status === 'On Track').length;
+    const atRiskKpis = unitKpis.filter(k => k.status === 'At Risk' || k.status === 'Off Track').length;
     
-    const totalKpis = kpis.length;
-    const completedKpis = kpis.filter(k => k.status === 'Completed').length;
-    const inProgressKpis = kpis.filter(k => k.status === 'On Track').length;
-    const atRiskKpis = kpis.filter(k => k.status === 'At Risk' || k.status === 'Off Track').length;
+    const [address, setAddress] = useState(unit.address);
+    const [isAddressModalOpen, setAddressModalOpen] = useState(false);
+
+    const handleSaveAddress = () => {
+        onEditAddress(unit, address);
+        setAddressModalOpen(false);
+    }
     
-    const performance = totalKpis > 0 ? Math.round((completedKpis / totalKpis) * 100) : 0;
-
-    const getPerformanceColor = (perf: number) => {
-        if (perf >= 80) return 'text-green-400';
-        if (perf >= 60) return 'text-yellow-400';
-        return 'text-red-400';
-    };
-
-    const coordinatesString = `${unit.coordinates.lat}, ${unit.coordinates.lng}`;
+    const coordinatesString = unit.address ? `${unit.coordinates.lat.toFixed(4)}, ${unit.coordinates.lng.toFixed(4)}` : 'N/A';
 
     return (
-        <div className="location-card">
-            <div className="flex justify-between items-start mb-2">
-                <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center">
-                        <IconComponent className="w-6 h-6 text-yellow-400"/>
+        <>
+            <div className="location-card">
+                <div className="flex justify-between items-center mb-4">
+                     <h3 className="text-white font-bold font-orbitron text-lg">{unit.name}</h3>
+                     <Button variant="ghost" size="icon" onClick={() => setAddressModalOpen(true)}>
+                        <Edit className="w-4 h-4 text-yellow-400"/>
+                     </Button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center text-xs mb-4">
+                    <div className="bg-green-500/20 text-green-400 p-2 rounded-md">
+                        <CheckCircle2 className="w-6 h-6 mx-auto mb-1 animate-pulse"/>
+                        <p className="font-bold text-lg">{completedKpis}</p>
+                        <p>Completed</p>
+                    </div>
+                    <div className="bg-yellow-500/20 text-yellow-400 p-2 rounded-md">
+                        <Loader className="w-6 h-6 mx-auto mb-1 animate-spin"/>
+                        <p className="font-bold text-lg">{inProgressKpis}</p>
+                        <p>In Progress</p>
+                    </div>
+                    <div className="bg-red-500/20 text-red-400 p-2 rounded-md">
+                        <AlertTriangle className="w-6 h-6 mx-auto mb-1 animate-pulse"/>
+                        <p className="font-bold text-lg">{atRiskKpis}</p>
+                        <p>At Risk</p>
+                    </div>
+                </div>
+
+                <div className="space-y-3 text-sm text-gray-300 mb-4">
+                    <div>
+                        <p className="text-xs text-gray-400">Address</p>
+                        <p className="font-semibold truncate">{unit.address || 'No address set'}</p>
                     </div>
                     <div>
-                        <h3 className="text-white font-bold font-orbitron text-lg">{unit.id.replace('bu','')}. {unit.name}</h3>
-                        <p className="text-xs text-gray-400">{unit.address}</p>
+                        <p className="text-xs text-gray-400">Coordinates</p>
+                        <p className="font-semibold font-mono">{coordinatesString}</p>
                     </div>
                 </div>
-                <div className={cn("text-xl font-bold font-orbitron", getPerformanceColor(performance))}>
-                    {performance}%
-                    <p className="text-xs text-gray-400 font-sans font-normal text-right">Perf.</p>
-                </div>
-            </div>
 
-            <div className="my-4">
-                <div className="flex justify-between items-center text-xs text-gray-400 mb-1">
-                    <span>KPI Progress</span>
-                    <span>{completedKpis}/{totalKpis}</span>
-                </div>
-                <Progress value={performance} indicatorClassName={cn(
-                    performance >= 80 ? 'bg-green-500' : performance >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                )} />
+                <Button className="w-full glow-button" onClick={() => onViewMap(unit)} disabled={!unit.address}>
+                    <MapPin className="w-4 h-4 mr-2"/>
+                    View on Google Map
+                </Button>
             </div>
-
-            <div className="grid grid-cols-3 gap-2 text-center text-xs mb-4">
-                <div className="bg-green-500/20 text-green-400 p-2 rounded-md">
-                    <p className="font-bold text-lg">{completedKpis}</p>
-                    <p>Completed</p>
-                </div>
-                <div className="bg-yellow-500/20 text-yellow-400 p-2 rounded-md">
-                    <p className="font-bold text-lg">{inProgressKpis}</p>
-                    <p>In Progress</p>
-                </div>
-                <div className="bg-red-500/20 text-red-400 p-2 rounded-md">
-                    <p className="font-bold text-lg">{atRiskKpis}</p>
-                    <p>At Risk</p>
-                </div>
-            </div>
-            
-            <div className="text-yellow-500 text-xs font-semibold flex items-center mb-2">
-                <AlertTriangle className="w-4 h-4 mr-2"/>
-                Address Required
-            </div>
-
-            <Button className="w-full glow-button">
-                <Plus className="w-4 h-4 mr-2"/>
-                Add Address
-            </Button>
-        </div>
+             <Dialog open={isAddressModalOpen} onOpenChange={setAddressModalOpen}>
+                <DialogContent className="glow-modal">
+                    <DialogHeader>
+                        <DialogTitle>Update Address for {unit.name}</DialogTitle>
+                        <DialogDescription>
+                            Enter the address to generate coordinates.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Label htmlFor="address">Address</Label>
+                        <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} className="glow-input mt-2" />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setAddressModalOpen(false)}>Cancel</Button>
+                        <Button className="glow-button" onClick={handleSaveAddress}>Save Address</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 };
 
 
 export default function LocationMap() {
     const { toast } = useToast();
-    const totalKpis = kpis.length;
-    const avgPerformance = totalKpis > 0 ? Math.round(kpis.reduce((acc, kpi) => acc + kpi.progress, 0) / totalKpis) : 0;
+    const [businessUnits, setBusinessUnits] = useState<BusinessUnit[]>(initialBusinessUnits);
+    const [selectedUnit, setSelectedUnit] = useState<BusinessUnit | null>(null);
     
-    const icons = [Building, Zap, Globe, Layers, LocateFixed, Zap, Globe];
+    // Simulate fetching updated data on mount
+    useEffect(() => {
+        const storedUnits = localStorage.getItem('gis-business-units');
+        if (storedUnits) {
+            setBusinessUnits(JSON.parse(storedUnits));
+        } else {
+            // On first load, clear placeholder addresses
+            const clearedUnits = initialBusinessUnits.map(u => ({...u, address: '', coordinates: {lat: 0, lng: 0}}));
+            setBusinessUnits(clearedUnits);
+        }
+    }, []);
 
-    const handleCopy = (text: string) => {
-        navigator.clipboard.writeText(text);
+    const handleEditAddress = (unit: BusinessUnit, address: string) => {
+        // Simulate geocoding
+        const newLat = 6.5 + Math.random() * 0.2;
+        const newLng = 3.3 + Math.random() * 0.2;
+
+        const updatedUnits = businessUnits.map(bu => 
+            bu.id === unit.id ? { ...bu, address: address, coordinates: { lat: newLat, lng: newLng } } : bu
+        );
+        setBusinessUnits(updatedUnits);
+        localStorage.setItem('gis-business-units', JSON.stringify(updatedUnits));
         toast({
-          title: "Coordinates Copied",
-          description: text,
+            title: "Address Updated",
+            description: `Coordinates for ${unit.name} have been generated.`,
         });
     };
+    
+    const handleViewMap = (unit: BusinessUnit) => {
+        setSelectedUnit(unit);
+    }
 
     return (
     <div className="space-y-8">
         <div className="flex items-center space-x-3">
              <Globe className="w-8 h-8 text-yellow-400 animate-pulse-glow"/>
              <h2 className="text-3xl font-bold text-white font-orbitron animate-neon-glow">
-                Interactive Location Management
+                Location Management
             </h2>
         </div>
        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {businessUnits.map((bu, index) => (
+            {businessUnits.map((unit) => (
                 <LocationCard 
-                    key={bu.id} 
-                    unit={bu} 
-                    kpis={getKpisForBusinessUnit(bu.id, kpis)} 
-                    icon={icons[index % icons.length]}
-                    onCopy={handleCopy}
+                    key={unit.id} 
+                    unit={unit} 
+                    onEditAddress={handleEditAddress}
+                    onViewMap={handleViewMap}
                 />
             ))}
         </div>
         
-        <div className="space-y-6">
-            <div className="flex items-center space-x-3">
-                <MapPin className="w-8 h-8 text-yellow-400 animate-pulse-glow"/>
-                <h2 className="text-3xl font-bold text-white font-orbitron animate-neon-glow">
-                    Interactive Network Map
-                </h2>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-white">
-                <div className="bg-blue-600/80 p-4 rounded-lg text-center flex flex-col justify-center items-center glow-container">
-                    <p className="text-4xl font-bold font-orbitron">{businessUnits.length}</p>
-                    <p className="text-sm">Total Locations</p>
-                </div>
-                <div className="bg-green-600/80 p-4 rounded-lg text-center flex flex-col justify-center items-center glow-container">
-                     <p className="text-4xl font-bold font-orbitron">{businessUnits.filter(bu => bu.address).length}</p>
-                    <p className="text-sm">With Addresses</p>
-                </div>
-                 <div className="bg-yellow-600/80 p-4 rounded-lg text-center flex flex-col justify-center items-center glow-container">
-                     <p className="text-4xl font-bold font-orbitron">{avgPerformance}%</p>
-                    <p className="text-sm">Avg Performance</p>
-                </div>
-                <div className="bg-purple-600/80 p-4 rounded-lg text-center flex flex-col justify-center items-center glow-container">
-                     <p className="text-4xl font-bold font-orbitron">{totalKpis}</p>
-                    <p className="text-sm">Total KPIs</p>
-                </div>
-            </div>
-
+        {selectedUnit && (
              <div className="network-map-display p-6 flex flex-col items-center justify-center text-center relative">
                  <div className="absolute top-4 right-4 flex space-x-2">
                     <Button id="satellite-btn" className="bg-blue-500 hover:bg-blue-600 text-white font-semibold">Satellite</Button>
                     <Button id="terrain-btn" className="bg-green-500 hover:bg-green-600 text-white font-semibold">Terrain</Button>
+                     <Button id="osm-btn" className="bg-orange-500 hover:bg-orange-600 text-white font-semibold">OSM</Button>
                     <Button id="refresh-btn" className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold"><RefreshCw className="w-4 h-4"/></Button>
                 </div>
 
                 <div className="mb-4">
-                    <Image src="https://i.imgur.com/gKeA2pE.png" alt="Ikeja Electric Logo" width={80} height={80} className="mx-auto" />
+                    <MapPin className="w-12 h-12 text-red-500 animate-bounce"/>
                 </div>
-                <h3 className="text-2xl font-bold text-white font-orbitron mb-2">Lagos Network Coverage Map</h3>
+                <h3 className="text-2xl font-bold text-white font-orbitron mb-2">Map for {selectedUnit.name}</h3>
                 <p className="text-gray-400 max-w-lg mx-auto mb-6">
-                    Interactive map showing all Ikeja Electric business units and their KPI performance across Lagos State.
+                    Displaying map for address: <span className="text-white">{selectedUnit.address}</span>
                 </p>
 
-                <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-300 mb-6">
-                    <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-green-500 mr-2"></span>High Performance (80%+)</div>
-                    <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></span>Medium Performance (60-79%)</div>
-                    <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-red-500 mr-2"></span>Needs Attention (&lt;60%)</div>
-                    <div className="flex items-center"><span className="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>Corporate Headquarters</div>
-                </div>
-
                 <div className="text-yellow-400 text-xs font-semibold animate-pulse-glow">
-                    💡 Click on any location card above to view detailed maps <br/>
-                    <span className="text-gray-500 font-normal">Real-time KPI data visualization • Coverage analysis • Performance monitoring</span>
+                    💡 Map interaction is simulated in this environment. <br/>
+                    <span className="text-gray-500 font-normal">Controls for zoom and map type are for demonstration purposes.</span>
                 </div>
              </div>
-        </div>
+        )}
     </div>
   )
 }
-
-    
