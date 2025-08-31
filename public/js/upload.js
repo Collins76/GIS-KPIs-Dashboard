@@ -10,14 +10,21 @@ let uploadedFiles = [];
 let currentFileView = 'grid';
 let currentFilter = '';
 let currentSort = 'newest';
+let currentUser = null;
 
 // Initialize Upload Area
 function initializeUploadArea() {
     const uploadArea = document.getElementById('uploadArea');
     const fileInput = document.getElementById('fileInput');
-    const urlUploadForm = document.getElementById('urlUploadForm');
+
+    if (localStorage.getItem('gis-user-profile')) {
+        currentUser = JSON.parse(localStorage.getItem('gis-user-profile'));
+    }
     
-    if (!uploadArea || !fileInput) return;
+    if (!uploadArea || !fileInput) {
+        console.warn("Upload area or file input not found. Skipping initialization.");
+        return;
+    }
     
     // Drag and drop events
     uploadArea.addEventListener('dragenter', handleDragEnter);
@@ -28,6 +35,7 @@ function initializeUploadArea() {
     // File input change event
     fileInput.addEventListener('change', handleFileSelect);
 
+    const urlUploadForm = document.getElementById('urlUploadForm');
     if (urlUploadForm) {
         urlUploadForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -35,11 +43,6 @@ function initializeUploadArea() {
             const url = document.getElementById('fileUrl').value;
             const customName = document.getElementById('customFileName').value;
             
-            if(!url) {
-                showUploadNotification('Please enter a valid URL.', 'error');
-                return;
-            }
-
             // Simulate URL download and upload
             const fileName = customName || url.split('/').pop().split('?')[0] || 'downloaded_file';
             const fileSize = Math.floor(Math.random() * 10000000) + 1000000; // Random size
@@ -53,8 +56,8 @@ function initializeUploadArea() {
                 uploadDate: new Date().toISOString(),
                 status: 'uploading',
                 progress: 0,
-                user: localStorage.getItem('gis-user-profile') ? JSON.parse(localStorage.getItem('gis-user-profile')).name : 'Unknown',
-                location: localStorage.getItem('gis-user-profile') ? JSON.parse(localStorage.getItem('gis-user-profile')).location : 'Unknown',
+                user: currentUser ? currentUser.name : 'Unknown',
+                location: currentUser ? currentUser.location : 'Unknown',
                 source: 'url',
                 originalUrl: url
             };
@@ -68,7 +71,10 @@ function initializeUploadArea() {
             simulateUpload(fileObj);
         });
     }
-};
+
+    loadFilesFromStorage();
+    displayUploadedFiles();
+}
 
 
 // Handle drag enter
@@ -88,7 +94,13 @@ function handleDragOver(e) {
 function handleDragLeave(e) {
     e.preventDefault();
     e.stopPropagation();
-    this.classList.remove('dragging');
+    
+    // Check if we're leaving the upload area
+    const rect = this.getBoundingClientRect();
+    if (e.clientX < rect.left || e.clientX >= rect.right || 
+        e.clientY < rect.top || e.clientY >= rect.bottom) {
+        this.classList.remove('dragging');
+    }
 }
 
 // Handle drop
@@ -159,7 +171,6 @@ function validateFile(file) {
 // Upload file
 async function uploadFile(file) {
     const fileId = generateFileId();
-    const currentUser = JSON.parse(localStorage.getItem('gis-user-profile'));
     const fileObj = {
         id: fileId,
         name: file.name,
@@ -176,37 +187,34 @@ async function uploadFile(file) {
     
     uploadedFiles.push(fileObj);
     displayUploadedFiles();
-    updateFileStatistics();
     
     // Simulate upload progress
     simulateUpload(fileObj, file);
 }
 
 // Simulate upload (replace with actual upload logic)
-function simulateUpload(fileObj, file) {
+async function simulateUpload(fileObj, file) {
     const progressInterval = setInterval(() => {
-        fileObj.progress += Math.random() * 20 + 5;
+        fileObj.progress += Math.random() * 30;
         
         if (fileObj.progress >= 100) {
             fileObj.progress = 100;
             fileObj.status = 'completed';
             clearInterval(progressInterval);
             
-            // Save to storage
             saveFilesToStorage();
-            
             // Process file based on type
             if (file && (fileObj.extension === 'csv' || fileObj.extension === 'xlsx')) {
-                 processDataFile(file, fileObj);
+                processDataFile(file, fileObj);
             }
             
+            // Show success notification
             showUploadNotification(`${fileObj.name} uploaded successfully`, 'success');
         }
         
-        updateFileStatistics();
-        displayUploadedFiles();
-    }, 300);
-};
+        updateFileProgress(fileObj);
+    }, 500);
+}
 
 // Process data file (CSV or Excel)
 async function processDataFile(file, fileObj) {
@@ -228,7 +236,8 @@ async function processDataFile(file, fileObj) {
             
             // Store data in tables
             if (data && data.length > 0) {
-                await storeKPIData(data);
+                // await storeKPIData(data);
+                console.log("Data to be stored", data);
                 showUploadNotification(`Data from ${fileObj.name} has been imported`, 'success');
             }
         } catch (error) {
@@ -264,18 +273,34 @@ function parseCSV(csvText) {
 
 // Store KPI Data
 async function storeKPIData(data) {
-    const currentUser = JSON.parse(localStorage.getItem('gis-user-profile'));
     try {
-        // In a real app, this would be a fetch call to a backend API
-        console.log('Storing KPI data:', {
-            data: data,
-            uploadedBy: currentUser ? currentUser.name : 'Unknown',
-            uploadDate: new Date().toISOString()
+        // Send data to API
+        const response = await fetch('tables/kpi_uploads', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                data: data,
+                uploadedBy: currentUser ? currentUser.name : 'Unknown',
+                uploadDate: new Date().toISOString()
+            })
         });
         
+        if (response.ok) {
+            console.log('Data stored successfully');
+        }
     } catch (error) {
         console.error('Error storing data:', error);
     }
+}
+
+// Update file progress
+function updateFileProgress(file) {
+    const fileElement = document.getElementById(`file-${file.id}`);
+    if (!fileElement) return;
+    
+    displayUploadedFiles();
 }
 
 // Get file icon
@@ -308,24 +333,13 @@ function formatFileSize(bytes) {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
 
 // Generate file ID
 function generateFileId() {
     return 'file_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
-
-function removeFile(fileId) {
-    if (confirm('Are you sure you want to delete this file?')) {
-        uploadedFiles = uploadedFiles.filter(f => f.id !== fileId);
-        saveFilesToStorage();
-        updateFileStatistics();
-        displayUploadedFiles();
-        showUploadNotification('File removed successfully', 'success');
-    }
-};
-
 
 // Show upload notification
 function showUploadNotification(message, type = 'info') {
@@ -335,7 +349,7 @@ function showUploadNotification(message, type = 'info') {
     
     // Create notification element
     const notification = document.createElement('div');
-    notification.className = `upload-notification fixed bottom-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all transform translate-x-full ${
+    notification.className = `upload-notification fixed bottom-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all transform translate-x-0 ${
         type === 'success' ? 'bg-green-500' : 
         type === 'error' ? 'bg-red-500' : 
         'bg-blue-500'
@@ -349,7 +363,7 @@ function showUploadNotification(message, type = 'info') {
                 'fa-info-circle'
             } mr-3 mt-1"></i>
             <div>
-                <p class="font-semibold">${type.charAt(0).toUpperCase() + type.slice(1)}</p>
+                <p class="font-semibold">${type === 'success' ? 'Success' : type === 'error' ? 'Error' : 'Info'}</p>
                 <p class="text-sm mt-1" style="white-space: pre-line;">${message}</p>
             </div>
         </div>
@@ -364,7 +378,7 @@ function showUploadNotification(message, type = 'info') {
     
     // Remove after 5 seconds
     setTimeout(() => {
-        notification.style.transform = 'translateX(calc(100% + 2rem))';
+        notification.style.transform = 'translateX(400px)';
         setTimeout(() => {
             notification.remove();
         }, 300);
@@ -375,11 +389,8 @@ function showUploadNotification(message, type = 'info') {
 
 // Show All Files
 function showAllFiles() {
-    const allFiles = JSON.parse(localStorage.getItem('gis_all_files') || '[]');
-    uploadedFiles = allFiles;
-    updateFileStatistics();
-    displayUploadedFiles();
-    showUploadNotification(`Showing ${allFiles.length} files`, 'info');
+    loadFilesFromStorage();
+    showUploadNotification(`Showing ${uploadedFiles.length} files`, 'info');
 }
 
 // Clear All Files
@@ -409,30 +420,45 @@ function toggleFileView(view) {
     currentFileView = view;
     
     // Update button states
-    document.getElementById('gridViewBtn').classList.toggle('bg-yellow-500', view === 'grid');
-    document.getElementById('gridViewBtn').classList.toggle('bg-gray-600', view !== 'grid');
-    document.getElementById('listViewBtn').classList.toggle('bg-yellow-500', view === 'list');
-    document.getElementById('listViewBtn').classList.toggle('bg-gray-600', view !== 'list');
+    const gridBtn = document.getElementById('gridViewBtn');
+    const listBtn = document.getElementById('listViewBtn');
+
+    if (gridBtn && listBtn) {
+        gridBtn.classList.toggle('bg-yellow-500', view === 'grid');
+        gridBtn.classList.toggle('bg-gray-600', view !== 'grid');
+        listBtn.classList.toggle('bg-yellow-500', view === 'list');
+        listBtn.classList.toggle('bg-gray-600', view !== 'list');
+    }
     
     displayUploadedFiles();
 }
 
 // Filter Files
 function filterFiles() {
-    currentFilter = document.getElementById('fileTypeFilter').value;
+    const filterEl = document.getElementById('fileTypeFilter');
+    if(filterEl) {
+       currentFilter = filterEl.value;
+    }
     displayUploadedFiles();
 }
 
 // Sort Files
 function sortFiles() {
-    currentSort = document.getElementById('fileSortOrder').value;
+    const sortEl = document.getElementById('fileSortOrder');
+    if (sortEl) {
+       currentSort = sortEl.value;
+    }
     displayUploadedFiles();
 }
 
 // Reset File Filters
 function resetFileFilters() {
-    document.getElementById('fileTypeFilter').value = '';
-    document.getElementById('fileSortOrder').value = 'newest';
+    const filterEl = document.getElementById('fileTypeFilter');
+    if(filterEl) filterEl.value = '';
+    
+    const sortEl = document.getElementById('fileSortOrder');
+    if(sortEl) sortEl.value = 'newest';
+
     currentFilter = '';
     currentSort = 'newest';
     displayUploadedFiles();
@@ -440,13 +466,17 @@ function resetFileFilters() {
 
 // Upload from URL
 function uploadFromUrl() {
-    document.getElementById('urlUploadModal').classList.remove('hidden');
+    const modal = document.getElementById('urlUploadModal')
+    if(modal) modal.classList.remove('hidden');
 }
 
 // Close URL Upload Modal
 function closeUrlUploadModal() {
-    document.getElementById('urlUploadModal').classList.add('hidden');
-    document.getElementById('urlUploadForm').reset();
+    const modal = document.getElementById('urlUploadModal')
+    if(modal) modal.classList.add('hidden');
+
+    const form = document.getElementById('urlUploadForm');
+    if(form) form.reset();
 }
 
 
@@ -457,15 +487,22 @@ function updateFileStatistics() {
     const uploading = uploadedFiles.filter(f => f.status === 'uploading').length;
     const completed = uploadedFiles.filter(f => f.status === 'completed').length;
     
-    document.getElementById('totalFilesCount').textContent = totalFiles;
-    document.getElementById('totalSizeCount').textContent = formatFileSize(totalSize);
-    document.getElementById('uploadingCount').textContent = uploading;
-    document.getElementById('completedCount').textContent = completed;
+    const totalFilesCountEl = document.getElementById('totalFilesCount');
+    if(totalFilesCountEl) totalFilesCountEl.textContent = totalFiles;
+    
+    const totalSizeCountEl = document.getElementById('totalSizeCount');
+    if(totalSizeCountEl) totalSizeCountEl.textContent = formatFileSize(totalSize);
+
+    const uploadingCountEl = document.getElementById('uploadingCount');
+    if(uploadingCountEl) uploadingCountEl.textContent = uploading;
+    
+    const completedCountEl = document.getElementById('completedCount');
+    if(completedCountEl) completedCountEl.textContent = completed;
     
     // Show/hide no files placeholder
     const placeholder = document.getElementById('noFilesPlaceholder');
     if (placeholder) {
-        placeholder.style.display = uploadedFiles.length > 0 ? 'none' : 'block';
+        placeholder.style.display = (totalFiles === 0) ? 'block' : 'none';
     }
 }
 
@@ -475,25 +512,25 @@ function displayUploadedFiles() {
     if (!container) return;
     
     // Filter files
-    let filesToDisplay = [...uploadedFiles];
+    let filteredFiles = uploadedFiles;
     
     if (currentFilter) {
-        filesToDisplay = filesToDisplay.filter(file => {
-            const fileTypeMap = {
-                csv: ['csv'],
-                xlsx: ['xlsx'],
-                pdf: ['pdf'],
-                image: ['jpg', 'jpeg', 'png'],
-                doc: ['doc', 'docx'],
-                gis: ['shp', 'gdb', 'kml', 'kmz'],
-                presentation: ['ppt', 'pptx']
-            };
-            return fileTypeMap[currentFilter]?.includes(file.extension);
+        filteredFiles = uploadedFiles.filter(file => {
+            switch (currentFilter) {
+                case 'csv': return file.extension === 'csv';
+                case 'xlsx': return file.extension === 'xlsx';
+                case 'pdf': return file.extension === 'pdf';
+                case 'image': return ['jpg', 'jpeg', 'png'].includes(file.extension);
+                case 'doc': return ['doc', 'docx'].includes(file.extension);
+                case 'gis': return ['shp', 'gdb', 'kml', 'kmz'].includes(file.extension);
+                case 'presentation': return ['ppt', 'pptx'].includes(file.extension);
+                default: return true;
+            }
         });
     }
     
     // Sort files
-    filesToDisplay.sort((a, b) => {
+    filteredFiles.sort((a, b) => {
         switch (currentSort) {
             case 'newest': return new Date(b.uploadDate) - new Date(a.uploadDate);
             case 'oldest': return new Date(a.uploadDate) - new Date(b.uploadDate);
@@ -506,8 +543,8 @@ function displayUploadedFiles() {
     
     updateFileStatistics();
     
-    if (filesToDisplay.length === 0) {
-        const placeholderText = currentFilter ? `
+    if (filteredFiles.length === 0) {
+        container.innerHTML = currentFilter ? `
             <div class="col-span-full text-center py-12">
                 <i class="fas fa-search text-6xl text-gray-600 mb-4"></i>
                 <p class="text-gray-400 text-lg">No files found matching the current filter</p>
@@ -516,65 +553,76 @@ function displayUploadedFiles() {
                 </button>
             </div>
         ` : '';
-        container.innerHTML = placeholderText;
-        document.getElementById('noFilesPlaceholder').style.display = uploadedFiles.length === 0 ? 'block' : 'none';
+        const placeholder = document.getElementById('noFilesPlaceholder');
+        if (placeholder) {
+           placeholder.style.display = uploadedFiles.length === 0 ? 'block' : 'none';
+        }
         return;
     }
-     document.getElementById('noFilesPlaceholder').style.display = 'none';
+     const placeholder = document.getElementById('noFilesPlaceholder');
+        if (placeholder) {
+           placeholder.style.display = 'none';
+        }
     
     // Set grid classes based on view
     container.className = currentFileView === 'grid' ? 
-        'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 
-        'space-y-4';
+        'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 
+        'space-y-3';
     
     let html = '';
     
-    filesToDisplay.forEach(file => {
+    filteredFiles.forEach(file => {
         const iconClass = getFileIcon(file.extension);
+        const statusColor = file.status === 'completed' ? 'green' : 
+                           file.status === 'error' ? 'red' : 'yellow';
         
         if (currentFileView === 'grid') {
             html += `
-                <div class="location-card p-4 flex flex-col justify-between" id="file-${file.id}">
-                    <div>
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="w-12 h-12 bg-gray-600 rounded-lg flex items-center justify-center">
-                                <i class="${iconClass} text-2xl text-gray-300"></i>
-                            </div>
+                <div class="location-card p-4" id="file-${file.id}">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 bg-gray-600 rounded-lg flex items-center justify-center">
+                            <i class="${iconClass} text-2xl text-gray-300"></i>
                         </div>
-                        
-                        <div class="mb-3">
-                            <h4 class="text-white font-semibold text-sm truncate font-orbitron" title="${file.name}">${file.name}</h4>
-                            <p class="text-gray-400 text-xs mt-1">
-                                ${formatFileSize(file.size)} • ${file.extension.toUpperCase()}
-                            </p>
-                            <p class="text-gray-500 text-xs">
-                                ${new Date(file.uploadDate).toLocaleDateString()} by ${file.user}
-                            </p>
+                         <div class="flex space-x-2">
+                            <button onclick="previewFile('${file.id}')" class="text-green-400 hover:text-green-300" title="View/Preview">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                             <button onclick="downloadFile('${file.id}')" class="text-blue-400 hover:text-blue-300" title="Download">
+                                <i class="fas fa-download"></i>
+                            </button>
+                             <button onclick="removeFile('${file.id}')" class="text-red-400 hover:text-red-300" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </div>
                     
-                    <div>
-                         ${file.status === 'uploading' ? `
-                            <div class="mb-3">
-                                <div class="bg-gray-600 rounded-full h-2 mb-1">
-                                    <div class="bg-gradient-to-r from-yellow-500 to-orange-500 h-2 rounded-full transition-all" 
-                                         style="width: ${file.progress}%"></div>
-                                </div>
-                                <p class="text-xs text-center text-yellow-400">Uploading: ${Math.round(file.progress)}%</p>
-                            </div>
-                        ` : `
-                            <div class="flex items-center justify-between text-xs mb-4">
-                                <span class="px-2 py-1 rounded-full text-white font-bold ${
-                                    file.status === 'completed' ? 'bg-green-500' : 'bg-red-500'
-                                }">${file.status}</span>
-                            </div>
-                            <div class="flex space-x-2">
-                                <button onclick="previewFile('${file.id}')" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg text-xs font-semibold transition-all"><i class="fas fa-eye mr-1"></i>View</button>
-                                <button onclick="downloadFile('${file.id}')" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-lg text-xs font-semibold transition-all"><i class="fas fa-download mr-1"></i>Download</button>
-                                <button onclick="removeFile('${file.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-all" title="Delete"><i class="fas fa-trash"></i></button>
-                            </div>
-                        `}
+                    <div class="mb-3">
+                        <h4 class="text-white font-semibold text-sm truncate font-orbitron" title="${file.name}">${file.name}</h4>
+                        <p class="text-gray-400 text-xs mt-1">
+                            ${formatFileSize(file.size)} • ${file.extension.toUpperCase()}
+                        </p>
+                        <p class="text-gray-500 text-xs">
+                            ${new Date(file.uploadDate).toLocaleDateString()}
+                        </p>
                     </div>
+                    
+                    ${file.status === 'uploading' ? `
+                        <div class="mb-3">
+                            <div class="bg-gray-600 rounded-full h-2 mb-1">
+                                <div class="bg-gradient-to-r from-yellow-500 to-orange-500 h-2 rounded-full transition-all" 
+                                     style="width: ${file.progress}%"></div>
+                            </div>
+                            <p class="text-xs text-gray-400 text-center">${Math.round(file.progress)}%</p>
+                        </div>
+                    ` : `
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="px-2 py-1 rounded text-white ${
+                                file.status === 'completed' ? 'bg-green-500' : 
+                                file.status === 'error' ? 'bg-red-500' : 'bg-yellow-500'
+                            }">${file.status}</span>
+                            <span class="text-gray-500">${file.user}</span>
+                        </div>
+                    `}
                 </div>
             `;
         } else {
@@ -582,15 +630,15 @@ function displayUploadedFiles() {
             html += `
                 <div class="location-card p-4" id="file-${file.id}">
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-4 flex-1 min-w-0">
-                            <div class="w-10 h-10 bg-gray-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <div class="flex items-center space-x-4 flex-1">
+                            <div class="w-10 h-10 bg-gray-600 rounded-lg flex items-center justify-center">
                                 <i class="${iconClass} text-xl text-gray-300"></i>
                             </div>
                             <div class="flex-1 min-w-0">
                                 <h4 class="text-white font-semibold truncate font-orbitron">${file.name}</h4>
                                 <p class="text-gray-400 text-sm">
                                     ${formatFileSize(file.size)} • ${file.extension.toUpperCase()} • 
-                                    ${new Date(file.uploadDate).toLocaleDateString()} • ${file.user}
+                                    ${new Date(file.uploadDate).toLocaleString()} • ${file.user}
                                 </p>
                             </div>
                         </div>
@@ -605,15 +653,22 @@ function displayUploadedFiles() {
                                     <p class="text-xs text-gray-400 mt-1">${Math.round(file.progress)}%</p>
                                 </div>
                             ` : `
-                                <span class="px-3 py-1 rounded-full text-white text-sm font-bold ${
-                                    file.status === 'completed' ? 'bg-green-500' : 'bg-red-500'
+                                <span class="px-3 py-1 rounded text-white text-sm ${
+                                    file.status === 'completed' ? 'bg-green-500' : 
+                                    file.status === 'error' ? 'bg-red-500' : 'bg-yellow-500'
                                 }">${file.status}</span>
                             `}
                             
-                             <div class="flex space-x-2">
-                                <button onclick="previewFile('${file.id}')" class="text-blue-400 hover:text-blue-300" title="Preview"><i class="fas fa-eye text-lg"></i></button>
-                                <button onclick="downloadFile('${file.id}')" class="text-green-400 hover:text-green-300" title="Download"><i class="fas fa-download text-lg"></i></button>
-                                <button onclick="removeFile('${file.id}')" class="text-red-400 hover:text-red-300" title="Delete"><i class="fas fa-trash text-lg"></i></button>
+                            <div class="flex space-x-2">
+                                <button onclick="previewFile('${file.id}')" class="text-green-400 hover:text-green-300" title="View/Preview">
+                                    <i class="fas fa-eye text-lg"></i>
+                                </button>
+                                <button onclick="downloadFile('${file.id}')" class="text-blue-400 hover:text-blue-300" title="Download">
+                                    <i class="fas fa-download text-lg"></i>
+                                </button>
+                                <button onclick="removeFile('${file.id}')" class="text-red-400 hover:text-red-300" title="Delete">
+                                    <i class="fas fa-trash text-lg"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -715,7 +770,7 @@ function showFilePreviewModal(file) {
     const previewContent = generatePreviewContent(file);
     
     modal.innerHTML = `
-        <div class="glow-modal max-w-4xl w-full max-h-full overflow-auto relative">
+        <div class="glow-container max-w-4xl w-full max-h-full overflow-auto relative">
             <!-- Modal Header -->
             <div class="flex justify-between items-center p-6 border-b border-gray-700">
                 <div class="flex items-center space-x-4">
@@ -775,29 +830,45 @@ function generatePreviewContent(file) {
     const extension = file.extension.toLowerCase();
     
     // Image preview
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension) && file.originalFile) {
-        const url = URL.createObjectURL(file.originalFile);
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
+         if (file.originalFile) {
+            const url = URL.createObjectURL(file.originalFile);
+            return `<img src="${url}" class="max-w-full max-h-[60vh] mx-auto rounded-lg" onload="URL.revokeObjectURL(this.src)">`;
+        }
         return `
             <div class="text-center">
-                 <img src="${url}" alt="Preview of ${file.name}" class="max-w-full max-h-[60vh] mx-auto rounded-lg" onload="URL.revokeObjectURL(this.src)">
+                <div class="bg-gray-800 rounded-lg p-8 mb-4">
+                    <i class="fas fa-image text-8xl text-gray-500 mb-4"></i>
+                    <p class="text-gray-400">Image Preview</p>
+                    <p class="text-sm text-gray-500 mt-2">Click download to view the actual image</p>
+                </div>
             </div>
         `;
     }
     
     // PDF preview
     if (extension === 'pdf') {
-         const url = file.originalFile ? URL.createObjectURL(file.originalFile) : '';
+         if (file.originalFile) {
+             const url = URL.createObjectURL(file.originalFile);
+             return `<iframe src="${url}" class="w-full h-[70vh]" frameborder="0"></iframe>`;
+         }
         return `
             <div class="text-center">
-                 ${file.originalFile ? `
-                    <iframe src="${url}" class="w-full h-[70vh] rounded-lg border border-gray-600" title="PDF Preview"></iframe>
-                 ` : `
-                    <div class="bg-gray-800 rounded-lg p-8 mb-4">
-                        <i class="fas fa-file-pdf text-8xl text-red-400 mb-4"></i>
-                        <h4 class="text-white font-semibold mb-2">PDF Document</h4>
-                        <p class="text-gray-400">Live preview not available for URL uploads. Please download to view.</p>
+                <div class="bg-gray-800 rounded-lg p-8 mb-4">
+                    <i class="fas fa-file-pdf text-8xl text-red-400 mb-4"></i>
+                    <h4 class="text-white font-semibold mb-2">PDF Document</h4>
+                    <p class="text-gray-400">PDF files can be downloaded and viewed with a PDF reader</p>
+                    <div class="mt-6 grid grid-cols-2 gap-4 text-sm">
+                        <div class="bg-gray-700 p-4 rounded">
+                            <div class="text-gray-400">File Type</div>
+                            <div class="text-white font-semibold">PDF Document</div>
+                        </div>
+                        <div class="bg-gray-700 p-4 rounded">
+                            <div class="text-gray-400">Size</div>
+                            <div class="text-white font-semibold">${formatFileSize(file.size)}</div>
+                        </div>
                     </div>
-                 `}
+                </div>
             </div>
         `;
     }
@@ -900,14 +971,37 @@ function closeFilePreviewModal() {
 
 // Save files to localStorage
 function saveFilesToStorage() {
-    try {
-      const filesToSave = uploadedFiles.map(({originalFile, ...rest}) => rest);
-      localStorage.setItem('gis_all_files', JSON.stringify(filesToSave));
-    } catch(e) {
-      console.error("Could not save files to storage", e);
+    // Storing the originalFile (File object) directly in localStorage is not possible.
+    // We'll store metadata and reconstruct if needed.
+    const storableFiles = uploadedFiles.map(f => {
+        const { originalFile, ...meta } = f;
+        return meta;
+    });
+    localStorage.setItem('gis_all_files', JSON.stringify(storableFiles));
+}
+
+// Load files from localStorage
+function loadFilesFromStorage() {
+    const storedFiles = localStorage.getItem('gis_all_files');
+    if(storedFiles) {
+        // We lose the `originalFile` here, so re-upload would be needed for downloads.
+        uploadedFiles = JSON.parse(storedFiles);
     }
 }
 
+// Enhanced Remove File
+function removeFile(fileId) {
+    if (confirm('Are you sure you want to delete this file?')) {
+        uploadedFiles = uploadedFiles.filter(f => f.id !== fileId);
+        saveFilesToStorage();
+        updateFileStatistics();
+        displayUploadedFiles();
+        showUploadNotification('File removed successfully', 'success');
+    }
+};
+
+// Add this to your main dashboard script initialization if needed
+document.addEventListener('DOMContentLoaded', initializeUploadArea);
 
 // Export functions to global window object
 window.initializeUploadArea = initializeUploadArea;
@@ -926,4 +1020,4 @@ window.previewFile = previewFile;
 window.createFileDownload = createFileDownload;
 window.showFilePreviewModal = showFilePreviewModal;
 window.closeFilePreviewModal = closeFilePreviewModal;
-```
+window.handleFileSelect = handleFileSelect;

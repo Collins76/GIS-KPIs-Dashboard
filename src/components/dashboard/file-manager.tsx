@@ -1,10 +1,10 @@
 
 "use client"
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileUp, List, Trash2, RotateCcw, LayoutGrid, Search, Undo, FolderOpen, Save, Link } from 'lucide-react';
+import { FileUp, List, Trash2, RotateCcw, LayoutGrid, Undo, FolderOpen, Link } from 'lucide-react';
 
 export default function FileManager() {
   
@@ -141,10 +141,10 @@ export default function FileManager() {
       <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold text-white font-orbitron">Uploaded Files</h3>
           <div className="flex space-x-2">
-              <Button onClick={() => window.toggleFileView?.('grid')} id="gridViewBtn" variant="outline" size="icon">
+              <Button onClick={() => window.toggleFileView?.('grid')} id="gridViewBtn" className="bg-yellow-500 text-white" variant="outline" size="icon">
                   <LayoutGrid className="h-5 w-5" />
               </Button>
-              <Button onClick={() => window.toggleFileView?.('list')} id="listViewBtn" variant="outline" size="icon">
+              <Button onClick={() => window.toggleFileView?.('list')} id="listViewBtn" className="bg-gray-600 text-white" variant="outline" size="icon">
                   <List className="h-5 w-5" />
               </Button>
           </div>
@@ -225,5 +225,9 @@ declare global {
         downloadFile: (fileId: string) => void;
         previewFile: (fileId: string) => void;
         initializeUploadArea: () => void;
+        handleFileSelect: (e: Event) => void;
+        createFileDownload: (originalFile: File, fileName: string) => boolean;
+        showFilePreviewModal: (file: any) => void;
+        closeFilePreviewModal: () => void;
     }
 }
