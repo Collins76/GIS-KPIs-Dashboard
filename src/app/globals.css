@@ -1352,7 +1352,7 @@ input[type="file"] {
     font-family: 'Space Grotesk', sans-serif;
     animation: textGlowGreen 3s ease-in-out infinite;
     display: inline-block;
-    font-size: 1.1rem; /* Made text a bit bigger */
+    font-size: 1.25rem; /* Made text a bit bigger */
 }
 
 @keyframes textGlowGreen {
@@ -1368,4 +1368,9 @@ input[type="file"] {
             0 0 24px rgba(16, 185, 129, 0.5),
             0 0 36px rgba(16, 185, 129, 0.3);
     }
+}
+
+/* Spinning, Glowing Refresh Button */
+.refresh-button-animated {
+    animation: spin 2s linear infinite, pulseGlow 1.5s ease-in-out infinite;
 }

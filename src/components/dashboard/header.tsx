@@ -25,8 +25,8 @@ export default function Header() {
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20 animate-sweep"></div>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white font-orbitron animate-neon-glow">Ikeja Electric Plc</h1>
-              <p className="text-xs text-yellow-400 font-rajdhani tracking-wide">⚡ GIS KPI Dashboard ⚡</p>
+              <h1 className="text-3xl font-bold text-white font-orbitron animate-neon-glow">Ikeja Electric Plc</h1>
+              <p className="text-sm text-green-400 font-rajdhani tracking-wide glow-text-green">⚡ GIS KPI Dashboard ⚡</p>
             </div>
           </div>
 
