@@ -222,6 +222,7 @@ declare global {
         uploadFromUrl: () => void;
         closeUrlUploadModal: () => void;
         removeFile: (fileId: string) => void;
+        editFile: (fileId: string) => void;
         downloadFile: (fileId: string) => void;
         previewFile: (fileId: string) => void;
         initializeUploadArea: () => void;
@@ -231,3 +232,5 @@ declare global {
         closeFilePreviewModal: () => void;
     }
 }
+
+  
