@@ -138,7 +138,7 @@ export default function LocationMap() {
     return (
     <div className="space-y-8">
         <div className="flex items-center space-x-3">
-             <Globe className="w-8 h-8 text-yellow-400 animate-pulse-glow"/>
+             <Globe className="w-8 h-8 text-yellow-400 animate-spin"/>
              <h2 className="text-3xl font-bold text-white font-orbitron animate-neon-glow">
                 Location Management
             </h2>
