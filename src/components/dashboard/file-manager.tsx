@@ -4,7 +4,7 @@
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileUp, List, Trash2, RotateCcw, LayoutGrid, Undo, FolderOpen, Link } from 'lucide-react';
+import { FileUp, List, Trash2, RotateCcw, LayoutGrid, Undo, FolderOpen, Link, Edit, Pencil } from 'lucide-react';
 
 export default function FileManager() {
   
@@ -20,10 +20,17 @@ export default function FileManager() {
           <h2 className="text-3xl font-bold text-white font-orbitron animate-neon-glow">
               📁 Advanced File Management 📁
           </h2>
-          <div className="flex space-x-4">
+          <div className="flex items-center space-x-2">
               <Button onClick={() => window.showAllFiles?.()} className="glow-button">
                   <List className="mr-2 h-4 w-4" />View All Files
               </Button>
+              <Button onClick={() => window.editSelectedFile?.()} variant="outline" className="text-yellow-400 border-yellow-400 hover:bg-yellow-400 hover:text-black">
+                  <Pencil className="mr-2 h-4 w-4" />Edit
+              </Button>
+               <Button onClick={() => window.deleteSelectedFile?.()} variant="outline" className="text-red-400 border-red-400 hover:bg-red-400 hover:text-white">
+                  <Trash2 className="mr-2 h-4 w-4" />Delete
+              </Button>
+              <div className="border-l h-8 border-gray-600 mx-2"></div>
               <Button onClick={() => window.clearAllFiles?.()} variant="destructive">
                   <Trash2 className="mr-2 h-4 w-4" />Clear All
               </Button>
@@ -231,5 +238,7 @@ declare global {
         showFilePreviewModal: (file: any) => void;
         closeFilePreviewModal: () => void;
         triggerBrowseFiles: () => void;
+        editSelectedFile: () => void;
+        deleteSelectedFile: () => void;
     }
 }
