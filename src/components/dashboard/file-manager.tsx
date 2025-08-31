@@ -176,31 +176,23 @@ export default function FileManager() {
       </div>
 
       <div id="urlUploadModal" className="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50 hidden">
-          <div className="glow-modal w-full max-w-lg p-8 m-4">
+          <div className="glow-modal w-full max-w-md p-6 m-4">
               <h3 className="text-2xl font-bold text-white font-orbitron mb-6 text-center animate-neon-glow">Upload from URL</h3>
-              <form id="urlUploadForm" className="space-y-6">
+              <form id="urlUploadForm" className="space-y-4">
                   <div>
                       <Input 
                           type="url" 
                           id="fileUrl"
-                          placeholder="https://drive.google.com/file/d/..."
-                          className="glow-input w-full text-center text-lg h-12"
+                          placeholder="https://example.com/file.pdf"
+                          className="glow-input w-full text-lg h-12"
                           required
                       />
                   </div>
-                   <div>
-                        <Input
-                            type="text"
-                            id="fileName"
-                            placeholder="Optional: Enter file name"
-                            className="glow-input w-full text-center text-lg h-12"
-                        />
-                    </div>
-                  <div className="flex space-x-4 pt-4">
+                  <div className="flex space-x-4 pt-2">
                       <Button type="button" onClick={() => callWindowFunc('closeUrlUploadModal')} className="flex-1 py-3 text-lg" variant="outline">
                           Cancel
                       </Button>
-                      <Button type="submit" className="glow-button flex-1 py-3 text-lg">
+                      <Button type="submit" className="glow-button flex-1 py-3 text-lg bg-blue-600 hover:bg-blue-700">
                           Upload
                       </Button>
                   </div>
