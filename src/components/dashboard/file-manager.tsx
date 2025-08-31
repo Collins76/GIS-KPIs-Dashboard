@@ -124,7 +124,7 @@ export default function FileManager() {
                   
                   <input type="file" id="fileInput" className="hidden" multiple accept=".csv,.xlsx,.pdf,.jpg,.jpeg,.png,.docx,.doc,.shp,.gdb,.ppt,.pptx,.kmz,.kml" />
                   <div className="flex justify-center space-x-4">
-                      <Button onClick={() => (document.getElementById('fileInput') as HTMLInputElement)?.click()} className="glow-button text-lg px-8 py-3">
+                      <Button onClick={() => window.triggerBrowseFiles?.()} className="glow-button text-lg px-8 py-3">
                           <FolderOpen className="mr-2 h-5 w-5" />Browse Files
                       </Button>
                       <Button onClick={() => window.uploadFromUrl?.()} variant="secondary" className="px-8 py-3 text-lg">
@@ -158,7 +158,7 @@ export default function FileManager() {
       <div id="noFilesPlaceholder" className="text-center py-12 hidden">
           <FolderOpen className="mx-auto h-16 w-16 text-gray-600 mb-4" />
           <p className="text-gray-400 text-lg mb-4">No files uploaded yet</p>
-          <Button onClick={() => (document.getElementById('fileInput') as HTMLInputElement)?.click()} className="glow-button">
+          <Button onClick={() => window.triggerBrowseFiles?.()} className="glow-button">
               <FileUp className="mr-2 h-4 w-4" />Upload Your First File
           </Button>
       </div>
@@ -230,7 +230,6 @@ declare global {
         createFileDownload: (originalFile: File, fileName: string) => boolean;
         showFilePreviewModal: (file: any) => void;
         closeFilePreviewModal: () => void;
+        triggerBrowseFiles: () => void;
     }
 }
-
-  
