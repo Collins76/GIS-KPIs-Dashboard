@@ -36,12 +36,12 @@ export default function AiInsights({ kpis, role }: AiInsightsProps) {
   };
 
   return (
-    <Card className="card-glow flex flex-col flex-grow">
+    <Card className="card-glow flex flex-col flex-grow h-full">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-glow">AI-Powered Insights</CardTitle>
         <Sparkles className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
-      <CardContent className="flex-grow">
+      <CardContent className="flex-grow flex items-center justify-center">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -52,11 +52,11 @@ export default function AiInsights({ kpis, role }: AiInsightsProps) {
             <p className="text-sm text-muted-foreground">{analysis}</p>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground h-full flex items-center justify-center text-center">Click the button to generate an analysis of your current KPI data for the selected role.</p>
+          <p className="text-sm text-muted-foreground text-center">Click the button to generate an analysis of your current KPI data for the selected role.</p>
         )}
       </CardContent>
       <CardFooter>
-        <Button onClick={handleAnalyze} disabled={loading || kpis.length === 0} className="w-full">
+        <Button onClick={handleAnalyze} disabled={loading || kpis.length === 0} className="w-full glow-button">
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
