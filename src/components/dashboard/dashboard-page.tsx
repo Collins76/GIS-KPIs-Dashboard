@@ -13,7 +13,6 @@ import {
   Users,
   TrendingUp,
   ListChecks,
-  CloudSun,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Header from './header';
@@ -34,7 +33,6 @@ const TABS = [
     { id: 'trends', label: 'Trends & Comparison', icon: TrendingUp },
     { id: 'tracking', label: 'KPIs Status & Tracking', icon: ListChecks },
     { id: 'map', label: 'Location Map', icon: Map },
-    { id: 'weather', label: 'Weather', icon: CloudSun },
     { id: 'upload', label: 'Data Upload', icon: FileIcon },
 ];
 
@@ -53,6 +51,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const initCharts = () => {
+      // Ensure Chart is available before initializing
+      if (typeof window.Chart === 'undefined') {
+        setTimeout(initCharts, 100);
+        return;
+      }
+
       if (typeof window.initializeCharts !== 'function' || typeof window.initializeComparisonChart !== 'function') {
         setTimeout(initCharts, 100); // Retry after a short delay
         return;
@@ -174,6 +178,9 @@ export default function DashboardPage() {
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                         <KpiSummaryCards kpis={filteredKpis} />
                     </div>
+                    <div className="my-8">
+                        <WeatherIntelligence />
+                    </div>
                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                         <div className="glow-container p-6">
                             <div className="flex justify-between items-center mb-4">
@@ -260,7 +267,6 @@ export default function DashboardPage() {
                 />
             )}
             {activeTab === 'map' && <LocationMap />}
-            {activeTab === 'weather' && <WeatherIntelligence />}
             {activeTab === 'upload' && <FileManager />}
         </div>
 
