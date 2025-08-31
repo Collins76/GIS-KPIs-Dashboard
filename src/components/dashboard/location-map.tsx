@@ -148,12 +148,7 @@ export default function LocationMap() {
                     newUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=mapnik&marker=${lat},${lng}`;
                     break;
                 case 'satellite':
-                    // Using a different provider that has satellite view embeddable via query params
-                     newUrl = `https://www.google.com/maps/embed/v1/view?key=YOUR_API_KEY&center=${lat},${lng}&zoom=15&maptype=satellite`;
-                     // Note: Google Maps embed requires an API key. For this demo, we'll use a placeholder URL that might not work.
-                     // A better approach for a real app is a library like Leaflet with different tile layers.
-                     // Since I cannot add libraries, I will show a message about the API key.
-                     toast({ variant: 'destructive', title: "API Key Needed", description: "Displaying live Google Satellite view requires an API key." });
+                     toast({ variant: 'default', title: "Satellite View", description: "This is a sample satellite-style map. For live Google Satellite imagery, an API key is required." });
                      newUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=cyclosm&marker=${lat},${lng}`;
                     break;
                 case 'terrain':
