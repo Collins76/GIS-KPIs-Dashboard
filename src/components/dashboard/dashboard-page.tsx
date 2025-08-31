@@ -208,7 +208,7 @@ export default function DashboardPage() {
 
                         <div className="glow-container p-6">
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-white font-bold text-lg font-orbitron">📈 Monthly Progress Trend</h3>
+                                <h3 className="text-white font-bold text-lg font-orbitron">📈 Progress Trend</h3>
                                 <div className="flex space-x-2">
                                     <button onClick={() => safeChangeTrendView('daily')} className="text-yellow-400 hover:text-yellow-300 transition-transform transform hover:scale-110">
                                         <CalendarDays className="h-5 w-5 animate-pulse-glow" />
