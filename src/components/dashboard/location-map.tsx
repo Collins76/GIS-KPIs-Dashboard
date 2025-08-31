@@ -19,7 +19,7 @@ const getKpisForBusinessUnit = (buId: string, allKpis: Kpi[]): Kpi[] => {
     return allKpis.filter((_, index) => (index % initialBusinessUnits.length) + 1 === buIndex);
 };
 
-const LocationCard = ({ unit, onEditAddress, onViewMap }: { unit: BusinessUnit, onEditAddress: (unit: BusinessUnit, address: string) => void, onViewMap: (unit: BusinessUnit) => void }) => {
+const LocationCard = ({ unit, onEditAddress, onViewMap, onResetAddress }: { unit: BusinessUnit, onEditAddress: (unit: BusinessUnit, address: string) => void, onViewMap: (unit: BusinessUnit) => void, onResetAddress: (unitId: string) => void }) => {
     const unitKpis = getKpisForBusinessUnit(unit.id, kpis);
     const completedKpis = unitKpis.filter(k => k.status === 'Completed').length;
     const inProgressKpis = unitKpis.filter(k => k.status === 'On Track').length;
@@ -40,6 +40,9 @@ const LocationCard = ({ unit, onEditAddress, onViewMap }: { unit: BusinessUnit, 
             <div className="location-card">
                 <div className="flex justify-between items-center mb-4">
                      <h3 className="text-white font-bold font-orbitron text-xl">{unit.name}</h3>
+                      <Button onClick={() => onResetAddress(unit.id)} variant="ghost" size="icon" className="text-gray-400 hover:text-white">
+                        <RefreshCw className="w-4 h-4"/>
+                    </Button>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 text-center text-xs mb-4">
@@ -112,6 +115,7 @@ export default function LocationMap() {
         if (storedUnits) {
             setBusinessUnits(JSON.parse(storedUnits));
         } else {
+            // On first load, clear addresses and set default coordinates to 0
             const clearedUnits = initialBusinessUnits.map(u => ({...u, address: '', coordinates: {lat: 0, lng: 0}}));
             setBusinessUnits(clearedUnits);
             localStorage.setItem('gis-business-units', JSON.stringify(clearedUnits));
@@ -133,6 +137,18 @@ export default function LocationMap() {
             description: `Coordinates for ${unit.name} have been generated.`,
         });
     };
+
+    const handleResetAddress = (unitId: string) => {
+        const updatedUnits = businessUnits.map(bu => 
+            bu.id === unitId ? { ...bu, address: '', coordinates: { lat: 0, lng: 0 } } : bu
+        );
+        setBusinessUnits(updatedUnits);
+        localStorage.setItem('gis-business-units', JSON.stringify(updatedUnits));
+        toast({
+            title: "Address Reset",
+            description: `Address for the selected unit has been cleared.`,
+        });
+    };
     
     const handleViewMap = (unit: BusinessUnit) => {
         setSelectedUnit(unit);
@@ -149,6 +165,7 @@ export default function LocationMap() {
                     break;
                 case 'satellite':
                      toast({ variant: 'default', title: "Satellite View", description: "This is a sample satellite-style map. For live Google Satellite imagery, an API key is required." });
+                     // Using a different OSM layer as a stand-in for satellite
                      newUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=cyclosm&marker=${lat},${lng}`;
                     break;
                 case 'terrain':
@@ -176,6 +193,7 @@ export default function LocationMap() {
                     unit={unit} 
                     onEditAddress={handleEditAddress}
                     onViewMap={handleViewMap}
+                    onResetAddress={handleResetAddress}
                 />
             ))}
         </div>
