@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -20,13 +20,70 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { kpis as allKpis, roles } from '@/lib/data';
-import type { Role, KpiStatus } from '@/lib/types';
+import type { Role, KpiStatus, Kpi } from '@/lib/types';
+import { Input } from '@/components/ui/input';
 
 export default function KpiTable() {
+  const [kpiData, setKpiData] = useState<Kpi[]>([]);
   const [selectedRole, setSelectedRole] = useState<Role | 'All'>('All');
   const [selectedStatus, setSelectedStatus] = useState<KpiStatus | 'All'>('All');
+  const [editingKpiId, setEditingKpiId] = useState<string | null>(null);
+  const [editingValue, setEditingValue] = useState<string>('');
 
-  const filteredKpis = allKpis.filter(kpi => 
+  useEffect(() => {
+    setKpiData(
+      allKpis.map(kpi => ({
+        ...kpi,
+        progress: 0,
+        status: 'Off Track',
+      }))
+    );
+  }, []);
+
+  const handleProgressChange = (kpiId: string, newProgress: number) => {
+    setKpiData(
+      kpiData.map(kpi => {
+        if (kpi.id === kpiId) {
+          let newStatus: KpiStatus;
+          if (newProgress >= kpi.progress) {
+             if (newProgress > 75) newStatus = 'On Track';
+             else if (newProgress > 40) newStatus = 'At Risk';
+             else newStatus = 'Off Track';
+          } else {
+             newStatus = 'Off Track';
+          }
+          
+          if (newProgress > 75) newStatus = 'On Track';
+          else if (newProgress > 40) newStatus = 'At Risk';
+          else newStatus = 'Off Track';
+
+          return { ...kpi, progress: newProgress, status: newStatus };
+        }
+        return kpi;
+      })
+    );
+  };
+  
+  const handleEdit = (kpi: Kpi) => {
+    setEditingKpiId(kpi.id);
+    setEditingValue(kpi.progress.toString());
+  };
+
+  const handleBlur = (kpiId: string) => {
+    const newProgress = parseInt(editingValue, 10);
+    if (!isNaN(newProgress) && newProgress >= 0 && newProgress <= 100) {
+      handleProgressChange(kpiId, newProgress);
+    }
+    setEditingKpiId(null);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>, kpiId: string) => {
+    if (event.key === 'Enter') {
+      handleBlur(kpiId);
+    }
+  };
+
+  const filteredKpis = kpiData.filter(kpi => 
     (selectedRole === 'All' || kpi.role === selectedRole) &&
     (selectedStatus === 'All' || kpi.status === selectedStatus)
   );
@@ -96,7 +153,19 @@ export default function KpiTable() {
                   <TableCell>
                     <div className="flex items-center gap-2">
                        <Progress value={kpi.progress} indicatorClassName={getProgressColor(kpi.progress)} className="w-[60%]" />
-                       <span>{kpi.progress}%</span>
+                       {editingKpiId === kpi.id ? (
+                          <Input
+                            type="number"
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                            onBlur={() => handleBlur(kpi.id)}
+                            onKeyDown={(e) => handleKeyDown(e, kpi.id)}
+                            className="w-16 h-8"
+                            autoFocus
+                          />
+                       ) : (
+                         <span onClick={() => handleEdit(kpi)} className="cursor-pointer">{kpi.progress}%</span>
+                       )}
                     </div>
                   </TableCell>
                   <TableCell>
