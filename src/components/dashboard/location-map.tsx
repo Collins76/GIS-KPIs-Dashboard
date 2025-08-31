@@ -21,7 +21,6 @@ const getKpisForBusinessUnit = (buId: string, allKpis: Kpi[]): Kpi[] => {
 };
 
 const LocationCard = ({ unit, kpis }: { unit: BusinessUnit, kpis: Kpi[] }) => {
-    const { toast } = useToast();
     
     const totalKpis = kpis.length;
     const completedKpis = kpis.filter(k => k.status === 'Completed').length;
@@ -97,8 +96,9 @@ const LocationCard = ({ unit, kpis }: { unit: BusinessUnit, kpis: Kpi[] }) => {
 
 
 export default function LocationMap() {
+    const { toast } = useToast();
     const totalKpis = kpis.length;
-    const avgPerformance = Math.round(kpis.reduce((acc, kpi) => acc + kpi.progress, 0) / totalKpis);
+    const avgPerformance = totalKpis > 0 ? Math.round(kpis.reduce((acc, kpi) => acc + kpi.progress, 0) / totalKpis) : 0;
 
     return (
     <div className="space-y-8">
@@ -173,5 +173,3 @@ export default function LocationMap() {
     </div>
   )
 }
-
-    
