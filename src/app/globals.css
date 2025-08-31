@@ -1,7 +1,8 @@
-/* ✨ GLOWING RADIANT BLACK THEME - GIS KPI Dashboard ✨ */
 
-/* Advanced Modern Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ✨ GLOWING RADIANT BLACK THEME - GIS KPI Dashboard ✨ */
 
 @tailwind base;
 @tailwind components;
@@ -97,7 +98,6 @@
     @apply bg-background border-border text-foreground;
   }
 }
-
 
 .font-orbitron {
     font-family: 'Orbitron', monospace;
@@ -444,8 +444,11 @@ body::before {
 
 /* Loading Animation */
 .loader {
-    border-top-color: #f59e0b;
-    -webkit-animation: spinner 1.5s linear infinite;
+    border-top-color: #f59e0b !important;
+    border: 8px solid #f3f3f3;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
     animation: spinner 1.5s linear infinite;
 }
 
@@ -668,15 +671,6 @@ body::before {
 }
 
 /* Weather Icon Animation */
-@keyframes float {
-    0%, 100% {
-        transform: translateY(0px);
-    }
-    50% {
-        transform: translateY(-10px);
-    }
-}
-
 .weather-icon {
     animation: float 3s ease-in-out infinite;
 }
@@ -969,7 +963,7 @@ body::before {
 
 .glow-input:focus {
     outline: none;
-    border-color: rgba(245, 158, 11, 0.7);
+    border-color: rgba(245, 158, 11, 0.7) !important;
     box-shadow: 0 0 25px rgba(245, 158, 11, 0.3),
                 inset 0 0 15px rgba(245, 158, 11, 0.1);
     background: linear-gradient(145deg, #111111 0%, #222222 100%);
@@ -1030,34 +1024,6 @@ body::before {
     font-weight: 600;
 }
 
-/* Firefox dropdown styling */
-.glow-input {
-    -moz-appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b'><path d='M7 10l5 5 5-5z'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-    background-size: 16px;
-    padding-right: 2.5rem;
-}
-
-/* WebKit dropdown styling */
-.glow-input::-webkit-scrollbar {
-    width: 8px;
-}
-
-.glow-input::-webkit-scrollbar-track {
-    background: #0a0a0a;
-    border-radius: 4px;
-}
-
-.glow-input::-webkit-scrollbar-thumb {
-    background: linear-gradient(45deg, #f59e0b, #fb923c);
-    border-radius: 4px;
-}
-
-.glow-input::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(45deg, #fb923c, #f59e0b);
-}
 
 /* Additional enhancements for better visibility */
 .glow-input::placeholder {
@@ -1070,20 +1036,6 @@ body::before {
     color: rgba(255, 255, 255, 0.5);
     border-color: rgba(75, 85, 99, 0.3);
     cursor: not-allowed;
-}
-
-/* Enhanced dropdown arrow styling */
-select.glow-input {
-    cursor: pointer;
-    background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b' stroke='%23f59e0b' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-    background-size: 18px;
-    padding-right: 3rem;
-}
-
-select.glow-input:hover {
-    background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fbbf24' stroke='%23fbbf24' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");
 }
 
 /* Form label enhancements */
@@ -1294,4 +1246,16 @@ input[type="file"] {
     .no-print {
         display: none;
     }
+}
+.animate-pulse-glow {
+    animation: pulseGlow 1.5s ease infinite;
+}
+.animate-float {
+    animation: float 3s ease infinite;
+}
+.animate-neon-glow {
+    animation: neonGlow 2s ease infinite;
+}
+.animate-sweep {
+    animation: sweep 3s linear infinite;
 }
