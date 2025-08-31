@@ -8,13 +8,22 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Loader, AlertTriangle, Users, Mail, User as UserIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useState, useEffect } from 'react';
 
 interface RoleBasedViewProps {
   kpis: Kpi[];
 }
 
-// Mock function to get user by role. In a real app, this would come from an API or a user management system.
-const getUserByRole = (role: Role): User => {
+// Function to get user by role.
+// In a real app, this would come from an API or a user management system.
+// For now, it creates a mock user, but we'll try to use the logged-in user's info.
+const getUserByRole = (role: Role, loggedInUser: User | null): User => {
+    // If the role matches the logged-in user's role, use their info
+    if (loggedInUser && loggedInUser.role === role) {
+        return loggedInUser;
+    }
+
+    // Fallback to generating a mock user for other roles
     const baseEmail = `${role.toLowerCase().replace(/\s+/g, '.')}@ikejaelectric.com`;
     return {
         name: role,
@@ -26,6 +35,15 @@ const getUserByRole = (role: Role): User => {
 };
 
 export default function RoleBasedView({ kpis }: RoleBasedViewProps) {
+  const [loggedInUser, setLoggedInUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('gis-user-profile');
+    if (storedUser) {
+      setLoggedInUser(JSON.parse(storedUser));
+    }
+  }, []);
+
 
   const getRoleStats = (role: Role) => {
     const roleKpis = kpis.filter(kpi => kpi.role === role);
@@ -64,7 +82,7 @@ export default function RoleBasedView({ kpis }: RoleBasedViewProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {roles.map(role => {
           const stats = getRoleStats(role);
-          const user = getUserByRole(role);
+          const user = getUserByRole(role, loggedInUser);
           return (
             <Card key={role} className="kpi-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
