@@ -1,17 +1,29 @@
 
 "use client";
 
-import type { Kpi, Role } from '@/lib/types';
+import type { Kpi, Role, User } from '@/lib/types';
 import { roles } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Loader, AlertTriangle, Users } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { CheckCircle2, Loader, AlertTriangle, Users, Mail, User as UserIcon } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface RoleBasedViewProps {
   kpis: Kpi[];
 }
+
+// Mock function to get user by role. In a real app, this would come from an API or a user management system.
+const getUserByRole = (role: Role): User => {
+    const baseEmail = `${role.toLowerCase().replace(/\s+/g, '.')}@ikejaelectric.com`;
+    return {
+        name: role,
+        email: baseEmail,
+        role: role,
+        location: 'CHQ',
+        avatar: `https://i.pravatar.cc/150?u=${baseEmail}`
+    };
+};
 
 export default function RoleBasedView({ kpis }: RoleBasedViewProps) {
 
@@ -52,13 +64,25 @@ export default function RoleBasedView({ kpis }: RoleBasedViewProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {roles.map(role => {
           const stats = getRoleStats(role);
+          const user = getUserByRole(role);
           return (
             <Card key={role} className="kpi-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                 <CardTitle className="text-lg font-bold text-white font-orbitron">{role}</CardTitle>
                 <Badge variant="secondary">{stats.totalKpis} KPIs</Badge>
               </CardHeader>
               <CardContent>
+                <div className="flex items-center space-x-4 mb-4">
+                    <Avatar className="h-12 w-12">
+                        <AvatarImage src={user.avatar} alt={user.name} />
+                        <AvatarFallback><UserIcon /></AvatarFallback>
+                    </Avatar>
+                    <div>
+                        <p className="font-semibold text-white flex items-center"><UserIcon className="w-4 h-4 mr-2 text-yellow-400"/> {user.name}</p>
+                        <p className="text-xs text-gray-400 flex items-center"><Mail className="w-4 h-4 mr-2 text-yellow-400"/> {user.email}</p>
+                    </div>
+                </div>
+
                 <div className="text-sm text-gray-400 mb-2 font-rajdhani">Overall Progress</div>
                 <div className="flex items-center gap-4">
                     <Progress value={stats.overallProgress} className="h-3" />
