@@ -122,6 +122,16 @@ export default function DashboardPage() {
             </div>
       </div>
       <Header />
+       <div className="scrolling-text-container-slow py-2">
+            <div className="animate-scroll-slow whitespace-nowrap">
+                <span className="inline-block px-4 py-1 scrolling-text-content-green">
+                    Powered by the GIS Team
+                </span>
+                <span className="inline-block px-4 py-1 scrolling-text-content-green">
+                    Powered by the GIS Team
+                </span>
+            </div>
+        </div>
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         
       <div className="filter-section mb-6">

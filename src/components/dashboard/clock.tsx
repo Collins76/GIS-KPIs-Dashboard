@@ -18,16 +18,6 @@ export default function Clock() {
   return (
     <div className="glow-container p-4">
         <div id="digitalClock" className="digital-clock text-center">{formattedTime}</div>
-        <div className="scrolling-text-container-slow mt-2">
-            <div className="animate-scroll-slow whitespace-nowrap">
-                <span className="inline-block px-4 py-1 scrolling-text-content-green">
-                    Powered by the GIS Team
-                </span>
-                <span className="inline-block px-4 py-1 scrolling-text-content-green">
-                    Powered by the GIS Team
-                </span>
-            </div>
-        </div>
         <p className="text-xs text-yellow-400 font-rajdhani tracking-widest mt-2 text-center">
             <MapPin className="mr-1 inline-block h-3 w-3" />LAGOS, NIGERIA
         </p>
