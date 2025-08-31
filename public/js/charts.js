@@ -1,294 +1,235 @@
 
-let categoryChart = null;
-let trendChart = null;
-let performanceGauge = null;
-let roleDistributionChart = null;
-let comparisonChart = null;
+// Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Make functions globally available
+    window.initializeCharts = initializeCharts;
+    window.initializeComparisonChart = initializeComparisonChart;
+    window.changeTrendView = changeTrendView;
+    window.toggleChartType = toggleChartType;
 
-const CHART_DEFAULTS = {
-    color: 'rgba(255, 255, 255, 0.7)',
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    grid: {
-        color: 'rgba(255, 255, 255, 0.1)',
-        borderColor: 'rgba(255, 255, 255, 0.1)',
-    },
-    ticks: {
-        color: 'rgba(255, 255, 255, 0.7)',
-        font: {
-            family: "'Space Grotesk', sans-serif",
-        },
-    },
-    legend: {
-        labels: {
-            color: 'rgba(255, 255, 255, 0.9)',
-            font: {
-                family: "'Space Grotesk', sans-serif",
-                size: 14,
-            },
-        },
-    },
-    title: {
-        display: true,
-        color: 'rgba(255, 255, 255, 0.9)',
-        font: {
-            family: "'Orbitron', monospace",
-            size: 18,
-        },
-    },
-    tooltip: {
-        enabled: true,
-        backgroundColor: 'rgba(10, 10, 10, 0.8)',
-        titleColor: '#f59e0b',
-        bodyColor: '#ffffff',
-        borderColor: '#f59e0b',
-        borderWidth: 1,
-        padding: 10,
-        cornerRadius: 8,
-        titleFont: { family: "'Orbitron', monospace", size: 16 },
-        bodyFont: { family: "'Space Grotesk', sans-serif", size: 12 },
-    },
-};
+    // Initial chart rendering if the overview tab is active
+    if (document.querySelector('.tab-active')?.innerText.includes('Overview')) {
+        initializeCharts();
+    }
+});
 
-const CHART_CONFIG = {
-    category: {
-        type: 'bar',
-        data: {
-            labels: ['Business Growth', 'People Development', 'Operational Process', 'Customer'],
-            datasets: [{
-                label: 'Average Progress',
-                data: [75, 60, 85, 90],
-                backgroundColor: 'rgba(245, 158, 11, 0.6)',
-                borderColor: 'rgba(245, 158, 11, 1)',
-                borderWidth: 2,
-                borderRadius: 8,
-                hoverBackgroundColor: 'rgba(251, 146, 60, 0.8)',
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                title: { ...CHART_DEFAULTS.title, text: 'KPI Performance by Category' },
-                tooltip: CHART_DEFAULTS.tooltip,
-            },
-            scales: {
-                y: {
-                    beginAtZero: true, max: 100, grid: { color: CHART_DEFAULTS.grid.color },
-                    ticks: { ...CHART_DEFAULTS.ticks, callback: (value) => value + '%' }
-                },
-                x: { grid: { display: false }, ticks: CHART_DEFAULTS.ticks }
-            }
-        }
+let categoryChart, trendChart, performanceGauge, roleDistributionChart, comparisonChart;
+
+const trendData = {
+    daily: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [
+            { label: 'Completed', data: [0, 0, 0, 0, 0, 0, 0], borderColor: '#10b981', tension: 0.4, fill: false, pointBackgroundColor: '#10b981', pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: '#10b981' },
+            { label: 'In Progress', data: [0, 0, 0, 0, 0, 0, 0], borderColor: '#f59e0b', tension: 0.4, fill: false, pointBackgroundColor: '#f59e0b', pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: '#f59e0b' },
+            { label: 'At Risk', data: [0, 0, 0, 0, 0, 0, 0], borderColor: '#ef4444', tension: 0.4, fill: false, pointBackgroundColor: '#ef4444', pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: '#ef4444' }
+        ]
     },
-    trend: {
-        type: 'line',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            datasets: [
-                {
-                    label: 'Completed',
-                    data: [10, 12, 15, 20, 25, 28, 30, 35, 40, 45, 50, 55],
-                    borderColor: 'rgba(16, 185, 129, 1)',
-                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: 'rgba(16, 185, 129, 1)',
-                    pointBorderColor: '#fff',
-                    pointHoverRadius: 7,
-                    pointRadius: 5
-                },
-                {
-                    label: 'In Progress',
-                    data: [30, 32, 35, 40, 42, 45, 48, 50, 52, 55, 58, 60],
-                    borderColor: 'rgba(59, 130, 246, 1)',
-                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: 'rgba(59, 130, 246, 1)',
-                    pointBorderColor: '#fff',
-                    pointHoverRadius: 7,
-                    pointRadius: 5
-                },
-                {
-                    label: 'At Risk',
-                    data: [5, 4, 6, 8, 7, 5, 4, 3, 5, 6, 4, 3],
-                    borderColor: 'rgba(239, 68, 68, 1)',
-                    backgroundColor: 'rgba(239, 68, 68, 0.2)',
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: 'rgba(239, 68, 68, 1)',
-                    pointBorderColor: '#fff',
-                    pointHoverRadius: 7,
-                    pointRadius: 5
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { ...CHART_DEFAULTS.legend, position: 'top' },
-                title: { ...CHART_DEFAULTS.title, text: 'Monthly Progress Trend' },
-                tooltip: CHART_DEFAULTS.tooltip,
-            },
-            scales: {
-                y: { beginAtZero: true, grid: { color: CHART_DEFAULTS.grid.color }, ticks: CHART_DEFAULTS.ticks },
-                x: { grid: { color: CHART_DEFAULTS.grid.color }, ticks: CHART_DEFAULTS.ticks }
-            },
-            animation: {
-                duration: 1000,
-                easing: 'easeInOutCubic'
-            }
-        }
+    monthly: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [
+            { label: 'Completed', data: [0, 0, 0, 0, 0, 0], borderColor: '#10b981', tension: 0.4, fill: false, pointBackgroundColor: '#10b981', pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: '#10b981' },
+            { label: 'In Progress', data: [0, 0, 0, 0, 0, 0], borderColor: '#f59e0b', tension: 0.4, fill: false, pointBackgroundColor: '#f59e0b', pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: '#f59e0b' },
+            { label: 'At Risk', data: [0, 0, 0, 0, 0, 0], borderColor: '#ef4444', tension: 0.4, fill: false, pointBackgroundColor: '#ef4444', pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: '#ef4444' }
+        ]
     },
-    performance: {
-        type: 'doughnut',
-        data: {
-            labels: ['Performance', 'Remaining'],
-            datasets: [{
-                data: [84, 16],
-                backgroundColor: ['rgba(245, 158, 11, 1)', 'rgba(255, 255, 255, 0.1)'],
-                borderColor: ['rgba(245, 158, 11, 1)', 'rgba(255, 255, 255, 0.1)'],
-                borderWidth: 1,
-                circumference: 270,
-                rotation: 225,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '80%',
-            plugins: {
-                legend: { display: false },
-                title: { display: false },
-                tooltip: { enabled: false },
-            },
-        }
-    },
-    roleDistribution: {
-        type: 'polarArea',
-        data: {
-            labels: ['GIS Coordinator', 'GIS Lead', 'GIS Specialist', 'Geodatabase Specialist', 'GIS Analyst'],
-            datasets: [{
-                data: [5, 5, 5, 5, 5],
-                backgroundColor: [
-                    'rgba(245, 158, 11, 0.7)',
-                    'rgba(59, 130, 246, 0.7)',
-                    'rgba(16, 185, 129, 0.7)',
-                    'rgba(139, 92, 246, 0.7)',
-                    'rgba(239, 68, 68, 0.7)'
-                ],
-                borderWidth: 1,
-                borderColor: 'rgba(255,255,255,0.2)'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { ...CHART_DEFAULTS.legend, position: 'right' },
-                title: { display: false },
-                tooltip: CHART_DEFAULTS.tooltip,
-            },
-            scales: {
-                r: {
-                    grid: { color: CHART_DEFAULTS.grid.color },
-                    ticks: { display: false },
-                    pointLabels: {
-                        display: true,
-                        centerPointLabels: true,
-                        color: CHART_DEFAULTS.ticks.color,
-                        font: {
-                            size: 10,
-                            family: "'Space Grotesk', sans-serif",
-                        }
-                    }
-                }
-            }
-        }
-    },
-    comparison: {
-        type: 'line',
-        data: {
-            labels: ['Q1', 'Q2', 'Q3', 'Q4'],
-            datasets: [
-                {
-                    label: 'Business Growth',
-                    data: [65, 70, 78, 85],
-                    borderColor: 'rgba(245, 158, 11, 1)',
-                    tension: 0.4,
-                    pointBackgroundColor: 'rgba(245, 158, 11, 1)'
-                },
-                {
-                    label: 'People Development',
-                    data: [55, 62, 68, 75],
-                    borderColor: 'rgba(59, 130, 246, 1)',
-                    tension: 0.4,
-                    pointBackgroundColor: 'rgba(59, 130, 246, 1)'
-                },
-                {
-                    label: 'Operational Process',
-                    data: [70, 75, 82, 90],
-                    borderColor: 'rgba(16, 185, 129, 1)',
-                    tension: 0.4,
-                    pointBackgroundColor: 'rgba(16, 185, 129, 1)'
-                },
-                {
-                    label: 'Customer',
-                    data: [80, 85, 88, 92],
-                    borderColor: 'rgba(239, 68, 68, 1)',
-                    tension: 0.4,
-                    pointBackgroundColor: 'rgba(239, 68, 68, 1)'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { ...CHART_DEFAULTS.legend, position: 'bottom' },
-                title: { ...CHART_DEFAULTS.title, text: 'Quarterly KPI Category Comparison' },
-                tooltip: CHART_DEFAULTS.tooltip,
-            },
-            scales: {
-                y: { beginAtZero: true, max: 100, grid: { color: CHART_DEFAULTS.grid.color }, ticks: { ...CHART_DEFAULTS.ticks, callback: (value) => value + '%' } },
-                x: { grid: { color: CHART_DEFAULTS.grid.color }, ticks: CHART_DEFAULTS.ticks }
-            }
-        }
+    quarterly: {
+        labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+        datasets: [
+            { label: 'Completed', data: [0, 0, 0, 0], borderColor: '#10b981', tension: 0.4, fill: false, pointBackgroundColor: '#10b981', pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: '#10b981' },
+            { label: 'In Progress', data: [0, 0, 0, 0], borderColor: '#f59e0b', tension: 0.4, fill: false, pointBackgroundColor: '#f59e0b', pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: '#f59e0b' },
+            { label: 'At Risk', data: [0, 0, 0, 0], borderColor: '#ef4444', tension: 0.4, fill: false, pointBackgroundColor: '#ef4444', pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: '#ef4444' }
+        ]
     }
 };
 
-const DAILY_DATA = {
-    labels: Array.from({length: 30}, (_, i) => `Day ${i + 1}`),
-    datasets: [
-        { ...CHART_CONFIG.trend.data.datasets[0], data: Array.from({length: 30}, () => Math.floor(Math.random() * 5) + 5) },
-        { ...CHART_CONFIG.trend.data.datasets[1], data: Array.from({length: 30}, () => Math.floor(Math.random() * 10) + 20) },
-        { ...CHART_CONFIG.trend.data.datasets[2], data: Array.from({length: 30}, () => Math.floor(Math.random() * 3)) }
-    ]
+const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { display: true, position: 'bottom', labels: { color: '#ccc', boxWidth: 15, padding: 20 } },
+        tooltip: {
+            enabled: true,
+            mode: 'index',
+            intersect: false,
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            titleColor: '#fff',
+            bodyColor: '#fff',
+            borderColor: '#f59e0b',
+            borderWidth: 1,
+            padding: 10,
+            cornerRadius: 8
+        },
+    },
+    scales: {
+        x: { 
+            ticks: { color: '#9ca3af' }, 
+            grid: { color: 'rgba(255, 255, 255, 0.1)', borderDash: [5, 5] } 
+        },
+        y: { 
+            ticks: { color: '#9ca3af' }, 
+            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+            beginAtZero: true
+        }
+    },
+    animation: {
+        duration: 1000,
+        easing: 'easeInOutCubic'
+    }
 };
 
-const MONTHLY_DATA = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    datasets: [
-        { ...CHART_CONFIG.trend.data.datasets[0], data: [10, 12, 15, 20, 25, 28, 30, 35, 40, 45, 50, 55] },
-        { ...CHART_CONFIG.trend.data.datasets[1], data: [30, 32, 35, 40, 42, 45, 48, 50, 52, 55, 58, 60] },
-        { ...CHART_CONFIG.trend.data.datasets[2], data: [5, 4, 6, 8, 7, 5, 4, 3, 5, 6, 4, 3] }
-    ]
-};
+function initializeCharts() {
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js is not loaded.');
+        return;
+    }
 
-const QUARTERLY_DATA = {
-    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
-    datasets: [
-        { ...CHART_CONFIG.trend.data.datasets[0], data: [47, 83, 115, 150] }, // Cumulative
-        { ...CHART_CONFIG.trend.data.datasets[1], data: [107, 135, 155, 173] }, // Cumulative
-        { ...CHART_CONFIG.trend.data.datasets[2], data: [15, 10, 12, 13] } // Cumulative
-    ]
-};
+    destroyChart(categoryChart);
+    destroyChart(trendChart);
+    destroyChart(performanceGauge);
+    destroyChart(roleDistributionChart);
 
-function createChart(ctx, config) {
-    if (!ctx) return null;
-    return new Chart(ctx, config);
+    const commonOptions = {
+        ...chartOptions,
+        plugins: {
+            ...chartOptions.plugins,
+            legend: { ...chartOptions.plugins.legend, labels: { ...chartOptions.plugins.legend.labels, color: '#e5e7eb' } }
+        },
+        scales: {
+            x: { ...chartOptions.scales.x, ticks: { ...chartOptions.scales.x.ticks, color: '#9ca3af' }, grid: { ...chartOptions.scales.x.grid, color: 'rgba(255,255,255,0.1)' } },
+            y: { ...chartOptions.scales.y, ticks: { ...chartOptions.scales.y.ticks, color: '#9ca3af' }, grid: { ...chartOptions.scales.y.grid, color: 'rgba(255,255,255,0.1)' } }
+        }
+    };
+
+    // KPI Performance by Category
+    const categoryCtx = document.getElementById('categoryChart')?.getContext('2d');
+    if (categoryCtx) {
+        categoryChart = new Chart(categoryCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Business Growth', 'People Dev', 'Ops Process', 'Customer'],
+                datasets: [{
+                    label: 'Average Progress',
+                    data: [68, 80, 75, 90],
+                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+                    borderRadius: 5,
+                    borderWidth: 0,
+                }]
+            },
+            options: { ...commonOptions, indexAxis: 'y' }
+        });
+    }
+
+    // Progress Trend
+    const trendCtx = document.getElementById('trendChart')?.getContext('2d');
+    if (trendCtx) {
+        trendChart = new Chart(trendCtx, {
+            type: 'line',
+            data: trendData.monthly,
+            options: {
+                ...commonOptions,
+                elements: {
+                    line: {
+                        tension: 0.4
+                    },
+                    point: {
+                        radius: 5,
+                        hoverRadius: 7
+                    }
+                }
+            }
+        });
+    }
+
+    // Performance Gauge
+    const gaugeCtx = document.getElementById('performanceGauge')?.getContext('2d');
+    if (gaugeCtx) {
+        performanceGauge = new Chart(gaugeCtx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [84, 16],
+                    backgroundColor: ['#f59e0b', '#374151'],
+                    borderWidth: 0,
+                    circumference: 180,
+                    rotation: 270,
+                }]
+            },
+            options: { ...commonOptions, cutout: '70%', plugins: { ...commonOptions.plugins, legend: { display: false } } }
+        });
+    }
+
+    // Role Distribution
+    const roleCtx = document.getElementById('roleDistributionChart')?.getContext('2d');
+    if (roleCtx) {
+        roleDistributionChart = new Chart(roleCtx, {
+            type: 'polarArea',
+            data: {
+                labels: ['Coordinator', 'Lead', 'Specialist', 'Analyst', 'Geodatabase'],
+                datasets: [{
+                    data: [10, 15, 25, 35, 15],
+                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                }]
+            },
+            options: { ...commonOptions, plugins: { ...commonOptions.plugins, legend: { display: true, position: 'right' } } }
+        });
+    }
+}
+
+function initializeComparisonChart() {
+    destroyChart(comparisonChart);
+    const comparisonCtx = document.getElementById('comparisonChart')?.getContext('2d');
+    if (comparisonCtx) {
+        comparisonChart = new Chart(comparisonCtx, {
+            type: 'radar',
+            data: {
+                labels: ['Data Accuracy', 'Project Timeliness', 'Team Training', 'Innovation', 'System Uptime'],
+                datasets: [
+                    { label: 'GIS Coordinator', data: [8, 7, 9, 8, 7], fill: true, backgroundColor: 'rgba(59, 130, 246, 0.2)', borderColor: '#3b82f6', pointBackgroundColor: '#3b82f6' },
+                    { label: 'GIS Lead', data: [7, 9, 8, 6, 8], fill: true, backgroundColor: 'rgba(16, 185, 129, 0.2)', borderColor: '#10b981', pointBackgroundColor: '#10b981' },
+                    { label: 'GIS Analyst', data: [9, 6, 7, 5, 9], fill: true, backgroundColor: 'rgba(245, 158, 11, 0.2)', borderColor: '#f59e0b', pointBackgroundColor: '#f59e0b' }
+                ]
+            },
+            options: {
+                ...chartOptions,
+                plugins: { ...chartOptions.plugins, legend: { display: true, position: 'top' } },
+                scales: { r: { angleLines: { color: 'rgba(255,255,255,0.2)' }, grid: { color: 'rgba(255,255,255,0.2)' }, pointLabels: { color: '#e5e7eb', font: { size: 12 } }, ticks: { backdropColor: 'transparent', color: '#9ca3af' } } }
+            }
+        });
+    }
+}
+
+function changeTrendView(view) {
+    if (trendChart && trendData[view]) {
+        trendChart.data = trendData[view];
+        trendChart.update();
+    }
+}
+
+function toggleChartType(chartName) {
+    let chartInstance;
+    let newType;
+
+    if (chartName === 'category') {
+        chartInstance = categoryChart;
+        newType = chartInstance.config.type === 'bar' ? 'line' : 'bar';
+    } else {
+        return;
+    }
+
+    if (chartInstance) {
+        const oldOptions = chartInstance.options;
+        const isLine = newType === 'line';
+
+        // Swap indexAxis for bar/line charts
+        if (newType === 'bar' && oldOptions.indexAxis !== 'y') {
+            oldOptions.indexAxis = 'y';
+        } else if (newType === 'line' && oldOptions.indexAxis) {
+            delete oldOptions.indexAxis;
+        }
+
+        chartInstance.config.type = newType;
+        chartInstance.update();
+    }
 }
 
 function destroyChart(chart) {
@@ -297,147 +238,15 @@ function destroyChart(chart) {
     }
 }
 
-window.initializeCharts = function () {
-    if (typeof Chart === 'undefined') {
-      setTimeout(window.initializeCharts, 100);
-      return;
-    }
-    
-    destroyChart(categoryChart);
-    destroyChart(trendChart);
-    destroyChart(performanceGauge);
-    destroyChart(roleDistributionChart);
-
-    categoryChart = createChart(document.getElementById('categoryChart')?.getContext('2d'), CHART_CONFIG.category);
-    trendChart = createChart(document.getElementById('trendChart')?.getContext('2d'), CHART_CONFIG.trend);
-    performanceGauge = createChart(document.getElementById('performanceGauge')?.getContext('2d'), CHART_CONFIG.performance);
-    roleDistributionChart = createChart(document.getElementById('roleDistributionChart')?.getContext('d'), CHART_CONFIG.roleDistribution);
-}
-
-window.initializeComparisonChart = function() {
-    if (typeof Chart === 'undefined') {
-      setTimeout(window.initializeComparisonChart, 100);
-      return;
-    }
-    destroyChart(comparisonChart);
-    comparisonChart = createChart(document.getElementById('comparisonChart')?.getContext('2d'), CHART_CONFIG.comparison);
-}
-
-window.toggleChartType = function(chartName) {
-    let chart, config;
-    if (chartName === 'category') {
-        chart = categoryChart;
-        config = CHART_CONFIG.category;
-    } else {
-        return;
-    }
-
-    if (!chart) return;
-
-    const currentType = chart.config.type;
-    const newType = currentType === 'bar' ? 'line' : 'bar';
-    
-    // Create new config object for the new chart type
-    const newConfig = {
-        ...config, // Keep original data and other options
-        type: newType,
-        options: {
-            ...config.options,
-            // Specific options changes for line chart if needed
-            ...(newType === 'line' && {
-                datasets: {
-                    line: {
-                        tension: 0.4,
-                        fill: true,
-                    }
-                }
-            })
-        },
-        data: {
-             ...config.data,
-             datasets: config.data.datasets.map(dataset => ({
-                ...dataset,
-                ...(newType === 'line' && { 
-                    tension: 0.4, 
-                    fill: true, 
-                    backgroundColor: dataset.borderColor.replace('1)', '0.2)'),
-                }),
-             }))
-        }
-    };
-    
-    destroyChart(chart);
-
-    const ctx = document.getElementById(chartName + 'Chart').getContext('2d');
-    
-    if (chartName === 'category') {
-      categoryChart = createChart(ctx, newConfig);
+// Dummy function to simulate KPI updates
+function handleKpiUpdate(kpi) {
+    console.log("KPI Updated:", kpi);
+    // In a real app, this would trigger a recalculation of chart data
+    // For now, we can add some random data to the trend chart to show it's working
+    if (trendChart) {
+        trendChart.data.datasets.forEach(dataset => {
+            dataset.data = dataset.data.map(() => Math.floor(Math.random() * 100));
+        });
+        trendChart.update();
     }
 }
-
-window.changeTrendView = function(view) {
-    if (!trendChart) return;
-    
-    let newData;
-    let newTitle;
-    let newType = 'line'; // Default to line
-
-    switch(view) {
-        case 'daily':
-            newData = DAILY_DATA;
-            newTitle = 'Daily Progress Trend';
-            break;
-        case 'quarterly':
-            newData = QUARTERLY_DATA;
-            newTitle = 'Quarterly Progress Trend';
-            newType = 'bar'; // Use bar chart for quarterly
-            break;
-        case 'monthly':
-        default:
-            newData = MONTHLY_DATA;
-            newTitle = 'Monthly Progress Trend';
-            break;
-    }
-
-    // Check if chart type needs to be changed
-    if (trendChart.config.type !== newType) {
-        destroyChart(trendChart);
-        const newConfig = {
-            ...CHART_CONFIG.trend, // Base config
-            type: newType,
-            data: newData,
-            options: {
-                ...CHART_CONFIG.trend.options,
-                plugins: {
-                    ...CHART_CONFIG.trend.options.plugins,
-                    title: {
-                        ...CHART_CONFIG.trend.options.plugins.title,
-                        text: newTitle
-                    }
-                },
-                // Reset scales for bar chart if needed
-                ...(newType === 'bar' && {
-                    scales: {
-                         y: { beginAtZero: true, grid: { color: CHART_DEFAULTS.grid.color }, ticks: CHART_DEFAULTS.ticks },
-                         x: { grid: { color: CHART_DEFAULTS.grid.color }, ticks: CHART_DEFAULTS.ticks }
-                    }
-                })
-            }
-        };
-        const ctx = document.getElementById('trendChart').getContext('2d');
-        trendChart = createChart(ctx, newConfig);
-    } else {
-        trendChart.data = newData;
-        trendChart.options.plugins.title.text = newTitle;
-        trendChart.update('smooth');
-    }
-};
-
-document.addEventListener('DOMContentLoaded', function() {
-    if (document.getElementById('categoryChart')) {
-        window.initializeCharts();
-    }
-    if (document.getElementById('comparisonChart')) {
-        window.initializeComparisonChart();
-    }
-});
