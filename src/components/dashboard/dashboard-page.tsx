@@ -175,11 +175,11 @@ export default function DashboardPage() {
                      <h2 className="text-3xl font-bold text-white mb-8 text-center font-orbitron animate-neon-glow">
                         🚀 GIS KPI Command Center 🚀
                     </h2>
+                     <div className="my-8">
+                        <WeatherIntelligence />
+                    </div>
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                         <KpiSummaryCards kpis={filteredKpis} />
-                    </div>
-                    <div className="my-8">
-                        <WeatherIntelligence />
                     </div>
                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                         <div className="glow-container p-6">
