@@ -38,6 +38,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import KpiUserPerformanceChart from './kpi-user-performance-chart';
+import RoleBasedView from './role-based-view';
 
 
 const TABS = [
@@ -313,18 +314,7 @@ export default function DashboardPage() {
                 </div>
             )}
             {activeTab === 'roleView' && (
-                <div>
-                     <h2 className="text-2xl font-bold text-white mb-6">Role-Based KPI View</h2>
-                      <KpiTable
-                        kpiData={kpiData}
-                        onKpiUpdate={handleKpiUpdate}
-                        selectedRole={selectedRole}
-                        setSelectedRole={setSelectedRole}
-                        selectedStatus={selectedStatus}
-                        setSelectedStatus={setSelectedStatus}
-                        filteredKpis={filteredKpis}
-                     />
-                </div>
+                <RoleBasedView kpis={filteredKpis} />
             )}
             {activeTab === 'trends' && (
                  <div>
