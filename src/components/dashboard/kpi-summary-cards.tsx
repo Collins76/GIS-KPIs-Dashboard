@@ -20,7 +20,7 @@ export default function KpiSummaryCards({ kpis }: KpiSummaryCardsProps) {
   const summaryData = [
     { title: 'Total KPIs', value: totalKpis, icon: ListTodo, color: 'text-blue-400', progressColor: 'from-blue-500 to-blue-400', subText: 'All Active', subIcon: TrendingUp },
     { title: 'Completed', value: completed, icon: CheckCircle2, color: 'text-green-400', progressColor: 'from-green-500 to-green-400', subText: `${getPercentage(completed)}% Complete`, subIcon: TrendingUp },
-    { title: 'In Progress', value: inProgress, icon: Loader, color: 'text-yellow-400', progressColor: 'from-yellow-500 to-yellow-400', subText: `${getPercentage(inProgress)}% Ongoing`, subIcon: Loader },
+    { title: 'In Progress', value: inProgress, icon: Loader, color: 'text-green-400', progressColor: 'from-green-500 to-green-400', subText: `${getPercentage(inProgress)}% Ongoing`, subIcon: Loader },
     { title: 'At Risk', value: atRisk + offTrack, icon: AlertTriangle, color: 'text-red-400', progressColor: 'from-red-500 to-red-400', subText: `${getPercentage(atRisk + offTrack)}% At Risk`, subIcon: TrendingDown },
   ];
 
