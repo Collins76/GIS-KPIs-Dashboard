@@ -9,7 +9,7 @@ import { Sparkles, Bot, Loader2 } from 'lucide-react';
 
 type AiInsightsProps = {
   kpis: Kpi[];
-  role: Role;
+  role: Role | 'All';
 };
 
 export default function AiInsights({ kpis, role }: AiInsightsProps) {
@@ -52,11 +52,11 @@ export default function AiInsights({ kpis, role }: AiInsightsProps) {
             <p className="text-sm text-muted-foreground">{analysis}</p>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">Click the button to generate an analysis of your current KPI data.</p>
+          <p className="text-sm text-muted-foreground">Click the button to generate an analysis of your current KPI data for the selected role.</p>
         )}
       </CardContent>
       <CardFooter>
-        <Button onClick={handleAnalyze} disabled={loading} className="w-full">
+        <Button onClick={handleAnalyze} disabled={loading || kpis.length === 0} className="w-full">
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

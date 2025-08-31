@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -19,49 +19,42 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { kpis as allKpis, roles } from '@/lib/data';
+import { roles } from '@/lib/data';
 import type { Role, KpiStatus, Kpi } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 
-export default function KpiTable() {
-  const [kpiData, setKpiData] = useState<Kpi[]>([]);
-  const [selectedRole, setSelectedRole] = useState<Role | 'All'>('All');
-  const [selectedStatus, setSelectedStatus] = useState<KpiStatus | 'All'>('All');
+type KpiTableProps = {
+  kpiData: Kpi[];
+  onKpiUpdate: (kpi: Kpi) => void;
+  selectedRole: Role | 'All';
+  setSelectedRole: (role: Role | 'All') => void;
+  selectedStatus: KpiStatus | 'All';
+  setSelectedStatus: (status: KpiStatus | 'All') => void;
+  filteredKpis: Kpi[];
+};
+
+export default function KpiTable({
+  kpiData,
+  onKpiUpdate,
+  selectedRole,
+  setSelectedRole,
+  selectedStatus,
+  setSelectedStatus,
+  filteredKpis,
+}: KpiTableProps) {
   const [editingKpiId, setEditingKpiId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState<string>('');
 
-  useEffect(() => {
-    setKpiData(
-      allKpis.map(kpi => ({
-        ...kpi,
-        progress: 0,
-        status: 'Off Track',
-      }))
-    );
-  }, []);
-
   const handleProgressChange = (kpiId: string, newProgress: number) => {
-    setKpiData(
-      kpiData.map(kpi => {
-        if (kpi.id === kpiId) {
-          let newStatus: KpiStatus;
-          if (newProgress >= kpi.progress) {
-             if (newProgress > 75) newStatus = 'On Track';
-             else if (newProgress > 40) newStatus = 'At Risk';
-             else newStatus = 'Off Track';
-          } else {
-             newStatus = 'Off Track';
-          }
-          
-          if (newProgress > 75) newStatus = 'On Track';
-          else if (newProgress > 40) newStatus = 'At Risk';
-          else newStatus = 'Off Track';
+    const kpi = kpiData.find(k => k.id === kpiId);
+    if (!kpi) return;
 
-          return { ...kpi, progress: newProgress, status: newStatus };
-        }
-        return kpi;
-      })
-    );
+    let newStatus: KpiStatus;
+    if (newProgress > 75) newStatus = 'On Track';
+    else if (newProgress > 40) newStatus = 'At Risk';
+    else newStatus = 'Off Track';
+
+    onKpiUpdate({ ...kpi, progress: newProgress, status: newStatus });
   };
   
   const handleEdit = (kpi: Kpi) => {
@@ -82,11 +75,6 @@ export default function KpiTable() {
       handleBlur(kpiId);
     }
   };
-
-  const filteredKpis = kpiData.filter(kpi => 
-    (selectedRole === 'All' || kpi.role === selectedRole) &&
-    (selectedStatus === 'All' || kpi.status === selectedStatus)
-  );
 
   const getStatusVariant = (status: KpiStatus) => {
     switch (status) {
