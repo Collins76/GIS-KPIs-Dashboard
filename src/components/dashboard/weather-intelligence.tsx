@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { weatherData as initialWeatherData } from '@/lib/data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,14 @@ export default function WeatherIntelligence() {
       setLoading(false);
     }, 1000);
   };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      handleRefresh();
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(interval); // Cleanup on component unmount
+  }, [weatherData]);
 
   const today = weatherData.find(d => d.isToday) || weatherData[0];
   const forecast = weatherData.filter(d => !d.isToday).slice(0, 5);
