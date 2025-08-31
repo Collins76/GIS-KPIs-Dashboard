@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -13,6 +14,9 @@ import {
   Users,
   TrendingUp,
   ListChecks,
+  CalendarDays,
+  Calendar,
+  BarChart3,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Header from './header';
@@ -96,6 +100,14 @@ export default function DashboardPage() {
       console.warn('toggleChartType function not available');
     }
   }
+
+  const safeChangeTrendView = (view: 'daily' | 'monthly' | 'quarterly') => {
+    if (typeof window.changeTrendView === 'function') {
+        window.changeTrendView(view);
+    } else {
+        console.warn('changeTrendView function not available');
+    }
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-black">
@@ -197,9 +209,17 @@ export default function DashboardPage() {
                         <div className="glow-container p-6">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-white font-bold text-lg font-orbitron">📈 Monthly Progress Trend</h3>
-                                <button className="text-yellow-400 hover:text-yellow-300">
-                                    <i className="fas fa-chart-line"></i>
-                                </button>
+                                <div className="flex space-x-2">
+                                    <button onClick={() => safeChangeTrendView('daily')} className="text-yellow-400 hover:text-yellow-300 transition-transform transform hover:scale-110">
+                                        <CalendarDays className="h-5 w-5 animate-pulse-glow" />
+                                    </button>
+                                    <button onClick={() => safeChangeTrendView('monthly')} className="text-yellow-400 hover:text-yellow-300 transition-transform transform hover:scale-110">
+                                        <Calendar className="h-5 w-5 animate-pulse-glow" />
+                                    </button>
+                                    <button onClick={() => safeChangeTrendView('quarterly')} className="text-yellow-400 hover:text-yellow-300 transition-transform transform hover:scale-110">
+                                        <BarChart3 className="h-5 w-5 animate-pulse-glow" />
+                                    </button>
+                                </div>
                             </div>
                             <div className="chart-container">
                                 <canvas id="trendChart"></canvas>

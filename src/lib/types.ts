@@ -65,6 +65,7 @@ declare global {
         initializeCharts: () => void;
         initializeComparisonChart: () => void;
         toggleChartType: (chartName: 'category' | 'trend') => void;
+        changeTrendView: (view: 'daily' | 'monthly' | 'quarterly') => void;
         initializeUploadArea: () => void;
         showAllFiles: () => void;
         clearAllFiles: () => void;
