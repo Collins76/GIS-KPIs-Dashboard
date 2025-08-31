@@ -87,7 +87,7 @@ export default function DashboardPage() {
       }
     };
     initCharts();
-  }, [activeTab]);
+  }, [activeTab, kpiData]);
 
   const handleKpiUpdate = (updatedKpi: Kpi) => {
     const newData = kpiData.map(kpi => (kpi.id === updatedKpi.id ? updatedKpi : kpi));
@@ -106,6 +106,14 @@ export default function DashboardPage() {
     );
   }, [kpiData, selectedRole, selectedStatus, selectedCategory]);
   
+    const overallPerformance = useMemo(() => {
+        if (kpiData.length === 0) return 0;
+        const totalProgress = kpiData.reduce((acc, kpi) => acc + kpi.progress, 0);
+        const totalPossibleProgress = kpiData.length * 100;
+        if (totalPossibleProgress === 0) return 0;
+        return Math.round((totalProgress / totalPossibleProgress) * 100);
+    }, [kpiData]);
+
   const safeToggleChartType = (chartName: 'category' | 'trend') => {
     if (typeof window.toggleChartType === 'function') {
       window.toggleChartType(chartName);
@@ -294,25 +302,17 @@ export default function DashboardPage() {
                         </div>
                     </div>
                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                        <div className="glow-container p-6">
+                        <div className="lg:col-span-2 glow-container p-6">
                             <h3 className="text-white font-bold text-lg font-orbitron mb-4">⚡ Performance Gauge</h3>
-                            <div className="chart-container">
-                                <canvas id="performanceGauge"></canvas>
+                            <div className="chart-container" style={{ height: '300px' }}>
+                                <canvas id="performanceGauge" data-performance={overallPerformance}></canvas>
                             </div>
                             <div className="text-center mt-4">
-                                <div className="text-3xl font-bold text-yellow-400 font-orbitron">84%</div>
+                                <div className="text-3xl font-bold text-yellow-400 font-orbitron">{overallPerformance}%</div>
                                 <div className="text-sm text-gray-400">Overall Performance</div>
                             </div>
                         </div>
-
-                        <div className="glow-container p-6">
-                            <h3 className="text-white font-bold text-lg font-orbitron mb-4">🎯 Role Distribution</h3>
-                            <div className="chart-container">
-                                <canvas id="roleDistributionChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div className="glow-container p-6">
+                        <div className="glow-container p-6 flex flex-col">
                              <AiInsights kpis={filteredKpis} role={selectedRole} />
                         </div>
                     </div>
