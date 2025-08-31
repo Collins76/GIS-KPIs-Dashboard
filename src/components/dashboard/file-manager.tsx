@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from 'react';
@@ -172,7 +173,7 @@ export default function FileManager() {
               
               <form id="urlUploadForm" className="space-y-4">
                   <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2 font-space">
+                      <label htmlFor="fileUrl" className="block text-sm font-medium text-gray-300 mb-2 font-space">
                           <Link className="inline-block mr-2 text-blue-400 h-4 w-4" />File URL
                       </label>
                       <input 
@@ -184,7 +185,7 @@ export default function FileManager() {
                       />
                   </div>
                   <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2 font-space">
+                      <label htmlFor="customFileName" className="block text-sm font-medium text-gray-300 mb-2 font-space">
                          <FileUp className="inline-block mr-2 text-green-400 h-4 w-4" />File Name (Optional)
                       </label>
                       <input 
