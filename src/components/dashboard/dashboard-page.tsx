@@ -18,6 +18,8 @@ import {
   Calendar,
   BarChart3,
   Filter,
+  PieChart,
+  RefreshCcw,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Header from './header';
@@ -34,6 +36,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import KpiUserPerformanceChart from './kpi-user-performance-chart';
 
 
 const TABS = [
@@ -55,6 +59,7 @@ export default function DashboardPage() {
   const [selectedStatus, setSelectedStatus] = useState<KpiStatus | 'All'>('All');
   const [selectedCategory, setSelectedCategory] = useState<KpiCategory | 'All'>('All');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [userChartType, setUserChartType] = useState<'pie' | 'bar'>('pie');
 
 
   const { toast } = useToast();
@@ -114,6 +119,10 @@ export default function DashboardPage() {
         console.warn('changeTrendView function not available');
     }
   };
+
+  const toggleUserChartType = () => {
+    setUserChartType(prev => (prev === 'pie' ? 'bar' : 'pie'));
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-black">
@@ -245,13 +254,16 @@ export default function DashboardPage() {
                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                         <div className="glow-container p-6">
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-white font-bold text-lg font-orbitron">📊 KPI Performance by Category</h3>
-                                <button onClick={() => safeToggleChartType('category')} className="text-yellow-400 hover:text-yellow-300">
-                                    <i className="fas fa-sync-alt"></i>
+                                <h3 className="text-white font-bold text-lg font-orbitron flex items-center">
+                                    <Users className="mr-3 h-5 w-5 text-yellow-400" />
+                                    KPI Performance by Users
+                                </h3>
+                                <button onClick={toggleUserChartType} className="text-yellow-400 hover:text-yellow-300 transition-transform transform hover:scale-110">
+                                    <RefreshCcw className="h-5 w-5 animate-spin" />
                                 </button>
                             </div>
                             <div className="chart-container">
-                                <canvas id="categoryChart"></canvas>
+                                <KpiUserPerformanceChart kpis={kpiData} type={userChartType} />
                             </div>
                         </div>
 
