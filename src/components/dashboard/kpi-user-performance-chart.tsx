@@ -1,7 +1,8 @@
+
 "use client"
 
 import * as React from "react"
-import { Bar, BarChart, CartesianGrid, XAxis, Pie, PieChart, Sector, Legend } from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis, Pie, PieChart, Sector, Legend, Cell } from "recharts"
 import {
   ChartConfig,
   ChartContainer,
@@ -10,7 +11,7 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from "@/components/ui/chart"
-import type { Kpi, Role } from "@/lib/types"
+import type { Kpi } from "@/lib/types"
 import { roles } from "@/lib/data"
 import { PieSectorDataItem } from "recharts/types/polar/Pie"
 
@@ -18,6 +19,7 @@ type KpiUserPerformanceChartProps = {
   kpis: Kpi[];
   type: 'pie' | 'bar';
 };
+
 
 const chartConfig = {
   inProgress: {
@@ -35,10 +37,11 @@ export default function KpiUserPerformanceChart({ kpis, type }: KpiUserPerforman
     return roles.map(role => {
       const userKpis = kpis.filter(kpi => kpi.role === role);
       const inProgressCount = userKpis.filter(kpi => kpi.status === 'On Track' || kpi.status === 'At Risk' || kpi.status === 'Off Track').length;
+      const roleKey = role.replace(/\s+/g, '-');
       return {
         role,
         inProgress: inProgressCount,
-        fill: `var(--color-${role.replace(/\s+/g, '-')})`
+        fill: `var(--color-${roleKey})`
       }
     });
   }, [kpis]);
@@ -81,7 +84,11 @@ export default function KpiUserPerformanceChart({ kpis, type }: KpiUserPerforman
               </g>
             )}
             onMouseEnter={onPieEnter}
-          />
+          >
+            {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={chartConfig[entry.role as keyof typeof chartConfig]?.color} />
+            ))}
+          </Pie>
           <ChartLegend content={<ChartLegendContent nameKey="role" />} />
         </PieChart>
       </ChartContainer>
@@ -104,8 +111,8 @@ export default function KpiUserPerformanceChart({ kpis, type }: KpiUserPerforman
           content={<ChartTooltipContent hideLabel />}
         />
         <Bar dataKey="inProgress" name="In Progress" radius={8}>
-            {chartData.map((entry) => (
-                <div key={entry.role} style={{ backgroundColor: entry.fill }} />
+            {chartData.map((entry, index) => (
+                 <Cell key={`cell-${index}`} fill={chartConfig[entry.role as keyof typeof chartConfig]?.color} />
             ))}
         </Bar>
       </BarChart>

@@ -258,9 +258,9 @@ export default function DashboardPage() {
                                     <Users className="mr-3 h-5 w-5 text-yellow-400" />
                                     KPI Performance by Users
                                 </h3>
-                                <button onClick={toggleUserChartType} className="text-yellow-400 hover:text-yellow-300 transition-transform transform hover:scale-110">
+                                <Button onClick={toggleUserChartType} variant="ghost" size="icon" className="text-yellow-400 hover:text-yellow-300 transition-transform transform hover:scale-110">
                                     <RefreshCcw className="h-5 w-5 animate-spin" />
-                                </button>
+                                </Button>
                             </div>
                             <div className="chart-container">
                                 <KpiUserPerformanceChart kpis={kpiData} type={userChartType} />
