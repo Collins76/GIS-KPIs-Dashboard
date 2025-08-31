@@ -28,6 +28,7 @@ export default function AiInsights({ kpis, role }: AiInsightsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleAnalyze = async () => {
+    // No need to set isModalOpen(true) here as DialogTrigger handles it
     setLoading(true);
     setAnalysis(null);
     try {
@@ -49,6 +50,7 @@ export default function AiInsights({ kpis, role }: AiInsightsProps) {
   const handleOpenChange = (open: boolean) => {
     setIsModalOpen(open);
     if (!open) {
+      // Reset state when closing the modal
       setAnalysis(null);
       setLoading(false);
     }
@@ -90,12 +92,12 @@ export default function AiInsights({ kpis, role }: AiInsightsProps) {
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
                 <p className="text-muted-foreground">Analyzing data...</p>
               </div>
-            ) : (
+            ) : analysis ? (
               <div className="flex items-start space-x-3">
                 <Bot className="h-6 w-6 flex-shrink-0 text-primary mt-1" />
                 <p className="text-base text-gray-300">{analysis}</p>
               </div>
-            )}
+            ) : null}
         </div>
         <DialogFooter>
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
