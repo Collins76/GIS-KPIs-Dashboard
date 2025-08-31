@@ -2,6 +2,15 @@
 import type { Kpi, Role, ManagedFile, BusinessUnit, WeatherData } from '@/lib/types';
 import { Cloudy, Sun, CloudRain, Zap, CloudSun, Wind, Droplets, CloudDrizzle, Waves } from 'lucide-react';
 
+// Add display names for using them in class names
+Sun.displayName = 'Sun';
+CloudSun.displayName = 'CloudSun';
+CloudRain.displayName = 'CloudRain';
+CloudDrizzle.displayName = 'CloudDrizzle';
+Cloudy.displayName = 'Cloudy';
+Zap.displayName = 'Zap';
+
+
 export const roles: Role[] = [
   'GIS Coordinator',
   'GIS Lead',

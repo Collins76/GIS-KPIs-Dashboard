@@ -53,7 +53,7 @@ export default function WeatherIntelligence() {
           <CardContent className="p-2 text-center text-white flex flex-col justify-center h-full">
              <p className="text-sm font-semibold text-yellow-400 font-rajdhani">TODAY</p>
              <p className="font-bold text-sm">{today.dayOfWeek}</p>
-             <today.icon className="w-10 h-10 text-yellow-400 mx-auto my-1 animate-weather-icon" />
+             <today.icon className={cn("w-10 h-10 text-yellow-400 mx-auto my-1 animate-weather-icon", `weather-icon-${today.icon.displayName}`)} />
              <p className="text-2xl font-bold font-orbitron">{today.temp}°C</p>
              <p className="text-gray-400 text-xs mb-1">{`${today.minTemp}° / ${today.maxTemp}°`}</p>
              <p className="font-semibold text-xs">{today.condition}</p>
@@ -66,7 +66,7 @@ export default function WeatherIntelligence() {
             <CardContent className="p-2 text-center text-white">
                 <p className="font-bold text-sm">{day.dayOfWeek}</p>
                 <p className="text-xs text-gray-400 mb-1">{day.date}</p>
-                <day.icon className="w-8 h-8 text-blue-300 mx-auto animate-weather-icon" />
+                <day.icon className={cn("w-8 h-8 text-blue-300 mx-auto animate-weather-icon", `weather-icon-${day.icon.displayName}`)} />
                 <p className="text-xl font-bold font-orbitron mt-1">{day.temp}°C</p>
                  <div className="flex justify-center gap-3 text-xs text-gray-400 mt-1">
                     <div className="flex items-center gap-1">

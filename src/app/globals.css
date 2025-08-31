@@ -1262,20 +1262,55 @@ input[type="file"] {
 
 /* Weather Icon Animation */
 .animate-weather-icon {
-    animation: weather-float 4s ease-in-out infinite, weather-glow 3s ease-in-out infinite;
-    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+    animation: weather-float 6s ease-in-out infinite, weather-glow 2s ease-in-out infinite, weather-spin 10s linear infinite;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
 }
 
 @keyframes weather-float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-8px); }
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    25% { transform: translateY(-10px) rotate(-5deg); }
+    50% { transform: translateY(0px) rotate(5deg); }
+    75% { transform: translateY(-5px) rotate(0deg); }
 }
 
 @keyframes weather-glow {
     0%, 100% {
-        filter: drop-shadow(0 0 5px rgba(255, 223, 186, 0.3)) drop-shadow(0 0 10px rgba(251, 146, 60, 0.2));
+        filter: drop-shadow(0 0 8px rgba(255, 223, 186, 0.4)) drop-shadow(0 0 16px rgba(251, 146, 60, 0.3));
     }
     50% {
-        filter: drop-shadow(0 0 10px rgba(255, 223, 186, 0.5)) drop-shadow(0 0 20px rgba(251, 146, 60, 0.3));
+        filter: drop-shadow(0 0 16px rgba(255, 223, 186, 0.7)) drop-shadow(0 0 32px rgba(251, 146, 60, 0.5));
     }
+}
+
+@keyframes weather-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.animate-weather-icon {
+    animation: 
+        weather-float 6s ease-in-out infinite, 
+        weather-glow 2.5s ease-in-out infinite,
+        weather-spin-subtle 20s linear infinite;
+}
+
+@keyframes weather-spin-subtle {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(3deg); }
+    50% { transform: rotate(0deg); }
+    75% { transform: rotate(-3deg); }
+    100% { transform: rotate(0deg); }
+}
+
+.weather-icon-Sun {
+    animation-delay: 0s, 0s, 0s;
+}
+.weather-icon-CloudSun {
+    animation-delay: -1s, -0.5s, -2s;
+}
+.weather-icon-CloudRain {
+    animation-delay: -2s, -1s, -4s;
+}
+.weather-icon-CloudDrizzle {
+    animation-delay: -3s, -1.5s, -6s;
 }
