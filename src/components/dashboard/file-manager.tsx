@@ -3,8 +3,8 @@
 
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileUp, List, Trash2, RotateCcw, LayoutGrid, Undo, FolderOpen, Link, Edit, Pencil } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { FileUp, List, Trash2, RotateCcw, LayoutGrid, Undo, FolderOpen, Link, Pencil, Download, Eye, Search } from 'lucide-react';
 
 export default function FileManager() {
   
@@ -24,10 +24,10 @@ export default function FileManager() {
               <Button onClick={() => window.showAllFiles?.()} className="glow-button">
                   <List className="mr-2 h-4 w-4" />View All Files
               </Button>
-              <Button onClick={() => window.editSelectedFile?.()} variant="outline" className="text-yellow-400 border-yellow-400 hover:bg-yellow-400 hover:text-black">
+              <Button onClick={(e) => window.editSelectedFile?.(e)} variant="outline" className="text-yellow-400 border-yellow-400 hover:bg-yellow-400 hover:text-black">
                   <Pencil className="mr-2 h-4 w-4" />Edit
               </Button>
-               <Button onClick={() => window.deleteSelectedFile?.()} variant="outline" className="text-red-400 border-red-400 hover:bg-red-400 hover:text-white">
+               <Button onClick={(e) => window.deleteSelectedFile?.(e)} variant="outline" className="text-red-400 border-red-400 hover:bg-red-400 hover:text-white">
                   <Trash2 className="mr-2 h-4 w-4" />Delete
               </Button>
               <div className="border-l h-8 border-gray-600 mx-2"></div>
@@ -40,43 +40,33 @@ export default function FileManager() {
           </div>
       </div>
 
-      {/* Upload Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card className="glow-container p-4 text-center">
-              <CardHeader className="p-2">
-                  <CardTitle className="text-sm text-gray-400">Total Files</CardTitle>
-              </CardHeader>
               <CardContent className="p-2">
+                <div className="text-sm text-gray-400 mb-2">Total Files</div>
                 <div className="text-3xl font-bold text-green-400 font-orbitron" id="totalFilesCount">0</div>
               </CardContent>
           </Card>
           <Card className="glow-container p-4 text-center">
-              <CardHeader className="p-2">
-                  <CardTitle className="text-sm text-gray-400">Total Size</CardTitle>
-              </CardHeader>
-              <CardContent className="p-2">
+               <CardContent className="p-2">
+                 <div className="text-sm text-gray-400 mb-2">Total Size</div>
                 <div className="text-3xl font-bold text-blue-400 font-orbitron" id="totalSizeCount">0 MB</div>
               </CardContent>
           </Card>
           <Card className="glow-container p-4 text-center">
-              <CardHeader className="p-2">
-                  <CardTitle className="text-sm text-gray-400">Uploading</CardTitle>
-              </CardHeader>
-              <CardContent className="p-2">
+               <CardContent className="p-2">
+                <div className="text-sm text-gray-400 mb-2">Uploading</div>
                 <div className="text-3xl font-bold text-yellow-400 font-orbitron" id="uploadingCount">0</div>
               </CardContent>
           </Card>
           <Card className="glow-container p-4 text-center">
-              <CardHeader className="p-2">
-                  <CardTitle className="text-sm text-gray-400">Completed</CardTitle>
-              </CardHeader>
-              <CardContent className="p-2">
+               <CardContent className="p-2">
+                <div className="text-sm text-gray-400 mb-2">Completed</div>
                 <div className="text-3xl font-bold text-purple-400 font-orbitron" id="completedCount">0</div>
               </CardContent>
           </Card>
       </div>
 
-      {/* File Type Filter */}
       <Card className="glow-container p-4 mb-6">
         <CardContent className="p-2">
           <div className="flex flex-wrap items-center gap-4">
@@ -107,18 +97,16 @@ export default function FileManager() {
       </Card>
       
 
-      {/* Enhanced Upload Area */}
       <Card className="glow-container p-6 mb-8">
         <CardContent className="p-0">
-          <div className="upload-area" id="uploadArea">
+          <div className="upload-area cursor-pointer" id="uploadArea">
               <div className="text-center">
                   <FileUp className="mx-auto h-20 w-20 text-yellow-400 mb-6 animate-float" />
                   <h3 className="text-2xl font-bold text-white mb-4 font-orbitron">Upload Your Files</h3>
                   <p className="text-white text-lg mb-2">Drag and drop files here or click to browse</p>
                   <p className="text-gray-400 text-sm mb-4">Maximum file size: 500MB per file</p>
                   
-                  {/* Supported formats grid */}
-                  <div className="grid grid-cols-4 md:grid-cols-8 gap-2 mb-6">
+                  <div className="grid grid-cols-4 md:grid-cols-8 gap-2 mb-6 max-w-lg mx-auto">
                       <div className="bg-blue-500 bg-opacity-20 text-blue-400 px-2 py-1 rounded text-xs font-semibold">CSV</div>
                       <div className="bg-green-500 bg-opacity-20 text-green-400 px-2 py-1 rounded text-xs font-semibold">XLSX</div>
                       <div className="bg-red-500 bg-opacity-20 text-red-400 px-2 py-1 rounded text-xs font-semibold">PDF</div>
@@ -143,8 +131,6 @@ export default function FileManager() {
         </CardContent>
       </Card>
       
-
-      {/* Files Grid View */}
       <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold text-white font-orbitron">Uploaded Files</h3>
           <div className="flex space-x-2">
@@ -157,20 +143,18 @@ export default function FileManager() {
           </div>
       </div>
 
-      <div id="uploadedFiles" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div id="uploadedFiles">
           {/* Uploaded files will appear here */}
       </div>
 
-      {/* No files placeholder */}
-      <div id="noFilesPlaceholder" className="text-center py-12 hidden">
-          <FolderOpen className="mx-auto h-16 w-16 text-gray-600 mb-4" />
-          <p className="text-gray-400 text-lg mb-4">No files uploaded yet</p>
+      <div id="noFilesPlaceholder" className="text-center py-16 hidden flex-col items-center">
+          <FolderOpen className="mx-auto h-24 w-24 text-gray-600 mb-6" />
+          <p className="text-gray-400 text-xl mb-4">No files uploaded yet</p>
           <Button onClick={() => window.triggerBrowseFiles?.()} className="glow-button">
               <FileUp className="mr-2 h-4 w-4" />Upload Your First File
           </Button>
       </div>
 
-      {/* URL Upload Modal */}
       <div id="urlUploadModal" className="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50 hidden">
           <div className="glow-modal w-full max-w-md p-6 m-4">
               <div className="text-center mb-6">
@@ -180,9 +164,9 @@ export default function FileManager() {
               
               <form id="urlUploadForm" className="space-y-4">
                   <div>
-                      <label htmlFor="fileUrl" className="block text-sm font-medium text-gray-300 mb-2 font-space">
+                      <Label htmlFor="fileUrl" className="block text-sm font-medium text-gray-300 mb-2 font-space">
                           <Link className="inline-block mr-2 text-blue-400 h-4 w-4" />File URL
-                      </label>
+                      </Label>
                       <input 
                           type="url" 
                           id="fileUrl"
@@ -192,9 +176,9 @@ export default function FileManager() {
                       />
                   </div>
                   <div>
-                      <label htmlFor="customFileName" className="block text-sm font-medium text-gray-300 mb-2 font-space">
-                         <FileUp className="inline-block mr-2 text-green-400 h-4 w-4" />File Name (Optional)
-                      </label>
+                      <Label htmlFor="customFileName" className="block text-sm font-medium text-gray-300 mb-2 font-space">
+                         <Pencil className="inline-block mr-2 text-green-400 h-4 w-4" />File Name (Optional)
+                      </Label>
                       <input 
                           type="text" 
                           id="customFileName"
@@ -228,17 +212,17 @@ declare global {
         resetFileFilters: () => void;
         uploadFromUrl: () => void;
         closeUrlUploadModal: () => void;
-        removeFile: (fileId: string) => void;
-        editFile: (fileId: string) => void;
-        downloadFile: (fileId: string) => void;
-        previewFile: (fileId: string) => void;
+        removeFile: (fileId: string, event?: MouseEvent) => void;
+        editFile: (fileId: string, event?: MouseEvent) => void;
+        downloadFile: (fileId: string, event?: MouseEvent) => void;
+        previewFile: (fileId: string, event?: MouseEvent) => void;
         initializeUploadArea: () => void;
         handleFileSelect: (e: Event) => void;
         createFileDownload: (originalFile: File, fileName: string) => boolean;
         showFilePreviewModal: (file: any) => void;
         closeFilePreviewModal: () => void;
         triggerBrowseFiles: () => void;
-        editSelectedFile: () => void;
-        deleteSelectedFile: () => void;
+        editSelectedFile: (event?: MouseEvent) => void;
+        deleteSelectedFile: (event?: MouseEvent) => void;
     }
 }
