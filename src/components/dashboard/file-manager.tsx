@@ -1,13 +1,18 @@
-
 "use client"
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileUp, List, Trash2, RotateCcw, LayoutGrid, Search, Undo, FolderOpen, Save, Link } from 'lucide-react';
 
 export default function FileManager() {
   
+  useEffect(() => {
+    if (typeof window !== 'undefined' && typeof window.initializeUploadArea === 'function') {
+      window.initializeUploadArea();
+    }
+  }, []);
+
   return (
     <>
       <div className="flex justify-between items-center mb-8">
@@ -15,13 +20,13 @@ export default function FileManager() {
               📁 Advanced File Management 📁
           </h2>
           <div className="flex space-x-4">
-              <Button onClick={() => window.showAllFiles()} className="glow-button">
+              <Button onClick={() => window.showAllFiles?.()} className="glow-button">
                   <List className="mr-2 h-4 w-4" />View All Files
               </Button>
-              <Button onClick={() => window.clearAllFiles()} variant="destructive">
+              <Button onClick={() => window.clearAllFiles?.()} variant="destructive">
                   <Trash2 className="mr-2 h-4 w-4" />Clear All
               </Button>
-              <Button onClick={() => window.resetUploadArea()} variant="secondary">
+              <Button onClick={() => window.resetUploadArea?.()} variant="secondary">
                   <RotateCcw className="mr-2 h-4 w-4" />Reset
               </Button>
           </div>
@@ -68,7 +73,7 @@ export default function FileManager() {
         <CardContent className="p-2">
           <div className="flex flex-wrap items-center gap-4">
               <label className="text-yellow-400 font-semibold font-rajdhani">Filter by Type:</label>
-              <select id="fileTypeFilter" onChange={() => window.filterFiles()} className="glow-input" style={{ color: 'white', background: 'linear-gradient(145deg, #0a0a0a 0%, #1a1a1a 100%)' }}>
+              <select id="fileTypeFilter" onChange={() => window.filterFiles?.()} className="glow-input" style={{ color: 'white', background: 'linear-gradient(145deg, #0a0a0a 0%, #1a1a1a 100%)' }}>
                   <option value="" style={{ background: '#0a0a0a', color: 'white' }}>All Types</option>
                   <option value="csv" style={{ background: '#0a0a0a', color: 'white' }}>CSV Files</option>
                   <option value="xlsx" style={{ background: '#0a0a0a', color: 'white' }}>Excel Files</option>
@@ -79,14 +84,14 @@ export default function FileManager() {
                   <option value="presentation" style={{ background: '#0a0a0a', color: 'white' }}>Presentations (PPT, PPTX)</option>
               </select>
               <label className="text-yellow-400 font-semibold font-rajdhani">Sort by:</label>
-              <select id="fileSortOrder" onChange={() => window.sortFiles()} className="glow-input" style={{ color: 'white', background: 'linear-gradient(145deg, #0a0a0a 0%, #1a1a1a 100%)' }}>
+              <select id="fileSortOrder" onChange={() => window.sortFiles?.()} className="glow-input" style={{ color: 'white', background: 'linear-gradient(145deg, #0a0a0a 0%, #1a1a1a 100%)' }}>
                   <option value="newest" style={{ background: '#0a0a0a', color: 'white' }}>Newest First</option>
                   <option value="oldest" style={{ background: '#0a0a0a', color: 'white' }}>Oldest First</option>
                   <option value="largest" style={{ background: '#0a0a0a', color: 'white' }}>Largest First</option>
                   <option value="smallest" style={{ background: '#0a0a0a', color: 'white' }}>Smallest First</option>
                   <option value="name" style={{ background: '#0a0a0a', color: 'white' }}>Name (A-Z)</option>
               </select>
-              <Button onClick={() => window.resetFileFilters()} variant="secondary">
+              <Button onClick={() => window.resetFileFilters?.()} variant="secondary">
                   <Undo className="mr-2 h-4 w-4"/>Reset Filters
               </Button>
           </div>
@@ -118,10 +123,10 @@ export default function FileManager() {
                   
                   <input type="file" id="fileInput" className="hidden" multiple accept=".csv,.xlsx,.pdf,.jpg,.jpeg,.png,.docx,.doc,.shp,.gdb,.ppt,.pptx,.kmz,.kml" />
                   <div className="flex justify-center space-x-4">
-                      <Button onClick={() => (document.getElementById('fileInput') as HTMLInputElement).click()} className="glow-button text-lg px-8 py-3">
+                      <Button onClick={() => (document.getElementById('fileInput') as HTMLInputElement)?.click()} className="glow-button text-lg px-8 py-3">
                           <FolderOpen className="mr-2 h-5 w-5" />Browse Files
                       </Button>
-                      <Button onClick={() => window.uploadFromUrl()} variant="secondary" className="px-8 py-3 text-lg">
+                      <Button onClick={() => window.uploadFromUrl?.()} variant="secondary" className="px-8 py-3 text-lg">
                           <Link className="mr-2 h-5 w-5" />Upload from URL
                       </Button>
                   </div>
@@ -135,10 +140,10 @@ export default function FileManager() {
       <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold text-white font-orbitron">Uploaded Files</h3>
           <div className="flex space-x-2">
-              <Button onClick={() => window.toggleFileView('grid')} id="gridViewBtn" variant="outline" size="icon">
+              <Button onClick={() => window.toggleFileView?.('grid')} id="gridViewBtn" variant="outline" size="icon">
                   <LayoutGrid className="h-5 w-5" />
               </Button>
-              <Button onClick={() => window.toggleFileView('list')} id="listViewBtn" variant="outline" size="icon">
+              <Button onClick={() => window.toggleFileView?.('list')} id="listViewBtn" variant="outline" size="icon">
                   <List className="h-5 w-5" />
               </Button>
           </div>
@@ -152,7 +157,7 @@ export default function FileManager() {
       <div id="noFilesPlaceholder" className="text-center py-12 hidden">
           <FolderOpen className="mx-auto h-16 w-16 text-gray-600 mb-4" />
           <p className="text-gray-400 text-lg mb-4">No files uploaded yet</p>
-          <Button onClick={() => (document.getElementById('fileInput') as HTMLInputElement).click()} className="glow-button">
+          <Button onClick={() => (document.getElementById('fileInput') as HTMLInputElement)?.click()} className="glow-button">
               <FileUp className="mr-2 h-4 w-4" />Upload Your First File
           </Button>
       </div>
@@ -190,7 +195,7 @@ export default function FileManager() {
                       />
                   </div>
                   <div className="flex space-x-4 pt-4">
-                      <Button type="button" onClick={() => window.closeUrlUploadModal()} className="flex-1" variant="secondary">
+                      <Button type="button" onClick={() => window.closeUrlUploadModal?.()} className="flex-1" variant="secondary">
                           Cancel
                       </Button>
                       <Button type="submit" className="glow-button flex-1">
@@ -218,5 +223,6 @@ declare global {
         removeFile: (fileId: string) => void;
         downloadFile: (fileId: string) => void;
         previewFile: (fileId: string) => void;
+        initializeUploadArea: () => void;
     }
 }
