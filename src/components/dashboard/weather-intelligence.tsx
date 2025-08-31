@@ -32,7 +32,7 @@ export default function WeatherIntelligence() {
   };
 
   const today = weatherData.find(d => d.isToday) || weatherData[0];
-  const forecast = weatherData.filter(d => !d.isToday).slice(0, 5); // show 5 day forecast now
+  const forecast = weatherData.filter(d => !d.isToday).slice(0, 5);
 
   return (
     <div className="glow-container p-4">
@@ -47,28 +47,28 @@ export default function WeatherIntelligence() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {/* Today's Weather */}
-        <Card className="kpi-card !border-yellow-400 md:col-span-1 lg:col-span-1">
-          <CardContent className="p-3 text-center text-white flex flex-col justify-center h-full">
+        <Card className="kpi-card !border-yellow-400 md:col-span-2 lg:col-span-1">
+          <CardContent className="p-2 text-center text-white flex flex-col justify-center h-full">
              <p className="text-sm font-semibold text-yellow-400 font-rajdhani">TODAY</p>
-             <p className="font-bold text-base">{today.dayOfWeek}</p>
-             <today.icon className="w-12 h-12 text-yellow-400 mx-auto my-2 animate-float" />
-             <p className="text-3xl font-bold font-orbitron">{today.temp}°C</p>
+             <p className="font-bold text-sm">{today.dayOfWeek}</p>
+             <today.icon className="w-10 h-10 text-yellow-400 mx-auto my-1 animate-weather-icon" />
+             <p className="text-2xl font-bold font-orbitron">{today.temp}°C</p>
              <p className="text-gray-400 text-xs mb-1">{`${today.minTemp}° / ${today.maxTemp}°`}</p>
-             <p className="font-semibold text-sm">{today.condition}</p>
+             <p className="font-semibold text-xs">{today.condition}</p>
           </CardContent>
         </Card>
 
         {/* Forecast */}
         {forecast.map((day, index) => (
           <Card key={index} className="kpi-card">
-            <CardContent className="p-3 text-center text-white">
-                <p className="font-bold text-base">{day.dayOfWeek}</p>
-                <p className="text-xs text-gray-400 mb-2">{day.date}</p>
-                <day.icon className="w-10 h-10 text-blue-300 mx-auto mb-2" />
-                <p className="text-2xl font-bold font-orbitron">{day.temp}°C</p>
-                 <div className="flex justify-center gap-4 text-xs text-gray-400 mt-2">
+            <CardContent className="p-2 text-center text-white">
+                <p className="font-bold text-sm">{day.dayOfWeek}</p>
+                <p className="text-xs text-gray-400 mb-1">{day.date}</p>
+                <day.icon className="w-8 h-8 text-blue-300 mx-auto animate-weather-icon" />
+                <p className="text-xl font-bold font-orbitron mt-1">{day.temp}°C</p>
+                 <div className="flex justify-center gap-3 text-xs text-gray-400 mt-1">
                     <div className="flex items-center gap-1">
                         <Droplets className="w-3 h-3" />
                         <span>{day.humidity}%</span>

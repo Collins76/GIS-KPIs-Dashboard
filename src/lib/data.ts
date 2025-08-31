@@ -65,10 +65,10 @@ export const files: ManagedFile[] = [
 ];
 
 export const weatherData: WeatherData[] = [
-    { dayOfWeek: 'Mon', date: 'Aug 31', temp: 30, minTemp: 28, maxTemp: 32, condition: 'Partly Cloudy', humidity: 70, windSpeed: 7, icon: CloudSun, isToday: true },
-    { dayOfWeek: 'Tue', date: 'Sep 1', temp: 25, minTemp: 24, maxTemp: 28, condition: 'Light Rain', humidity: 67, windSpeed: 9, icon: CloudRain, isToday: false },
-    { dayOfWeek: 'Wed', date: 'Sep 2', temp: 28, minTemp: 25, maxTemp: 29, condition: 'Scattered Showers', humidity: 70, windSpeed: 9, icon: CloudDrizzle, isToday: false },
-    { dayOfWeek: 'Thu', date: 'Sep 3', temp: 26, minTemp: 24, maxTemp: 28, condition: 'Light Rain', humidity: 86, windSpeed: 8, icon: CloudRain, isToday: false },
-    { dayOfWeek: 'Fri', date: 'Sep 4', temp: 25, minTemp: 24, maxTemp: 28, condition: 'Light Rain', humidity: 86, windSpeed: 5, icon: CloudRain, isToday: false },
-    { dayOfWeek: 'Sat', date: 'Sep 5', temp: 32, minTemp: 29, maxTemp: 34, condition: 'Sunny', humidity: 60, windSpeed: 6, icon: Sun, isToday: false },
+    { dayOfWeek: 'Sun', date: 'Sep 5', temp: 32, minTemp: 29, maxTemp: 34, condition: 'Sunny', humidity: 60, windSpeed: 6, icon: Sun, isToday: true },
+    { dayOfWeek: 'Mon', date: 'Sep 6', temp: 30, minTemp: 28, maxTemp: 32, condition: 'Partly Cloudy', humidity: 70, windSpeed: 7, icon: CloudSun, isToday: false },
+    { dayOfWeek: 'Tue', date: 'Sep 7', temp: 25, minTemp: 24, maxTemp: 28, condition: 'Light Rain', humidity: 67, windSpeed: 9, icon: CloudRain, isToday: false },
+    { dayOfWeek: 'Wed', date: 'Sep 8', temp: 28, minTemp: 25, maxTemp: 29, condition: 'Scattered Showers', humidity: 70, windSpeed: 9, icon: CloudDrizzle, isToday: false },
+    { dayOfWeek: 'Thu', date: 'Sep 9', temp: 26, minTemp: 24, maxTemp: 28, condition: 'Light Rain', humidity: 86, windSpeed: 8, icon: CloudRain, isToday: false },
+    { dayOfWeek: 'Fri', date: 'Sep 10', temp: 25, minTemp: 24, maxTemp: 28, condition: 'Light Rain', humidity: 86, windSpeed: 5, icon: CloudRain, isToday: false },
 ];
