@@ -1,3 +1,4 @@
+
 import type { Kpi, Role, ManagedFile, BusinessUnit, WeatherData } from '@/lib/types';
 import { Cloudy, Sun, CloudRain, Zap, CloudSun } from 'lucide-react';
 
@@ -64,9 +65,9 @@ export const files: ManagedFile[] = [
 ];
 
 export const weatherData: WeatherData[] = [
-    { day: 'Today', temp: 29, icon: CloudSun },
-    { day: 'Tue', temp: 31, icon: Sun },
-    { day: 'Wed', temp: 28, icon: CloudRain },
-    { day: 'Thu', temp: 27, icon: Zap },
-    { day: 'Fri', temp: 30, icon: Cloudy },
+    { day: 'Today', temp: 29, icon: CloudSun, condition: 'Partly Cloudy' },
+    { day: 'Tue', temp: 31, icon: Sun, condition: 'Sunny' },
+    { day: 'Wed', temp: 28, icon: CloudRain, condition: 'Showers' },
+    { day: 'Thu', temp: 27, icon: Zap, condition: 'Thunderstorm' },
+    { day: 'Fri', temp: 30, icon: Cloudy, condition: 'Overcast' },
 ];

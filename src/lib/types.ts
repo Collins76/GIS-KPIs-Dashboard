@@ -1,3 +1,4 @@
+
 export type Role =
   | 'GIS Coordinator'
   | 'GIS Lead'
@@ -50,6 +51,7 @@ export interface WeatherData {
   day: string;
   temp: number;
   icon: React.ComponentType<{ className?: string }>;
+  condition: string;
 }
 
 declare global {
@@ -57,5 +59,26 @@ declare global {
         initializeCharts: () => void;
         initializeComparisonChart: () => void;
         toggleChartType: (chartName: 'category' | 'trend') => void;
+        initializeUploadArea: () => void;
+        showAllFiles: () => void;
+        clearAllFiles: () => void;
+        resetUploadArea: () => void;
+        toggleFileView: (view: 'grid' | 'list') => void;
+        filterFiles: () => void;
+        sortFiles: () => void;
+        resetFileFilters: () => void;
+        uploadFromUrl: () => void;
+        closeUrlUploadModal: () => void;
+        removeFile: (fileId: string, event?: MouseEvent) => void;
+        editFile: (fileId: string, event?: MouseEvent) => void;
+        downloadFile: (fileId: string, event?: MouseEvent) => void;
+        previewFile: (fileId: string, event?: MouseEvent) => void;
+        handleFileSelect: (e: Event) => void;
+        createFileDownload: (originalFile: File, fileName: string) => boolean;
+        showFilePreviewModal: (file: any) => void;
+        closeFilePreviewModal: () => void;
+        triggerBrowseFiles: () => void;
+        editSelectedFile: (event?: MouseEvent) => void;
+        deleteSelectedFile: (event?: MouseEvent) => void;
     }
 }
