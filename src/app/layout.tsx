@@ -19,11 +19,11 @@ export default function RootLayout({
     <html lang="en" className="dark" suppressHydrationWarning>
        <Head>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
       </Head>
       <body className={cn('min-h-screen bg-black font-space antialiased text-white')}>
         {children}
         <Toaster />
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src="/js/charts.js" defer></script>
         <script src="/js/map.js" defer></script>
         <script src="/js/upload.js" defer></script>
