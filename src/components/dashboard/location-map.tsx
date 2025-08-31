@@ -20,7 +20,7 @@ const getKpisForBusinessUnit = (buId: string, allKpis: Kpi[]): Kpi[] => {
     return allKpis.filter((_, index) => (index % businessUnits.length) + 1 === buIndex);
 };
 
-const LocationCard = ({ unit, kpis, icon: CardIcon }: { unit: BusinessUnit, kpis: Kpi[], icon: React.ElementType }) => {
+const LocationCard = ({ unit, kpis, icon: IconComponent, onCopy }: { unit: BusinessUnit, kpis: Kpi[], icon: React.ElementType, onCopy: (text: string) => void }) => {
     
     const totalKpis = kpis.length;
     const completedKpis = kpis.filter(k => k.status === 'Completed').length;
@@ -35,12 +35,14 @@ const LocationCard = ({ unit, kpis, icon: CardIcon }: { unit: BusinessUnit, kpis
         return 'text-red-400';
     };
 
+    const coordinatesString = `${unit.coordinates.lat}, ${unit.coordinates.lng}`;
+
     return (
         <div className="location-card">
             <div className="flex justify-between items-start mb-2">
                 <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center">
-                        <CardIcon className="w-6 h-6 text-yellow-400"/>
+                        <IconComponent className="w-6 h-6 text-yellow-400"/>
                     </div>
                     <div>
                         <h3 className="text-white font-bold font-orbitron text-lg">{unit.id.replace('bu','')}. {unit.name}</h3>
@@ -99,6 +101,14 @@ export default function LocationMap() {
     
     const icons = [Building, Zap, Globe, Layers, LocateFixed, Zap, Globe];
 
+    const handleCopy = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({
+          title: "Coordinates Copied",
+          description: text,
+        });
+    };
+
     return (
     <div className="space-y-8">
         <div className="flex items-center space-x-3">
@@ -110,7 +120,13 @@ export default function LocationMap() {
        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {businessUnits.map((bu, index) => (
-                <LocationCard key={bu.id} unit={bu} kpis={getKpisForBusinessUnit(bu.id, kpis)} icon={icons[index % icons.length]} />
+                <LocationCard 
+                    key={bu.id} 
+                    unit={bu} 
+                    kpis={getKpisForBusinessUnit(bu.id, kpis)} 
+                    icon={icons[index % icons.length]}
+                    onCopy={handleCopy}
+                />
             ))}
         </div>
         
@@ -172,3 +188,5 @@ export default function LocationMap() {
     </div>
   )
 }
+
+    
