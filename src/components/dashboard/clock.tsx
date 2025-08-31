@@ -16,12 +16,12 @@ export default function Clock() {
   const formattedDate = time.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
-    <div className="glow-container p-4">
-        <div id="digitalClock" className="digital-clock text-center">{formattedTime}</div>
-        <p className="text-xs text-yellow-400 font-rajdhani tracking-widest mt-2 text-center">
+    <div className="glow-container p-4 text-center">
+        <div id="digitalClock" className="digital-clock">{formattedTime}</div>
+        <p className="text-xs text-yellow-400 font-rajdhani tracking-widest mt-2">
             <MapPin className="mr-1 inline-block h-3 w-3" />LAGOS, NIGERIA
         </p>
-        <div className="text-xs text-gray-400 mt-1 font-space text-center">
+        <div className="text-xs text-gray-400 mt-1 font-space">
             <Calendar className="mr-1 inline-block h-3 w-3" />
             <span id="currentDate">{formattedDate}</span>
         </div>

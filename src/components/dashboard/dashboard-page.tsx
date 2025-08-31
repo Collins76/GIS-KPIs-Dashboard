@@ -17,6 +17,7 @@ import {
   CalendarDays,
   Calendar,
   BarChart3,
+  Filter,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Header from './header';
@@ -29,6 +30,10 @@ import LocationMap from './location-map';
 import FileManager from './file-manager';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import WeatherIntelligence from './weather-intelligence';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { format } from 'date-fns';
 
 
 const TABS = [
@@ -49,6 +54,7 @@ export default function DashboardPage() {
   const [selectedRole, setSelectedRole] = useState<Role | 'All'>('All');
   const [selectedStatus, setSelectedStatus] = useState<KpiStatus | 'All'>('All');
   const [selectedCategory, setSelectedCategory] = useState<KpiCategory | 'All'>('All');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
 
   const { toast } = useToast();
@@ -132,8 +138,11 @@ export default function DashboardPage() {
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         
       <div className="filter-section mb-6">
-            <h3 className="text-xl font-bold text-white font-orbitron glow-text-yellow mb-4">🎛️ Advanced Filters</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <h3 className="text-xl font-bold text-white font-orbitron glow-text-yellow mb-4 flex items-center">
+              <Filter className="mr-3 h-6 w-6" />
+              Advanced Filters
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                     <label className="text-yellow-400 text-sm mb-2 block font-rajdhani font-semibold">
                         Role in GIS
@@ -182,6 +191,30 @@ export default function DashboardPage() {
                           <SelectItem value="Off Track">Off Track</SelectItem>
                         </SelectContent>
                     </Select>
+                </div>
+                <div>
+                    <label className="text-yellow-400 text-sm mb-2 block font-rajdhani font-semibold">
+                       Date
+                    </label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                            variant={"outline"}
+                            className="glow-input w-full justify-start text-left font-normal"
+                            >
+                            <Calendar className="mr-2 h-4 w-4 animate-pulse-glow" />
+                            {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 glow-container" align="start">
+                            <CalendarComponent
+                                mode="single"
+                                selected={selectedDate}
+                                onSelect={setSelectedDate}
+                                initialFocus
+                            />
+                        </PopoverContent>
+                    </Popover>
                 </div>
             </div>
         </div>
