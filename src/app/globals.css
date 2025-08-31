@@ -1314,3 +1314,52 @@ input[type="file"] {
 .weather-icon-CloudDrizzle {
     animation-delay: -3s, -1.5s, -6s;
 }
+
+/* SLOW SCROLLING TEXT */
+.scrolling-text-container-slow {
+    overflow: hidden;
+    position: relative;
+    height: 24px;
+}
+
+@keyframes scroll-slow {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.animate-scroll-slow {
+    animation: scroll-slow 50s linear infinite; /* Slower speed */
+    display: flex;
+    align-items: center;
+}
+
+.scrolling-text-content-green {
+    color: #10b981; /* Green color */
+    font-weight: bold;
+    text-shadow: 
+        0 0 8px rgba(16, 185, 129, 0.6),
+        0 0 16px rgba(16, 185, 129, 0.4),
+        0 0 24px rgba(16, 185, 129, 0.2);
+    letter-spacing: 0.05em;
+    font-family: 'Space Grotesk', sans-serif;
+    animation: textGlowGreen 3s ease-in-out infinite;
+}
+
+@keyframes textGlowGreen {
+    0%, 100% {
+        text-shadow: 
+            0 0 8px rgba(16, 185, 129, 0.6),
+            0 0 16px rgba(16, 185, 129, 0.4),
+            0 0 24px rgba(16, 185, 129, 0.2);
+    }
+    50% {
+        text-shadow: 
+            0 0 12px rgba(16, 185, 129, 0.8),
+            0 0 24px rgba(16, 185, 129, 0.5),
+            0 0 36px rgba(16, 185, 129, 0.3);
+    }
+}
