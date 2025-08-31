@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Role, Kpi, KpiStatus, KpiCategory } from '@/lib/types';
 import { kpis as allKpis, roles } from '@/lib/data';
 import {
@@ -25,6 +25,7 @@ import LocationMap from './location-map';
 import FileManager from './file-manager';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+
 const TABS = [
     { id: 'overview', label: 'Overview', icon: LayoutGrid },
     { id: 'roleView', label: 'Role-Based View', icon: Users },
@@ -46,6 +47,19 @@ export default function DashboardPage() {
 
 
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (typeof window.initializeCharts !== 'function' || typeof window.initializeComparisonChart !== 'function') {
+        return;
+    }
+
+    if (activeTab === 'overview') {
+      window.initializeCharts();
+    }
+    if (activeTab === 'trends') {
+        setTimeout(window.initializeComparisonChart, 0);
+    }
+  }, [activeTab]);
 
   const handleKpiUpdate = (updatedKpi: Kpi) => {
     const newData = kpiData.map(kpi => (kpi.id === updatedKpi.id ? updatedKpi : kpi));
@@ -145,18 +159,53 @@ export default function DashboardPage() {
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                         <KpiSummaryCards kpis={filteredKpis} />
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                         <div className="glow-container p-6">
-                             <h3 className="text-white font-bold text-lg font-orbitron mb-4">📊 KPI Performance by Category</h3>
-                            <KpiPerformanceChart kpis={filteredKpis} />
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-white font-bold text-lg font-orbitron">📊 KPI Performance by Category</h3>
+                                <button onClick={() => window.toggleChartType('category')} className="text-yellow-400 hover:text-yellow-300">
+                                    <i className="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                            <div className="chart-container">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
                         </div>
+
                         <div className="glow-container p-6">
-                           <h3 className="text-white font-bold text-lg font-orbitron mb-4">📈 KPI Status Distribution</h3>
-                            <KpiStatusChart kpis={filteredKpis} />
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-white font-bold text-lg font-orbitron">📈 Monthly Progress Trend</h3>
+                                <button onClick={() => window.toggleChartType('trend')} className="text-yellow-400 hover:text-yellow-300">
+                                    <i className="fas fa-chart-line"></i>
+                                </button>
+                            </div>
+                            <div className="chart-container">
+                                <canvas id="trendChart"></canvas>
+                            </div>
                         </div>
                     </div>
-                    <div className="glow-container p-6">
-                         <AiInsights kpis={filteredKpis} role={selectedRole} />
+                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                        <div className="glow-container p-6">
+                            <h3 className="text-white font-bold text-lg font-orbitron mb-4">⚡ Performance Gauge</h3>
+                            <div className="chart-container">
+                                <canvas id="performanceGauge"></canvas>
+                            </div>
+                            <div className="text-center mt-4">
+                                <div className="text-3xl font-bold text-yellow-400 font-orbitron">84%</div>
+                                <div className="text-sm text-gray-400">Overall Performance</div>
+                            </div>
+                        </div>
+
+                        <div className="glow-container p-6">
+                            <h3 className="text-white font-bold text-lg font-orbitron mb-4">🎯 Role Distribution</h3>
+                            <div className="chart-container">
+                                <canvas id="roleDistributionChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div className="glow-container p-6">
+                             <AiInsights kpis={filteredKpis} role={selectedRole} />
+                        </div>
                     </div>
                 </div>
             )}
@@ -178,7 +227,9 @@ export default function DashboardPage() {
                  <div>
                     <h2 className="text-2xl font-bold text-white mb-6">Trends & Comparison</h2>
                     <div className="glow-container p-6">
-                       <KpiPerformanceChart kpis={allKpis} />
+                       <div className="chart-container" style={{height: '500px'}}>
+                         <canvas id="comparisonChart"></canvas>
+                       </div>
                     </div>
                 </div>
             )}

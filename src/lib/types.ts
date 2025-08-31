@@ -51,3 +51,11 @@ export interface WeatherData {
   temp: number;
   icon: React.ComponentType<{ className?: string }>;
 }
+
+declare global {
+    interface Window {
+        initializeCharts: () => void;
+        initializeComparisonChart: () => void;
+        toggleChartType: (chartName: 'category' | 'trend') => void;
+    }
+}
