@@ -48,10 +48,16 @@ export interface BusinessUnit {
 }
 
 export interface WeatherData {
-  day: string;
+  dayOfWeek: string;
+  date: string;
   temp: number;
-  icon: React.ComponentType<{ className?: string }>;
+  minTemp: number;
+  maxTemp: number;
   condition: string;
+  humidity: number;
+  windSpeed: number;
+  icon: React.ComponentType<{ className?: string }>;
+  isToday: boolean;
 }
 
 declare global {

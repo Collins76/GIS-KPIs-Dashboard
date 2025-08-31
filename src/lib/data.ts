@@ -1,6 +1,6 @@
 
 import type { Kpi, Role, ManagedFile, BusinessUnit, WeatherData } from '@/lib/types';
-import { Cloudy, Sun, CloudRain, Zap, CloudSun } from 'lucide-react';
+import { Cloudy, Sun, CloudRain, Zap, CloudSun, Wind, Droplets, CloudDrizzle, Waves } from 'lucide-react';
 
 export const roles: Role[] = [
   'GIS Coordinator',
@@ -65,9 +65,10 @@ export const files: ManagedFile[] = [
 ];
 
 export const weatherData: WeatherData[] = [
-    { day: 'Today', temp: 29, icon: CloudSun, condition: 'Partly Cloudy' },
-    { day: 'Tue', temp: 31, icon: Sun, condition: 'Sunny' },
-    { day: 'Wed', temp: 28, icon: CloudRain, condition: 'Showers' },
-    { day: 'Thu', temp: 27, icon: Zap, condition: 'Thunderstorm' },
-    { day: 'Fri', temp: 30, icon: Cloudy, condition: 'Overcast' },
+    { dayOfWeek: 'Mon', date: 'Aug 31', temp: 30, minTemp: 28, maxTemp: 32, condition: 'Partly Cloudy', humidity: 70, windSpeed: 7, icon: CloudSun, isToday: true },
+    { dayOfWeek: 'Tue', date: 'Sep 1', temp: 25, minTemp: 24, maxTemp: 28, condition: 'Light Rain', humidity: 67, windSpeed: 9, icon: CloudRain, isToday: false },
+    { dayOfWeek: 'Wed', date: 'Sep 2', temp: 28, minTemp: 25, maxTemp: 29, condition: 'Scattered Showers', humidity: 70, windSpeed: 9, icon: CloudDrizzle, isToday: false },
+    { dayOfWeek: 'Thu', date: 'Sep 3', temp: 26, minTemp: 24, maxTemp: 28, condition: 'Light Rain', humidity: 86, windSpeed: 8, icon: CloudRain, isToday: false },
+    { dayOfWeek: 'Fri', date: 'Sep 4', temp: 25, minTemp: 24, maxTemp: 28, condition: 'Light Rain', humidity: 86, windSpeed: 5, icon: CloudRain, isToday: false },
+    { dayOfWeek: 'Sat', date: 'Sep 5', temp: 32, minTemp: 29, maxTemp: 34, condition: 'Sunny', humidity: 60, windSpeed: 6, icon: Sun, isToday: false },
 ];

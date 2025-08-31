@@ -8,7 +8,7 @@ import { Calendar } from 'lucide-react';
 
 export default function WeatherForecast() {
   const today = weatherData[0];
-  const forecast = weatherData.slice(1);
+  const forecast = weatherData.slice(1,5); // Show next 4 days
 
   return (
     <Popover>
@@ -28,7 +28,7 @@ export default function WeatherForecast() {
       <PopoverContent className="w-80 glow-container p-4">
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                 <h4 className="font-orbitron text-lg font-bold text-white">5-Day Forecast</h4>
+                 <h4 className="font-orbitron text-lg font-bold text-white">4-Day Forecast</h4>
                  <Calendar className="h-5 w-5 text-yellow-400" />
             </div>
            
@@ -36,8 +36,8 @@ export default function WeatherForecast() {
             {forecast.map((day) => {
               const DayIcon = day.icon;
               return (
-                <div key={day.day} className="flex items-center justify-between text-sm">
-                  <span className="font-rajdhani font-semibold text-gray-300 w-12">{day.day}</span>
+                <div key={day.dayOfWeek} className="flex items-center justify-between text-sm">
+                  <span className="font-rajdhani font-semibold text-gray-300 w-12">{day.dayOfWeek}</span>
                   <div className="flex items-center gap-2">
                     <DayIcon className="h-5 w-5 text-yellow-400" />
                     <span className="w-24 text-gray-400">{day.condition}</span>

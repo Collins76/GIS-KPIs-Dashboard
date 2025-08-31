@@ -13,6 +13,7 @@ import {
   Users,
   TrendingUp,
   ListChecks,
+  CloudSun,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Header from './header';
@@ -24,6 +25,7 @@ import KpiTable from './kpi-table';
 import LocationMap from './location-map';
 import FileManager from './file-manager';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import WeatherIntelligence from './weather-intelligence';
 
 
 const TABS = [
@@ -32,6 +34,7 @@ const TABS = [
     { id: 'trends', label: 'Trends & Comparison', icon: TrendingUp },
     { id: 'tracking', label: 'KPIs Status & Tracking', icon: ListChecks },
     { id: 'map', label: 'Location Map', icon: Map },
+    { id: 'weather', label: 'Weather', icon: CloudSun },
     { id: 'upload', label: 'Data Upload', icon: FileIcon },
 ];
 
@@ -257,6 +260,7 @@ export default function DashboardPage() {
                 />
             )}
             {activeTab === 'map' && <LocationMap />}
+            {activeTab === 'weather' && <WeatherIntelligence />}
             {activeTab === 'upload' && <FileManager />}
         </div>
 
