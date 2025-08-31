@@ -8,6 +8,9 @@ export type Role =
 
 export type KpiCategory = 'Business Growth' | 'People Development' | 'Operational Process' | 'Customer';
 export type KpiStatus = 'On Track' | 'At Risk' | 'Off Track' | 'Not Started' | 'Completed';
+export type KpiTargetType = 'Number' | 'Percentage';
+export type KpiFrequency = 'Annually' | 'Monthly' | 'Quarterly';
+
 
 export interface Kpi {
   id: string;
@@ -19,6 +22,11 @@ export interface Kpi {
   dataSource: string;
   progress: number;
   status: KpiStatus;
+  weight: number;
+  targetType: KpiTargetType;
+  frequency: KpiFrequency;
+  startDate: string;
+  endDate: string;
 }
 
 export interface User {

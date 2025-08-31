@@ -10,13 +10,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import type { Role, KpiStatus, Kpi } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { KpiUpdateDialog } from './kpi-update-dialog';
 import { Edit } from 'lucide-react';
+import { format } from 'date-fns';
 
 type KpiTableProps = {
   kpiData: Kpi[];
@@ -64,13 +64,6 @@ export default function KpiTable({
     }
   };
   
-  const getProgressColor = (progress: number) => {
-    if (progress > 75) return 'bg-green-500';
-    if (progress > 40) return 'bg-yellow-500';
-    if (progress > 0) return 'bg-red-500';
-    return 'bg-gray-400';
-  }
-
   return (
     <>
       <div className="glow-container p-6">
@@ -78,11 +71,14 @@ export default function KpiTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[35%]">KPI</TableHead>
+              <TableHead className="w-[25%]">KPI</TableHead>
               <TableHead>Role</TableHead>
-              <TableHead>Category</TableHead>
+              <TableHead>Frequency</TableHead>
+              <TableHead>Weight</TableHead>
+              <TableHead>Target</TableHead>
               <TableHead>Progress</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Timeline</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -90,9 +86,11 @@ export default function KpiTable({
             {filteredKpis.length > 0 ? (
               filteredKpis.map(kpi => (
                 <TableRow key={kpi.id}>
-                  <TableCell className="font-medium">{kpi.title}</TableCell>
+                  <TableCell className="font-medium text-xs">{kpi.title}</TableCell>
                   <TableCell>{kpi.role}</TableCell>
-                  <TableCell>{kpi.category}</TableCell>
+                  <TableCell>{kpi.frequency}</TableCell>
+                  <TableCell>{kpi.weight}%</TableCell>
+                  <TableCell>{kpi.targetType === 'Percentage' ? `${kpi.target}%` : kpi.target}</TableCell>
                   <TableCell onClick={() => handleOpenDialog(kpi)} className="cursor-pointer">
                     <div className="flex items-center gap-2">
                       <Progress value={kpi.progress} className="w-[80%] h-3" />
@@ -101,6 +99,9 @@ export default function KpiTable({
                   </TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(kpi.status)}>{kpi.status}</Badge>
+                  </TableCell>
+                  <TableCell className="text-xs">
+                    {format(new Date(kpi.startDate), 'MMM d, yyyy')} - {format(new Date(kpi.endDate), 'MMM d, yyyy')}
                   </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" onClick={() => handleOpenDialog(kpi)}>
@@ -111,7 +112,7 @@ export default function KpiTable({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center h-24">No KPIs found for the selected filters.</TableCell>
+                <TableCell colSpan={9} className="text-center h-24">No KPIs found for the selected filters.</TableCell>
               </TableRow>
             )}
           </TableBody>

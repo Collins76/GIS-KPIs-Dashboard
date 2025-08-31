@@ -14,6 +14,7 @@ import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
 
 type KpiUpdateDialogProps = {
   kpi: Kpi;
@@ -45,11 +46,15 @@ export function KpiUpdateDialog({ kpi, onUpdate, onClose }: KpiUpdateDialogProps
             <div className="glow-container p-4 rounded-lg">
                 <h4 className="text-white font-bold mb-4 font-orbitron text-lg">KPI Details</h4>
                 <div className="space-y-3 text-sm text-gray-300">
-                    <p><strong className="font-semibold text-yellow-400 w-24 inline-block">Role:</strong> {kpi.role}</p>
-                    <p><strong className="font-semibold text-yellow-400 w-24 inline-block">Category:</strong> <Badge variant="secondary">{kpi.category}</Badge></p>
-                    <p><strong className="font-semibold text-yellow-400 w-24 inline-block">Target:</strong> {kpi.target}</p>
-                    <p><strong className="font-semibold text-yellow-400 w-24 inline-block">Metric:</strong> {kpi.metric}</p>
-                    <p><strong className="font-semibold text-yellow-400 w-24 inline-block">Data Source:</strong> {kpi.dataSource}</p>
+                    <p><strong className="font-semibold text-yellow-400 w-28 inline-block">Role:</strong> {kpi.role}</p>
+                    <p><strong className="font-semibold text-yellow-400 w-28 inline-block">Category:</strong> <Badge variant="secondary">{kpi.category}</Badge></p>
+                    <p><strong className="font-semibold text-yellow-400 w-28 inline-block">Target:</strong> {kpi.targetType === 'Percentage' ? `${kpi.target}%` : kpi.target} ({kpi.targetType})</p>
+                    <p><strong className="font-semibold text-yellow-400 w-28 inline-block">Metric:</strong> {kpi.metric}</p>
+                    <p><strong className="font-semibold text-yellow-400 w-28 inline-block">Data Source:</strong> {kpi.dataSource}</p>
+                    <p><strong className="font-semibold text-yellow-400 w-28 inline-block">Weight:</strong> {kpi.weight}%</p>
+                    <p><strong className="font-semibold text-yellow-400 w-28 inline-block">Frequency:</strong> {kpi.frequency}</p>
+                    <p><strong className="font-semibold text-yellow-400 w-28 inline-block">Start Date:</strong> {format(new Date(kpi.startDate), 'PPP')}</p>
+                    <p><strong className="font-semibold text-yellow-400 w-28 inline-block">End Date:</strong> {format(new Date(kpi.endDate), 'PPP')}</p>
                 </div>
             </div>
 
