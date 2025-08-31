@@ -173,41 +173,23 @@ export default function FileManager() {
       </div>
 
       <div id="urlUploadModal" className="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50 hidden">
-          <div className="glow-modal w-full max-w-md p-6 m-4">
-              <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold text-white font-orbitron mb-2">Upload from URL</h3>
-                  <p className="text-yellow-400 font-rajdhani">Enter the direct URL of the file</p>
-              </div>
-              
-              <form id="urlUploadForm" className="space-y-4">
+          <div className="glow-modal w-full max-w-lg p-8 m-4">
+              <h3 className="text-2xl font-bold text-white font-orbitron mb-6 text-center animate-neon-glow">Upload from URL</h3>
+              <form id="urlUploadForm" className="space-y-6">
                   <div>
-                      <Label htmlFor="fileUrl" className="block text-sm font-medium text-gray-300 mb-2 font-space">
-                          <Link className="inline-block mr-2 text-blue-400 h-4 w-4" />File URL
-                      </Label>
                       <Input 
                           type="url" 
                           id="fileUrl"
-                          placeholder="https://example.com/file.pdf"
-                          className="glow-input w-full"
+                          placeholder="https://drive.google.com/file/d/..."
+                          className="glow-input w-full text-center text-lg h-12"
                           required
                       />
                   </div>
-                  <div>
-                      <Label htmlFor="customFileName" className="block text-sm font-medium text-gray-300 mb-2 font-space">
-                         <Pencil className="inline-block mr-2 text-green-400 h-4 w-4" />File Name (Optional)
-                      </Label>
-                      <Input 
-                          type="text" 
-                          id="customFileName"
-                          placeholder="Leave empty to use original name"
-                          className="glow-input w-full"
-                      />
-                  </div>
                   <div className="flex space-x-4 pt-4">
-                      <Button type="button" onClick={() => callWindowFunc('closeUrlUploadModal')} className="flex-1" variant="secondary">
+                      <Button type="button" onClick={() => callWindowFunc('closeUrlUploadModal')} className="flex-1 py-3 text-lg" variant="outline">
                           Cancel
                       </Button>
-                      <Button type="submit" className="glow-button flex-1">
+                      <Button type="submit" className="glow-button flex-1 py-3 text-lg">
                           Upload
                       </Button>
                   </div>
@@ -243,3 +225,5 @@ declare global {
         deleteSelectedFile: (event?: MouseEvent) => void;
     }
 }
+
+    
