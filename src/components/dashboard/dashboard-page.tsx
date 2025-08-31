@@ -24,8 +24,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import Header from './header';
 import KpiSummaryCards from './kpi-summary-cards';
-import KpiPerformanceChart from './kpi-performance-chart';
-import KpiStatusChart from './kpi-status-chart';
 import AiInsights from './ai-insights';
 import KpiTable from './kpi-table';
 import LocationMap from './location-map';
@@ -39,6 +37,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import KpiUserPerformanceChart from './kpi-user-performance-chart';
 import RoleBasedView from './role-based-view';
+import TrendsComparisonChart from './trends-comparison-chart';
 
 
 const TABS = [
@@ -57,10 +56,11 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
   
   const [selectedRole, setSelectedRole] = useState<Role | 'All'>('All');
-  const [selectedStatus, setSelectedStatus] = useState<KpiStatus | 'All'>('All');
+  const [selectedStatus, setSelectedStatus] = useState<KpiStatus | 'All'>('Completed');
   const [selectedCategory, setSelectedCategory] = useState<KpiCategory | 'All'>('All');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [userChartType, setUserChartType] = useState<'pie' | 'bar'>('pie');
+  const [trendsChartType, setTrendsChartType] = useState<'bar' | 'doughnut'>('bar');
 
 
   const { toast } = useToast();
@@ -82,7 +82,8 @@ export default function DashboardPage() {
         window.initializeCharts();
       }
       if (activeTab === 'trends') {
-          setTimeout(window.initializeComparisonChart, 0);
+          // The old comparison chart is no longer used, so we don't initialize it.
+          // setTimeout(window.initializeComparisonChart, 0);
       }
     };
     initCharts();
@@ -123,6 +124,10 @@ export default function DashboardPage() {
 
   const toggleUserChartType = () => {
     setUserChartType(prev => (prev === 'pie' ? 'bar' : 'pie'));
+  }
+
+  const toggleTrendsChartType = () => {
+    setTrendsChartType(prev => (prev === 'bar' ? 'doughnut' : 'bar'));
   }
 
   return (
@@ -318,11 +323,14 @@ export default function DashboardPage() {
             )}
             {activeTab === 'trends' && (
                  <div>
-                    <h2 className="text-2xl font-bold text-white mb-6">Trends & Comparison</h2>
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-bold text-white">Trends & Comparison</h2>
+                         <Button onClick={toggleTrendsChartType} variant="ghost" size="icon" className="text-yellow-400 hover:text-yellow-300 transition-transform transform hover:scale-110">
+                            <RefreshCcw className="h-5 w-5 animate-spin" />
+                        </Button>
+                    </div>
                     <div className="glow-container p-6">
-                       <div className="chart-container" style={{height: '500px'}}>
-                         <canvas id="comparisonChart"></canvas>
-                       </div>
+                       <TrendsComparisonChart kpis={kpiData} type={trendsChartType} />
                     </div>
                 </div>
             )}
