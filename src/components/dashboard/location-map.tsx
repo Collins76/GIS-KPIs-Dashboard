@@ -64,9 +64,9 @@ const LocationCard = ({ unit, onEditAddress, onViewMap, onResetAddress }: { unit
                 </div>
 
                 <div className="space-y-3 text-sm text-gray-300 mb-4 min-h-[70px]">
-                    <div>
-                        <p className="text-xs text-gray-400">Address</p>
-                        <p onClick={() => setAddressModalOpen(true)} className="font-semibold truncate cursor-pointer hover:text-yellow-400">
+                    <div onClick={() => setAddressModalOpen(true)} className="glowing-blue-box">
+                        <p className="text-xs text-blue-300">Address</p>
+                        <p className="font-semibold truncate text-white">
                           {unit.address || 'Click to set address'}
                         </p>
                     </div>
@@ -169,7 +169,7 @@ export default function LocationMap() {
                      newUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=cyclosm&marker=${lat},${lng}`;
                     break;
                 case 'terrain':
-                     newUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=cyclemap&marker=${lat},${lng}`;
+                     newUrl = `https://www/openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=cyclemap&marker=${lat},${lng}`;
                     break;
             }
             setMapUrl(newUrl);

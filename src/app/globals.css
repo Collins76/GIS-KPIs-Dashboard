@@ -1363,4 +1363,32 @@ input[type="file"] {
     animation: pulseGlow 1.5s ease-in-out infinite;
 }
 
+/* Glowing Blue Box for Address */
+@keyframes pulseBlueGlow {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.2),
+                    0 0 20px rgba(59, 130, 246, 0.1);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.4),
+                    0 0 30px rgba(59, 130, 246, 0.2);
+    }
+}
+
+.glowing-blue-box {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.3s ease-in-out;
+    animation: pulseBlueGlow 2.5s infinite ease-in-out;
+}
+
+.glowing-blue-box:hover {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5),
+                0 0 40px rgba(59, 130, 246, 0.3);
+    border-color: rgba(59, 130, 246, 0.7);
+    transform: translateY(-2px);
+    background: rgba(59, 130, 246, 0.15);
+}
     
