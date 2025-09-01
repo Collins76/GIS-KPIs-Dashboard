@@ -1360,5 +1360,7 @@ input[type="file"] {
 
 /* Spinning, Glowing Refresh Button */
 .refresh-button-animated {
-    animation: spin 2s linear infinite, pulseGlow 1.5s ease-in-out infinite;
+    animation: pulseGlow 1.5s ease-in-out infinite;
 }
+
+    
