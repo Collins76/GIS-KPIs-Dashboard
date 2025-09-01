@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect }from 'react';
+import { useState, useEffect, useRef }from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -109,6 +109,7 @@ export default function LocationMap() {
     const [businessUnits, setBusinessUnits] = useState<BusinessUnit[]>(initialBusinessUnits);
     const [selectedUnit, setSelectedUnit] = useState<BusinessUnit | null>(null);
     const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    const mapRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const storedUnits = localStorage.getItem('gis-business-units');
@@ -160,6 +161,7 @@ export default function LocationMap() {
 
     const handleViewOnMap = (unit: BusinessUnit) => {
         setSelectedUnit(unit);
+        mapRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
 
     const mapSrc = selectedUnit && selectedUnit.coordinates.lat !== 0
@@ -187,7 +189,7 @@ export default function LocationMap() {
             ))}
         </div>
         
-        <div className="network-map-display h-[450px]">
+        <div ref={mapRef} className="network-map-display h-[450px]">
             {googleMapsApiKey ? (
                 <iframe
                     width="100%"
