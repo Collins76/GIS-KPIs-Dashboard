@@ -28,6 +28,8 @@ const getFileIcon = (fileType: string) => {
     if (fileType.startsWith('image/')) return <ImageIcon className="h-10 w-10 text-purple-400" />;
     if (fileType === 'application/pdf') return <FileText className="h-10 w-10 text-red-400" />;
     if (fileType.includes('spreadsheet') || fileType.includes('csv')) return <FileSpreadsheet className="h-10 w-10 text-green-400" />;
+    if (fileType.includes('presentation') || fileType.includes('powerpoint')) return <FileIcon className="h-10 w-10 text-orange-400" />;
+    if (['application/octet-stream', 'application/x-zip-compressed', 'application/vnd.google-earth.kml+xml'].includes(fileType)) return <Folder className="h-10 w-10 text-yellow-400"/>
     return <FileIcon className="h-10 w-10 text-gray-400" />;
 };
 
@@ -84,9 +86,8 @@ export default function FileManager() {
         const pathname = url.pathname;
         const fileName = pathname.split('/').pop() || 'file_from_url';
 
-        // Basic mime-type guessing from extension
         const extension = fileName.split('.').pop()?.toLowerCase();
-        let fileType = 'application/octet-stream';
+        let fileType = 'application/octet-stream'; // Default
         if (extension) {
             const types: { [key: string]: string } = {
                 'jpg': 'image/jpeg',
@@ -97,8 +98,12 @@ export default function FileManager() {
                 'csv': 'text/csv',
                 'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'shp': 'application/octet-stream', // Common shapefile extension
+                'ppt': 'application/vnd.ms-powerpoint',
+                'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'shp': 'application/octet-stream', // SHP is complex, often a zip. octet-stream is safe.
                 'kml': 'application/vnd.google-earth.kml+xml',
+                'kmz': 'application/vnd.google-earth.kmz',
+                'gdb': 'application/octet-stream', // GDB is a folder, often zipped.
             };
             fileType = types[extension] || 'application/octet-stream';
         }
@@ -106,16 +111,15 @@ export default function FileManager() {
         const newFile: ManagedFile = {
             id: `${fileName}-${Date.now()}-${Math.random()}`,
             name: fileName,
-            size: Math.floor(Math.random() * 10000000) + 100000, // Random size between 100KB and 10MB
+            size: Math.floor(Math.random() * 10000000) + 100000,
             type: fileType,
-            file: new File([], fileName, { type: fileType }), // Create a dummy File object
+            file: new File([], fileName, { type: fileType }),
             progress: 100,
             status: 'completed',
             uploadedAt: new Date(),
         };
 
         setUploadedFiles(prev => [...prev, newFile]);
-
         toast({
           title: "URL processed",
           description: `${fileName} has been added to the list.`,
@@ -139,7 +143,6 @@ export default function FileManager() {
   
   const handleReset = () => {
     clearAllFiles();
-    // Here you would also reset filters and sorting
     toast({
       title: "File Manager Reset",
       description: "All files, filters, and sorting have been reset.",
@@ -147,7 +150,6 @@ export default function FileManager() {
   };
 
   const showAllFiles = () => {
-    // In a real app, this would reset filters. For now, it just shows a toast.
     toast({
       title: "Showing All Files",
       description: "Filters have been reset.",
@@ -159,20 +161,20 @@ export default function FileManager() {
   };
   
   const viewFile = (file: ManagedFile) => {
-    if (file.file) {
+    if (file.file && file.file.size > 0) {
         const fileUrl = URL.createObjectURL(file.file);
         window.open(fileUrl, '_blank');
     } else {
         toast({
             title: "Preview not available",
-            description: "Cannot preview this file.",
+            description: "Cannot preview this file. It may be a placeholder from a URL upload.",
             variant: "default",
         });
     }
   };
 
   const downloadFile = (file: ManagedFile) => {
-    if (file.file) {
+    if (file.file && file.file.size > 0) {
         const link = document.createElement('a');
         link.href = URL.createObjectURL(file.file);
         link.download = file.name;
@@ -182,7 +184,7 @@ export default function FileManager() {
     } else {
         toast({
             title: "Download not available",
-            description: "Cannot download this file.",
+            description: "Cannot download this file. It may be a placeholder from a URL upload.",
             variant: "destructive"
         });
     }
@@ -206,13 +208,13 @@ export default function FileManager() {
         </div>
         <div className={cn("flex items-center gap-2", { 'mt-4': viewMode === 'grid' })}>
             <Button onClick={() => viewFile(file)} variant="ghost" size="icon" className="text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 transition-all transform hover:scale-110">
-                <Eye className="h-5 w-5 glow-text-blue animate-pulse"/>
+                <Eye className="h-5 w-5 glow-text-blue animate-pulse-glow"/>
             </Button>
             <Button onClick={() => downloadFile(file)} variant="ghost" size="icon" className="text-green-400 hover:bg-green-500/10 hover:text-green-300 transition-all transform hover:scale-110">
-                <Download className="h-5 w-5 glow-text-green animate-pulse"/>
+                <Download className="h-5 w-5 glow-text-green animate-pulse-glow"/>
             </Button>
             <Button onClick={() => removeFile(file.id)} variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10 hover:text-red-300 transition-all transform hover:scale-110">
-                <Trash2 className="h-5 w-5 glow-text-yellow animate-pulse"/>
+                <Trash2 className="h-5 w-5 glow-text-yellow animate-pulse-glow"/>
             </Button>
         </div>
     </Card>
@@ -416,3 +418,5 @@ export default function FileManager() {
     </>
   );
 }
+
+    
