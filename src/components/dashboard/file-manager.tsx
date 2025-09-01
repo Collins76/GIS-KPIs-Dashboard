@@ -476,5 +476,3 @@ export default function FileManager() {
     </>
   );
 }
-
-    
