@@ -64,7 +64,7 @@ const LocationCard = ({ unit, onEditAddress, onViewMap, onResetAddress }: { unit
                 </div>
 
                 <div className="space-y-3 text-sm text-gray-300 mb-4 min-h-[70px]">
-                    <div onClick={() => setAddressModalOpen(true)} className="glowing-blue-box">
+                    <div onClick={() => setAddressModalOpen(true)} className="glowing-blue-box cursor-pointer">
                         <p className="text-xs text-blue-300">Address</p>
                         <p className="font-semibold truncate text-white">
                           {unit.address || 'Click to set address'}
