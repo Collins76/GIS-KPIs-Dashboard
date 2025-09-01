@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -330,7 +329,6 @@ export default function FileManager() {
               Advanced File Management
           </h2>
           <div className="flex space-x-2">
-            <Button onClick={showAllFiles} className="glow-button !bg-blue-500 hover:!bg-blue-600 animate-pulse-glow"><Eye className="mr-2 h-4 w-4"/>View All Files</Button>
             <Button onClick={clearAllFiles} className="glow-button !bg-red-500 hover:!bg-red-600 animate-pulse-glow"><Trash2 className="mr-2 h-4 w-4"/>Clear All</Button>
             <Button onClick={handleReset} className="glow-button !bg-gray-500 hover:!bg-gray-600 animate-pulse-glow"><RotateCcw className="mr-2 h-4 w-4"/>Reset</Button>
           </div>
@@ -476,3 +474,5 @@ export default function FileManager() {
     </>
   );
 }
+
+    
