@@ -18,7 +18,8 @@ type ManagedFile = {
   name: string;
   size: number; // Store size in bytes for accurate calculation
   type: string;
-  file: File;
+  file?: File;
+  url?: string;
   progress: number;
   status: 'pending' | 'uploading' | 'completed' | 'error';
   uploadedAt: Date;
@@ -90,12 +91,8 @@ export default function FileManager() {
         let fileType = 'application/octet-stream'; // Default
         if (extension) {
             const types: { [key: string]: string } = {
-                'jpg': 'image/jpeg',
-                'jpeg': 'image/jpeg',
-                'png': 'image/png',
-                'gif': 'image/gif',
-                'pdf': 'application/pdf',
-                'csv': 'text/csv',
+                'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png', 'gif': 'image/gif',
+                'pdf': 'application/pdf', 'csv': 'text/csv',
                 'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                 'ppt': 'application/vnd.ms-powerpoint',
@@ -113,7 +110,7 @@ export default function FileManager() {
             name: fileName,
             size: Math.floor(Math.random() * 10000000) + 100000,
             type: fileType,
-            file: new File([], fileName, { type: fileType }),
+            url: urlToUpload,
             progress: 100,
             status: 'completed',
             uploadedAt: new Date(),
@@ -152,7 +149,7 @@ export default function FileManager() {
   const showAllFiles = () => {
     toast({
       title: "Showing All Files",
-      description: "Filters have been reset.",
+      description: "Filters have been reset to show all uploaded files.",
     });
   };
 
@@ -161,33 +158,39 @@ export default function FileManager() {
   };
   
   const viewFile = (file: ManagedFile) => {
-    if (file.file && file.file.size > 0) {
+    if (file.url) {
+        window.open(file.url, '_blank');
+    } else if (file.file && file.file.size > 0) {
         const fileUrl = URL.createObjectURL(file.file);
         window.open(fileUrl, '_blank');
     } else {
         toast({
             title: "Preview not available",
-            description: "Cannot preview this file. It may be a placeholder from a URL upload.",
-            variant: "default",
+            description: "This file does not have a valid source to preview.",
+            variant: "destructive",
         });
     }
   };
 
   const downloadFile = (file: ManagedFile) => {
-    if (file.file && file.file.size > 0) {
-        const link = document.createElement('a');
+    const link = document.createElement('a');
+    link.download = file.name;
+    if (file.url) {
+        link.href = file.url;
+        link.target = '_blank';
+    } else if (file.file) {
         link.href = URL.createObjectURL(file.file);
-        link.download = file.name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
     } else {
         toast({
             title: "Download not available",
-            description: "Cannot download this file. It may be a placeholder from a URL upload.",
+            description: "No file source to download.",
             variant: "destructive"
         });
+        return;
     }
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleBrowseClick = () => {
