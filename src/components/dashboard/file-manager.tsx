@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -30,7 +31,7 @@ const getFileIcon = (fileType: string) => {
     if (fileType === 'application/pdf') return <FileText className="h-10 w-10 text-red-400" />;
     if (fileType.includes('spreadsheet') || fileType.includes('csv')) return <FileSpreadsheet className="h-10 w-10 text-green-400" />;
     if (fileType.includes('presentation') || fileType.includes('powerpoint')) return <FileIcon className="h-10 w-10 text-orange-400" />;
-    if (['application/octet-stream', 'application/x-zip-compressed', 'application/vnd.google-earth.kml+xml'].includes(fileType)) return <Folder className="h-10 w-10 text-yellow-400"/>
+    if (['application/octet-stream', 'application/x-zip-compressed', 'application/vnd.google-earth.kml+xml', 'application/vnd.google-earth.kmz'].includes(fileType)) return <Folder className="h-10 w-10 text-yellow-400"/>
     return <FileIcon className="h-10 w-10 text-gray-400" />;
 };
 
@@ -239,21 +240,19 @@ export default function FileManager() {
      <Card className={cn("glow-container p-3 flex flex-col gap-3", { 'items-center text-center': viewMode === 'grid' })}>
         
         {file.status === 'uploading' ? (
-          <>
-            <div className="flex items-center gap-4 w-full">
-              <div className="w-12 h-12 flex-shrink-0 bg-gray-700 rounded-lg flex items-center justify-center animate-pulse-glow">
-                <Hourglass className="h-6 w-6 text-yellow-400" />
-              </div>
-              <div className="flex-grow overflow-hidden">
-                <p className="font-semibold text-sm truncate text-white">{file.name}</p>
-                <p className="text-xs text-gray-400">Uploading... {file.progress}%</p>
-                <Progress value={file.progress} className="h-1.5 mt-1" />
-              </div>
-              <Button onClick={() => cancelUpload(file.id)} variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10 hover:text-red-300">
-                <XSquare className="h-5 w-5" />
-              </Button>
+          <div className="flex items-center gap-4 w-full">
+            <div className="w-12 h-12 flex-shrink-0 bg-gray-700 rounded-lg flex items-center justify-center animate-pulse-glow">
+              <Hourglass className="h-6 w-6 text-yellow-400" />
             </div>
-          </>
+            <div className="flex-grow overflow-hidden">
+              <p className="font-semibold text-sm truncate text-white">{file.name}</p>
+              <p className="text-xs text-gray-400">Uploading... {file.progress}%</p>
+              <Progress value={file.progress} className="h-1.5 mt-1" />
+            </div>
+            <Button onClick={() => cancelUpload(file.id)} variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10 hover:text-red-300">
+              <XSquare className="h-5 w-5" />
+            </Button>
+          </div>
         ) : (
           <>
              <div className={cn("flex-grow overflow-hidden w-full", {'flex flex-col items-center': viewMode === 'grid' })}>
