@@ -78,8 +78,53 @@ export default function FileManager() {
         toast({ title: "URL is empty", description: "Please paste a URL to upload.", variant: "destructive" });
         return;
     }
-    // In a real app, you would handle the URL upload logic here (e.g., fetch and process the file)
-    toast({ title: "URL submitted", description: `Processing: ${urlToUpload}` });
+    
+    try {
+        const url = new URL(urlToUpload);
+        const pathname = url.pathname;
+        const fileName = pathname.split('/').pop() || 'file_from_url';
+
+        // Basic mime-type guessing from extension
+        const extension = fileName.split('.').pop()?.toLowerCase();
+        let fileType = 'application/octet-stream';
+        if (extension) {
+            const types: { [key: string]: string } = {
+                'jpg': 'image/jpeg',
+                'jpeg': 'image/jpeg',
+                'png': 'image/png',
+                'gif': 'image/gif',
+                'pdf': 'application/pdf',
+                'csv': 'text/csv',
+                'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'shp': 'application/octet-stream', // Common shapefile extension
+                'kml': 'application/vnd.google-earth.kml+xml',
+            };
+            fileType = types[extension] || 'application/octet-stream';
+        }
+
+        const newFile: ManagedFile = {
+            id: `${fileName}-${Date.now()}-${Math.random()}`,
+            name: fileName,
+            size: Math.floor(Math.random() * 10000000) + 100000, // Random size between 100KB and 10MB
+            type: fileType,
+            file: new File([], fileName, { type: fileType }), // Create a dummy File object
+            progress: 100,
+            status: 'completed',
+            uploadedAt: new Date(),
+        };
+
+        setUploadedFiles(prev => [...prev, newFile]);
+
+        toast({
+          title: "URL processed",
+          description: `${fileName} has been added to the list.`,
+        });
+
+    } catch (error) {
+        toast({ title: "Invalid URL", description: "Please enter a valid URL.", variant: "destructive" });
+    }
+
     setUrlToUpload('');
     setUrlModalOpen(false);
   };
