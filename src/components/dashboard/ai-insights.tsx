@@ -28,7 +28,6 @@ export default function AiInsights({ kpis, role }: AiInsightsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleAnalyze = async () => {
-    // No need to set isModalOpen(true) here as DialogTrigger handles it
     setLoading(true);
     setAnalysis(null);
     try {
@@ -71,7 +70,7 @@ export default function AiInsights({ kpis, role }: AiInsightsProps) {
       </CardContent>
       <CardFooter>
         <DialogTrigger asChild>
-            <Button disabled={kpis.length === 0} className="w-full glow-button">
+            <Button className="w-full glow-button">
                 <Sparkles className="mr-2 h-4 w-4" />
                 Analyze Dashboard Data
             </Button>
