@@ -20,26 +20,10 @@ const callWindowFunc = (funcName: keyof Window, ...args: any[]) => {
 
 
 export default function FileManager() {
-  const [isUrlModalOpen, setUrlModalOpen] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadAreaRef = useRef<HTMLDivElement>(null);
 
-
-  const handleUrlUpload = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const urlInput = form.elements.namedItem('fileUrl') as HTMLInputElement;
-    const url = urlInput.value;
-    if (url) {
-        console.log("Uploading from URL:", url);
-        toast({
-            title: "Upload Started",
-            description: `File from ${url} is being uploaded.`,
-        });
-        setUrlModalOpen(false);
-    }
-  };
 
   const handleFiles = useCallback((files: FileList) => {
     console.log(`${files.length} files selected.`);
@@ -191,7 +175,7 @@ export default function FileManager() {
               <div className="text-center">
                   <FileUp className="mx-auto h-20 w-20 text-yellow-400 mb-6 animate-float" />
                   <h3 className="text-2xl font-bold text-white mb-4 font-orbitron">Upload Your Files</h3>
-                  <p className="text-white text-lg mb-2">Drag and drop files here or click a button below</p>
+                  <p className="text-white text-lg mb-2">Drag and drop files here or click the button below</p>
                   <p className="text-gray-400 text-sm mb-4">Maximum file size: 500MB per file</p>
                   
                   <div className="grid grid-cols-4 md:grid-cols-8 gap-2 mb-6 max-w-lg mx-auto">
@@ -216,12 +200,6 @@ export default function FileManager() {
                   <div className="flex justify-center space-x-4">
                       <Button onClick={() => fileInputRef.current?.click()} className="glow-button text-lg px-8 py-3">
                           <FolderOpen className="mr-2 h-5 w-5" />Browse Files
-                      </Button>
-                      <Button 
-                        onClick={() => setUrlModalOpen(true)}
-                        variant="secondary" 
-                        className="px-8 py-3 text-lg bg-blue-600 hover:bg-blue-700 text-white border-blue-700">
-                          <Link className="mr-2 h-5 w-5" />Upload from URL
                       </Button>
                   </div>
               </div>
@@ -253,33 +231,6 @@ export default function FileManager() {
           </Button>
       </div>
 
-      {isUrlModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="glow-modal w-full max-w-md p-6 m-4">
-              <h3 className="text-2xl font-bold text-white font-orbitron mb-6 text-center animate-neon-glow">Upload from URL</h3>
-              <form onSubmit={handleUrlUpload} className="space-y-4">
-                  <div>
-                      <Input 
-                          type="url" 
-                          name="fileUrl"
-                          id="fileUrl"
-                          placeholder="https://example.com/file.pdf"
-                          className="glow-input w-full text-lg h-12"
-                          required
-                      />
-                  </div>
-                  <div className="flex space-x-4 pt-2">
-                      <Button type="button" onClick={() => setUrlModalOpen(false)} className="flex-1 py-3 text-lg" variant="outline">
-                          Cancel
-                      </Button>
-                      <Button type="submit" className="glow-button flex-1 py-3 text-lg bg-blue-600 hover:bg-blue-700">
-                          Upload
-                      </Button>
-                  </div>
-              </form>
-          </div>
-        </div>
-      )}
     </>
   );
 }
