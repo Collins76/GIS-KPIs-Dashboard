@@ -163,7 +163,7 @@ export default function LocationMap() {
     };
 
     const mapSrc = selectedUnit && selectedUnit.coordinates.lat !== 0
-    ? `https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}&q=${selectedUnit.coordinates.lat},${selectedUnit.coordinates.lng}`
+    ? `https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}&q=${selectedUnit.coordinates.lat},${selectedUnit.coordinates.lng}&zoom=15`
     : `https://www.google.com/maps/embed/v1/view?key=${googleMapsApiKey}&center=6.5244,3.3792&zoom=11`;
     
     return (
