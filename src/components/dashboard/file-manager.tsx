@@ -214,7 +214,7 @@ export default function FileManager() {
                   
                   <Input type="file" id="fileInput" className="hidden" multiple accept=".csv,.xlsx,.pdf,.jpg,.jpeg,.png,.docx,.doc,.shp,.gdb,.ppt,.pptx,.kmz,.kml" />
                   <div className="flex justify-center space-x-4">
-                      <Button onClick={() => window.triggerBrowseFiles && window.triggerBrowseFiles()} className="glow-button text-lg px-8 py-3">
+                      <Button onClick={(e) => { e.stopPropagation(); window.triggerBrowseFiles && window.triggerBrowseFiles()}} className="glow-button text-lg px-8 py-3">
                           <FolderOpen className="mr-2 h-5 w-5" />Browse Files
                       </Button>
                       <Button 
@@ -309,3 +309,5 @@ declare global {
         deleteSelectedFile: (event?: MouseEvent) => void;
     }
 }
+
+    
