@@ -40,7 +40,6 @@ const formatFileSize = (bytes: number): string => {
 export default function FileManager() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const uploadAreaRef = useRef<HTMLDivElement>(null);
   const [isUrlModalOpen, setUrlModalOpen] = useState(false);
   const [urlToUpload, setUrlToUpload] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<ManagedFile[]>([]);
@@ -51,7 +50,7 @@ export default function FileManager() {
     if (!files) return;
 
     const newFiles: ManagedFile[] = Array.from(files).map(file => ({
-        id: `${file.name}-${file.lastModified}-${file.size}`,
+        id: `${file.name}-${file.lastModified}-${file.size}-${Date.now()}-${Math.random()}`,
         name: file.name,
         size: file.size,
         type: file.type,
@@ -85,68 +84,10 @@ export default function FileManager() {
   };
 
 
-  useEffect(() => {
-    const uploadArea = uploadAreaRef.current;
-    if (!uploadArea) return;
-
-    const dragOverHandler = (e: DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        uploadArea.classList.add('dragging');
-    };
-    const dragLeaveHandler = (e: DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        uploadArea.classList.remove('dragging');
-    };
-    const dropHandler = (e: DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        uploadArea.classList.remove('dragging');
-        if (e.dataTransfer?.files) {
-            handleFiles(e.dataTransfer.files);
-            if(fileInputRef.current) {
-              fileInputRef.current.files = e.dataTransfer.files;
-            }
-        }
-    };
-    
-    uploadArea.addEventListener('dragover', dragOverHandler);
-    uploadArea.addEventListener('dragleave', dragLeaveHandler);
-    uploadArea.addEventListener('drop', dropHandler);
-    
-    return () => {
-        uploadArea.removeEventListener('dragover', dragOverHandler);
-        uploadArea.removeEventListener('dragleave', dragLeaveHandler);
-        uploadArea.removeEventListener('drop', dropHandler);
-    };
-  }, [handleFiles]);
-
-
-  useEffect(() => {
-    const fileInput = fileInputRef.current;
-    if (!fileInput) return;
-
-    const fileSelectHandler = (e: Event) => {
-        const target = e.target as HTMLInputElement;
-        if (target.files) {
-            handleFiles(target.files);
-        }
-    };
-    
-    fileInput.addEventListener('change', fileSelectHandler);
-    
-    return () => {
-        if (fileInput) {
-            fileInput.removeEventListener('change', fileSelectHandler);
-        }
-    };
-  }, [handleFiles]);
-
-  const handleBrowseClick = () => {
+ const handleBrowseClick = () => {
       fileInputRef.current?.click();
   }
-  
+
   const handleUrlModalOpen = (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation(); // Prevent triggering the parent's onClick
       setUrlModalOpen(true);
@@ -186,6 +127,27 @@ export default function FileManager() {
         </div>
     </div>
   );
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.add('dragging');
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('dragging');
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('dragging');
+    if (e.dataTransfer?.files) {
+      handleFiles(e.dataTransfer.files);
+    }
+  };
 
 
   return (
@@ -247,7 +209,12 @@ export default function FileManager() {
 
       <Card className="glow-container p-0">
         <CardContent className="p-6">
-          <div className="upload-area" ref={uploadAreaRef}>
+          <div
+            className="upload-area"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
               <div className="text-center">
                   <UploadCloud className="mx-auto h-20 w-20 text-yellow-400 mb-6 animate-float" />
                   <h3 className="text-2xl font-bold text-white mb-4 font-orbitron">Upload Your Files</h3>
@@ -277,9 +244,6 @@ export default function FileManager() {
                   <div className="flex justify-center space-x-4">
                       <Button onClick={handleBrowseClick} className="glow-button text-lg px-8 py-3 !bg-yellow-500 hover:!bg-yellow-600">
                           <FolderOpen className="mr-2 h-5 w-5" />Browse Files
-                      </Button>
-                       <Button onClick={handleUrlModalOpen} className="glow-button text-lg px-8 py-3 !bg-blue-500 hover:!bg-blue-600">
-                          <Link className="mr-2 h-5 w-5" />Upload from URL
                       </Button>
                   </div>
               </div>
@@ -314,3 +278,4 @@ export default function FileManager() {
   );
 }
 
+    
