@@ -110,6 +110,8 @@ export default function LocationMap() {
     const [selectedUnit, setSelectedUnit] = useState<BusinessUnit | null>(null);
     const [mapUrl, setMapUrl] = useState('');
     
+    const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
     useEffect(() => {
         const storedUnits = localStorage.getItem('gis-business-units');
         if (storedUnits) {
@@ -151,28 +153,35 @@ export default function LocationMap() {
     };
     
     const handleViewMap = (unit: BusinessUnit) => {
+        if (!API_KEY) {
+            toast({
+                title: "API Key Missing",
+                description: "Google Maps API key is not configured.",
+                variant: "destructive",
+            });
+            return;
+        }
         setSelectedUnit(unit);
-        setMapUrl(`https://www.openstreetmap.org/export/embed.html?bbox=${unit.coordinates.lng - 0.01},${unit.coordinates.lat - 0.01},${unit.coordinates.lng + 0.01},${unit.coordinates.lat + 0.01}&layer=mapnik&marker=${unit.coordinates.lat},${unit.coordinates.lng}`);
+        // Default to roadmap view
+        handleMapTypeChange('roadmap', unit);
     }
     
-    const handleMapTypeChange = (type: 'osm' | 'satellite' | 'terrain') => {
-        if (selectedUnit) {
-            let newUrl = '';
-            const { lat, lng } = selectedUnit.coordinates;
-            switch(type) {
-                case 'osm':
-                    newUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=mapnik&marker=${lat},${lng}`;
-                    break;
-                case 'satellite':
-                     toast({ variant: 'default', title: "Satellite View", description: "This is a sample satellite-style map. For live Google Satellite imagery, an API key is required." });
-                     // Using a different OSM layer as a stand-in for satellite
-                     newUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=cyclosm&marker=${lat},${lng}`;
-                    break;
-                case 'terrain':
-                     newUrl = `https://www/openstreetmap.org/export/embed.html?bbox=${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}&layer=cyclemap&marker=${lat},${lng}`;
-                    break;
-            }
-            setMapUrl(newUrl);
+    const handleMapTypeChange = (type: 'roadmap' | 'satellite', unit: BusinessUnit) => {
+        if (unit && API_KEY) {
+             const { lat, lng } = unit.coordinates;
+             const url = new URL("https://www.google.com/maps/embed/v1/view");
+             url.searchParams.append("key", API_KEY);
+             url.searchParams.append("center", `${lat},${lng}`);
+             url.searchParams.append("zoom", "15");
+             url.searchParams.append("maptype", type);
+             setMapUrl(url.toString());
+        }
+    }
+
+    const openInGoogleMaps = (unit: BusinessUnit) => {
+        if (unit) {
+            const { lat, lng } = unit.coordinates;
+            window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank');
         }
     }
 
@@ -200,24 +209,30 @@ export default function LocationMap() {
         
         {selectedUnit && (
              <div className="network-map-display p-6 flex flex-col items-center justify-center text-center relative">
-                 <div className="absolute top-4 right-4 flex space-x-2">
-                    <Button onClick={() => handleMapTypeChange('satellite')} className="bg-blue-500 hover:bg-blue-600 text-white font-semibold">Satellite</Button>
-                    <Button onClick={() => handleMapTypeChange('terrain')} className="bg-green-500 hover:bg-green-600 text-white font-semibold">Terrain</Button>
-                    <Button onClick={() => handleMapTypeChange('osm')} className="bg-orange-500 hover:bg-orange-600 text-white font-semibold">OSM</Button>
+                 <div className="absolute top-4 right-4 flex space-x-2 z-10">
+                    <Button onClick={() => handleMapTypeChange('roadmap', selectedUnit)} className="bg-blue-500 hover:bg-blue-600 text-white font-semibold">Roadmap</Button>
+                    <Button onClick={() => handleMapTypeChange('satellite', selectedUnit)} className="bg-teal-500 hover:bg-teal-600 text-white font-semibold">Satellite</Button>
+                    <Button onClick={() => openInGoogleMaps(selectedUnit)} className="bg-green-500 hover:bg-green-600 text-white font-semibold">Open in Google Maps</Button>
                 </div>
 
                 <div className="w-full h-[400px] bg-gray-800 rounded-lg overflow-hidden mt-4">
-                     <iframe
-                        width="100%"
-                        height="100%"
-                        frameBorder="0"
-                        scrolling="no"
-                        marginHeight={0}
-                        marginWidth={0}
-                        src={mapUrl}
-                        style={{ border: 0 }}
-                        allowFullScreen
-                      ></iframe>
+                     {API_KEY ? (
+                        <iframe
+                            width="100%"
+                            height="100%"
+                            frameBorder="0"
+                            scrolling="no"
+                            marginHeight={0}
+                            marginWidth={0}
+                            src={mapUrl}
+                            style={{ border: 0 }}
+                            allowFullScreen
+                        ></iframe>
+                     ) : (
+                        <div className="flex items-center justify-center h-full text-red-500">
+                           Google Maps API Key is missing.
+                        </div>
+                     )}
                 </div>
                  <div className="mt-4">
                     <h3 className="text-2xl font-bold text-white font-orbitron mb-2">Map for {selectedUnit.name}</h3>
