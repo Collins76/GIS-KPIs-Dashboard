@@ -181,7 +181,6 @@ export default function FileManager() {
         </CardContent>
       </Card>
       
-
       <Card className="glow-container p-6 mb-8">
         <CardContent className="p-0">
           <div className="upload-area" ref={uploadAreaRef}>
@@ -208,8 +207,7 @@ export default function FileManager() {
                           <FolderOpen className="mr-2 h-5 w-5" />Browse Files
                       </Button>
                       <Button 
-                        onClick={(e) => {
-                          e.stopPropagation();
+                        onClick={() => {
                           setUrlModalOpen(true);
                         }}
                         variant="secondary" 
