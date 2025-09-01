@@ -49,7 +49,7 @@ export default function WeatherIntelligence() {
             <CloudSun className="mr-2 h-6 w-6 text-yellow-400 animate-float" />
             Lagos Weather Intelligence
         </h2>
-        <Button onClick={handleRefresh} disabled={loading} size="sm" className="glow-button refresh-button-animated">
+        <Button onClick={handleRefresh} disabled={loading} size="sm" className="glow-button">
           <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} />
           Refresh
         </Button>
