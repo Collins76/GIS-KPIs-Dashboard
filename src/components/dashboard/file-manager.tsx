@@ -5,6 +5,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { FileUp, List, Trash2, RotateCcw, LayoutGrid, FolderOpen, Link, Eye, Share2, Download, Search, File as FileIcon, Image as ImageIcon, FileText, FileSpreadsheet, Folder, UploadCloud, Hourglass, CheckCircle, Database } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -325,3 +326,5 @@ export default function FileManager() {
     </>
   );
 }
+
+    
