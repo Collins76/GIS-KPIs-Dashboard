@@ -25,10 +25,10 @@ type ManagedFile = {
 };
 
 const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith('image/')) return <ImageIcon className="h-8 w-8 text-purple-400" />;
-    if (fileType === 'application/pdf') return <FileText className="h-8 w-8 text-red-400" />;
-    if (fileType.includes('spreadsheet') || fileType.includes('csv')) return <FileSpreadsheet className="h-8 w-8 text-green-400" />;
-    return <FileIcon className="h-8 w-8 text-gray-400" />;
+    if (fileType.startsWith('image/')) return <ImageIcon className="h-10 w-10 text-purple-400" />;
+    if (fileType === 'application/pdf') return <FileText className="h-10 w-10 text-red-400" />;
+    if (fileType.includes('spreadsheet') || fileType.includes('csv')) return <FileSpreadsheet className="h-10 w-10 text-green-400" />;
+    return <FileIcon className="h-10 w-10 text-gray-400" />;
 };
 
 const formatFileSize = (bytes: number): string => {
@@ -157,6 +157,36 @@ export default function FileManager() {
   const removeFile = (fileId: string) => {
     setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
   };
+  
+  const viewFile = (file: ManagedFile) => {
+    if (file.file && (file.type.startsWith('image/') || file.type === 'application/pdf')) {
+        const fileUrl = URL.createObjectURL(file.file);
+        window.open(fileUrl, '_blank');
+    } else {
+        toast({
+            title: "Preview not available",
+            description: "This file type cannot be previewed.",
+            variant: "default",
+        });
+    }
+  };
+
+  const downloadFile = (file: ManagedFile) => {
+    if (file.file) {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(file.file);
+        link.download = file.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } else {
+        toast({
+            title: "Download not available",
+            description: "Cannot download this file.",
+            variant: "destructive"
+        });
+    }
+  };
 
   const handleBrowseClick = () => {
       fileInputRef.current?.click();
@@ -167,16 +197,24 @@ export default function FileManager() {
       setUrlModalOpen(true);
   }
 
-  const FileItem = ({ file, onRemove }: { file: ManagedFile, onRemove: (id: string) => void }) => (
+  const FileItem = ({ file }: { file: ManagedFile }) => (
      <Card className={cn("glow-container p-3 flex items-center gap-4", { 'flex-col text-center': viewMode === 'grid' })}>
-        {getFileIcon(file.type)}
-        <div className="flex-grow overflow-hidden">
-            <p className="font-semibold text-sm truncate text-white">{file.name}</p>
+        <div className={cn("flex-grow overflow-hidden w-full", {'flex flex-col items-center': viewMode === 'grid' })}>
+            {getFileIcon(file.type)}
+            <p className="font-semibold text-sm truncate text-white mt-2">{file.name}</p>
             <p className="text-xs text-gray-400">{formatFileSize(file.size)}</p>
         </div>
-        <Button onClick={() => onRemove(file.id)} variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10">
-            <Trash2 className="h-4 w-4"/>
-        </Button>
+        <div className={cn("flex items-center gap-2", { 'mt-4': viewMode === 'grid' })}>
+            <Button onClick={() => viewFile(file)} variant="ghost" size="icon" className="text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 transition-all transform hover:scale-110">
+                <Eye className="h-5 w-5"/>
+            </Button>
+            <Button onClick={() => downloadFile(file)} variant="ghost" size="icon" className="text-green-400 hover:bg-green-500/10 hover:text-green-300 transition-all transform hover:scale-110">
+                <Download className="h-5 w-5"/>
+            </Button>
+            <Button onClick={() => removeFile(file.id)} variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10 hover:text-red-300 transition-all transform hover:scale-110">
+                <Trash2 className="h-5 w-5"/>
+            </Button>
+        </div>
     </Card>
   );
 
@@ -345,7 +383,7 @@ export default function FileManager() {
             <div id="uploadedFiles">
                 <div className={cn("gap-4", viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : 'space-y-3')}>
                     {uploadedFiles.map(file => (
-                        <FileItem key={file.id} file={file} onRemove={removeFile} />
+                        <FileItem key={file.id} file={file} />
                     ))}
                 </div>
             </div>
