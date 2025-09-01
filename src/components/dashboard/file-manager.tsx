@@ -4,34 +4,68 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { FileUp, List, Trash2, RotateCcw, LayoutGrid, Undo, FolderOpen, Link, Pencil, Download, Eye, Search } from 'lucide-react';
+import { FileUp, List, Trash2, RotateCcw, LayoutGrid, Undo, FolderOpen, Link, Pencil, Download, Eye, Search, File as FileIcon, Image as ImageIcon, FileText, FileSpreadsheet } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
-// Helper to safely call window functions
-const callWindowFunc = (funcName: keyof Window, ...args: any[]) => {
-  if (typeof window !== 'undefined' && typeof window[funcName] === 'function') {
-    (window[funcName] as Function)(...args);
-  } else {
-    // console.warn(`${funcName} function not available on window object.`);
-  }
+type ManagedFile = {
+  id: string;
+  name: string;
+  size: string;
+  type: string;
+  file: File;
+  progress: number;
+  status: 'pending' | 'uploading' | 'completed' | 'error';
 };
 
+const getFileIcon = (fileType: string) => {
+    if (fileType.startsWith('image/')) return <ImageIcon className="h-8 w-8 text-purple-400" />;
+    if (fileType === 'application/pdf') return <FileText className="h-8 w-8 text-red-400" />;
+    if (fileType.includes('spreadsheet') || fileType.includes('csv')) return <FileSpreadsheet className="h-8 w-8 text-green-400" />;
+    return <FileIcon className="h-8 w-8 text-gray-400" />;
+};
+
+const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
 
 export default function FileManager() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadAreaRef = useRef<HTMLDivElement>(null);
+  const [isUrlModalOpen, setUrlModalOpen] = useState(false);
+  const [urlToUpload, setUrlToUpload] = useState('');
+  const [uploadedFiles, setUploadedFiles] = useState<ManagedFile[]>([]);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
 
   const handleFiles = useCallback((files: FileList) => {
-    console.log(`${files.length} files selected.`);
+    const newFiles: ManagedFile[] = Array.from(files).map(file => ({
+        id: `${file.name}-${file.lastModified}-${file.size}`,
+        name: file.name,
+        size: formatFileSize(file.size),
+        type: file.type,
+        file: file,
+        progress: 0,
+        status: 'pending',
+    }));
+
+    setUploadedFiles(prev => [...prev, ...newFiles]);
+
     toast({
-      title: "Files selected",
-      description: `${files.length} files are ready for upload.`,
+      title: "Files added",
+      description: `${files.length} file(s) are ready for upload.`,
     });
   }, [toast]);
+  
+  const removeFile = (fileId: string) => {
+    setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
+  };
 
 
   useEffect(() => {
@@ -54,6 +88,9 @@ export default function FileManager() {
         uploadArea.classList.remove('dragging');
         if (e.dataTransfer?.files) {
             handleFiles(e.dataTransfer.files);
+            if(fileInputRef.current) {
+              fileInputRef.current.files = e.dataTransfer.files;
+            }
         }
     };
     
@@ -83,9 +120,28 @@ export default function FileManager() {
     fileInput.addEventListener('change', fileSelectHandler);
     
     return () => {
-        fileInput.removeEventListener('change', fileSelectHandler);
+        if (fileInput) {
+            fileInput.removeEventListener('change', fileSelectHandler);
+        }
     };
   }, [handleFiles]);
+
+  const handleBrowseClick = () => {
+      fileInputRef.current?.click();
+  }
+
+  const FileItem = ({ file, onRemove }: { file: ManagedFile, onRemove: (id: string) => void }) => (
+     <Card className={cn("glow-container p-3 flex items-center gap-4", { 'flex-col text-center': viewMode === 'grid' })}>
+        {getFileIcon(file.type)}
+        <div className="flex-grow overflow-hidden">
+            <p className="font-semibold text-sm truncate text-white">{file.name}</p>
+            <p className="text-xs text-gray-400">{file.size}</p>
+        </div>
+        <Button onClick={() => onRemove(file.id)} variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10">
+            <Trash2 className="h-4 w-4"/>
+        </Button>
+    </Card>
+  );
 
   return (
     <>
@@ -93,82 +149,8 @@ export default function FileManager() {
           <h2 className="text-3xl font-bold text-white font-orbitron animate-neon-glow">
               📁 Advanced File Management 📁
           </h2>
-          <div className="flex items-center space-x-2">
-              <Button onClick={() => callWindowFunc('showAllFiles')} className="glow-button">
-                  <List className="mr-2 h-4 w-4" />View All Files
-              </Button>
-              <Button onClick={(e) => callWindowFunc('editSelectedFile', e)} variant="outline" className="text-yellow-400 border-yellow-400 hover:bg-yellow-400 hover:text-black">
-                  <Pencil className="mr-2 h-4 w-4" />Edit
-              </Button>
-               <Button onClick={(e) => callWindowFunc('deleteSelectedFile', e)} variant="outline" className="text-red-400 border-red-400 hover:bg-red-400 hover:text-white">
-                  <Trash2 className="mr-2 h-4 w-4" />Delete
-              </Button>
-              <div className="border-l h-8 border-gray-600 mx-2"></div>
-              <Button onClick={() => callWindowFunc('clearAllFiles')} variant="destructive">
-                  <Trash2 className="mr-2 h-4 w-4" />Clear All
-              </Button>
-              <Button onClick={() => callWindowFunc('resetUploadArea')} variant="secondary">
-                  <RotateCcw className="mr-2 h-4 w-4" />Reset
-              </Button>
-          </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card className="glow-container p-4 text-center">
-              <CardContent className="p-2">
-                <div className="text-sm text-gray-400 mb-2">Total Files</div>
-                <div className="text-3xl font-bold text-green-400 font-orbitron" id="totalFilesCount">0</div>
-              </CardContent>
-          </Card>
-          <Card className="glow-container p-4 text-center">
-               <CardContent className="p-2">
-                 <div className="text-sm text-gray-400 mb-2">Total Size</div>
-                <div className="text-3xl font-bold text-blue-400 font-orbitron" id="totalSizeCount">0 MB</div>
-              </CardContent>
-          </Card>
-          <Card className="glow-container p-4 text-center">
-               <CardContent className="p-2">
-                <div className="text-sm text-gray-400 mb-2">Uploading</div>
-                <div className="text-3xl font-bold text-yellow-400 font-orbitron" id="uploadingCount">0</div>
-              </CardContent>
-          </Card>
-          <Card className="glow-container p-4 text-center">
-               <CardContent className="p-2">
-                <div className="text-sm text-gray-400 mb-2">Completed</div>
-                <div className="text-3xl font-bold text-purple-400 font-orbitron" id="completedCount">0</div>
-              </CardContent>
-          </Card>
-      </div>
-
-      <Card className="glow-container p-4 mb-6">
-        <CardContent className="p-2">
-          <div className="flex flex-wrap items-center gap-4">
-              <label className="text-yellow-400 font-semibold font-rajdhani">Filter by Type:</label>
-              <select id="fileTypeFilter" onChange={() => callWindowFunc('filterFiles')} className="glow-input" style={{ color: 'white', background: 'linear-gradient(145deg, #0a0a0a 0%, #1a1a1a 100%)' }}>
-                  <option value="" style={{ background: '#0a0a0a', color: 'white' }}>All Types</option>
-                  <option value="csv" style={{ background: '#0a0a0a', color: 'white' }}>CSV Files</option>
-                  <option value="xlsx" style={{ background: '#0a0a0a', color: 'white' }}>Excel Files</option>
-                  <option value="pdf" style={{ background: '#0a0a0a', color: 'white' }}>PDF Documents</option>
-                  <option value="image" style={{ background: '#0a0a0a', color: 'white' }}>Images (JPG, PNG)</option>
-                  <option value="doc" style={{ background: '#0a0a0a', color: 'white' }}>Word Documents</option>
-                  <option value="gis" style={{ background: '#0a0a0a', color: 'white' }}>GIS Files (SHP, GDB, KML)</option>
-                  <option value="presentation" style={{ background: '#0a0a0a', color: 'white' }}>Presentations (PPT, PPTX)</option>
-              </select>
-              <label className="text-yellow-400 font-semibold font-rajdhani">Sort by:</label>
-              <select id="fileSortOrder" onChange={() => callWindowFunc('sortFiles')} className="glow-input" style={{ color: 'white', background: 'linear-gradient(145deg, #0a0a0a 0%, #1a1a1a 100%)' }}>
-                  <option value="newest" style={{ background: '#0a0a0a', color: 'white' }}>Newest First</option>
-                  <option value="oldest" style={{ background: '#0a0a0a', color: 'white' }}>Oldest First</option>
-                  <option value="largest" style={{ background: '#0a0a0a', color: 'white' }}>Largest First</option>
-                  <option value="smallest" style={{ background: '#0a0a0a', color: 'white' }}>Smallest First</option>
-                  <option value="name" style={{ background: '#0a0a0a', color: 'white' }}>Name (A-Z)</option>
-              </select>
-              <Button onClick={() => callWindowFunc('resetFileFilters')} variant="secondary">
-                  <Undo className="mr-2 h-4 w-4"/>Reset Filters
-              </Button>
-          </div>
-        </CardContent>
-      </Card>
-      
       <Card className="glow-container p-6 mb-8">
         <CardContent className="p-0">
           <div className="upload-area" ref={uploadAreaRef}>
@@ -198,7 +180,7 @@ export default function FileManager() {
                   />
 
                   <div className="flex justify-center space-x-4">
-                      <Button onClick={() => fileInputRef.current?.click()} className="glow-button text-lg px-8 py-3">
+                      <Button onClick={handleBrowseClick} className="glow-button text-lg px-8 py-3">
                           <FolderOpen className="mr-2 h-5 w-5" />Browse Files
                       </Button>
                   </div>
@@ -208,54 +190,34 @@ export default function FileManager() {
       </Card>
       
       <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-white font-orbitron">Uploaded Files</h3>
+          <h3 className="text-xl font-bold text-white font-orbitron">Uploaded Files ({uploadedFiles.length})</h3>
           <div className="flex space-x-2">
-              <Button onClick={() => callWindowFunc('toggleFileView','grid')} id="gridViewBtn" className="bg-yellow-500 text-white" variant="outline" size="icon">
+              <Button onClick={() => setViewMode('grid')} id="gridViewBtn" className={cn(viewMode === 'grid' ? "bg-yellow-500 text-white" : "bg-gray-600 text-white")} variant="outline" size="icon">
                   <LayoutGrid className="h-5 w-5" />
               </Button>
-              <Button onClick={() => callWindowFunc('toggleFileView','list')} id="listViewBtn" className="bg-gray-600 text-white" variant="outline" size="icon">
+              <Button onClick={() => setViewMode('list')} id="listViewBtn" className={cn(viewMode === 'list' ? "bg-yellow-500 text-white" : "bg-gray-600 text-white")} variant="outline" size="icon">
                   <List className="h-5 w-5" />
               </Button>
           </div>
       </div>
 
-      <div id="uploadedFiles">
-          {/* Uploaded files will appear here */}
+       <div id="uploadedFiles">
+         {uploadedFiles.length > 0 ? (
+            <div className={cn("gap-4", viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'space-y-3')}>
+               {uploadedFiles.map(file => (
+                  <FileItem key={file.id} file={file} onRemove={removeFile} />
+                ))}
+            </div>
+         ) : (
+            <div id="noFilesPlaceholder" className="text-center py-16 flex flex-col items-center">
+                <FolderOpen className="mx-auto h-24 w-24 text-gray-600 mb-6" />
+                <p className="text-gray-400 text-xl mb-4">No files uploaded yet</p>
+                <Button onClick={handleBrowseClick} className="glow-button">
+                    <FileUp className="mr-2 h-4 w-4" />Upload Your First File
+                </Button>
+            </div>
+         )}
       </div>
-
-      <div id="noFilesPlaceholder" className="text-center py-16 hidden flex-col items-center">
-          <FolderOpen className="mx-auto h-24 w-24 text-gray-600 mb-6" />
-          <p className="text-gray-400 text-xl mb-4">No files uploaded yet</p>
-          <Button onClick={() => fileInputRef.current?.click()} className="glow-button">
-              <FileUp className="mr-2 h-4 w-4" />Upload Your First File
-          </Button>
-      </div>
-
     </>
   );
 }
-
-declare global {
-    interface Window {
-        showAllFiles: () => void;
-        clearAllFiles: () => void;
-        resetUploadArea: () => void;
-        toggleFileView: (view: 'grid' | 'list') => void;
-        filterFiles: () => void;
-        sortFiles: () => void;
-        resetFileFilters: () => void;
-        removeFile: (fileId: string, event?: MouseEvent) => void;
-        editFile: (fileId: string, event?: MouseEvent) => void;
-        downloadFile: (fileId: string, event?: MouseEvent) => void;
-        previewFile: (fileId: string, event?: MouseEvent) => void;
-        handleFileSelect: (e: Event) => void;
-        createFileDownload: (originalFile: File, fileName: string) => boolean;
-        showFilePreviewModal: (file: any) => void;
-        closeFilePreviewModal: () => void;
-        triggerBrowseFiles: () => void;
-        editSelectedFile: (event?: MouseEvent) => void;
-        deleteSelectedFile: (event?: MouseEvent) => void;
-    }
-}
-
-    
