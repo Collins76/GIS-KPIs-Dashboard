@@ -9,6 +9,7 @@ import { FileUp, List, Trash2, RotateCcw, LayoutGrid, FolderOpen, Link, Eye, Sha
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 
 type ManagedFile = {
@@ -56,7 +57,7 @@ export default function FileManager() {
         type: file.type,
         file: file,
         progress: 0,
-        status: 'pending', // Will be updated to 'completed' for this demo
+        status: 'pending',
         uploadedAt: new Date(),
     }));
 
@@ -71,6 +72,17 @@ export default function FileManager() {
     });
   }, [toast]);
   
+  const handleUrlSubmit = () => {
+    if (!urlToUpload) {
+        toast({ title: "URL is empty", description: "Please paste a URL to upload.", variant: "destructive" });
+        return;
+    }
+    // In a real app, you would handle the URL upload logic here (e.g., fetch and process the file)
+    toast({ title: "URL submitted", description: `Processing: ${urlToUpload}` });
+    setUrlToUpload('');
+    setUrlModalOpen(false);
+  };
+  
   const clearAllFiles = () => {
     setUploadedFiles([]);
      toast({
@@ -78,6 +90,15 @@ export default function FileManager() {
       description: `The file list has been emptied.`,
     });
   }
+  
+  const handleReset = () => {
+    clearAllFiles();
+    // Here you would also reset filters and sorting
+    toast({
+      title: "File Manager Reset",
+      description: "All files, filters, and sorting have been reset.",
+    });
+  };
 
   const removeFile = (fileId: string) => {
     setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
@@ -89,7 +110,7 @@ export default function FileManager() {
   }
 
   const handleUrlModalOpen = (e: React.MouseEvent<HTMLButtonElement>) => {
-      e.stopPropagation(); // Prevent triggering the parent's onClick
+      e.stopPropagation(); 
       setUrlModalOpen(true);
   }
 
@@ -117,8 +138,8 @@ export default function FileManager() {
   const StatCard = ({ icon: Icon, title, value, colorClass }: { icon: React.ElementType, title: string, value: string | number, colorClass: string }) => (
     <div className="kpi-card">
         <div className="flex justify-between items-start">
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg bg-gradient-to-br ${colorClass}`}>
-                <Icon className="text-white text-2xl" />
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg bg-gradient-to-br ${colorClass} animate-pulse-glow`}>
+                <Icon className="text-white text-2xl animate-float" />
             </div>
             <div className='text-right'>
                 <p className="text-gray-400 text-sm font-rajdhani">{title}</p>
@@ -158,9 +179,9 @@ export default function FileManager() {
               Advanced File Management
           </h2>
           <div className="flex space-x-2">
-            <Button className="glow-button bg-blue-500 hover:bg-blue-600"><Eye className="mr-2 h-4 w-4"/>View All Files</Button>
-            <Button onClick={clearAllFiles} className="glow-button bg-red-500 hover:bg-red-600"><Trash2 className="mr-2 h-4 w-4"/>Clear All</Button>
-            <Button className="glow-button bg-gray-500 hover:bg-gray-600"><RotateCcw className="mr-2 h-4 w-4"/>Reset</Button>
+            <Button onClick={handleReset} className="glow-button !bg-blue-500 hover:!bg-blue-600 animate-pulse-glow"><Eye className="mr-2 h-4 w-4"/>View All Files</Button>
+            <Button onClick={clearAllFiles} className="glow-button !bg-red-500 hover:!bg-red-600 animate-pulse-glow"><Trash2 className="mr-2 h-4 w-4"/>Clear All</Button>
+            <Button onClick={handleReset} className="glow-button !bg-gray-500 hover:!bg-gray-600 animate-pulse-glow"><RotateCcw className="mr-2 h-4 w-4"/>Reset</Button>
           </div>
       </div>
 
@@ -201,7 +222,7 @@ export default function FileManager() {
                 </SelectContent>
             </Select>
         </div>
-        <Button variant="outline" className="glow-input">
+        <Button variant="outline" className="glow-input" onClick={handleReset}>
             <RotateCcw className="mr-2 h-4 w-4"/>
             Reset Filters
         </Button>
@@ -245,6 +266,9 @@ export default function FileManager() {
                       <Button onClick={handleBrowseClick} className="glow-button text-lg px-8 py-3 !bg-yellow-500 hover:!bg-yellow-600">
                           <FolderOpen className="mr-2 h-5 w-5" />Browse Files
                       </Button>
+                       <Button onClick={(e) => handleUrlModalOpen(e)} className="glow-button text-lg px-8 py-3 !bg-teal-500 hover:!bg-teal-600">
+                          <Link className="mr-2 h-5 w-5" />Upload from URL
+                      </Button>
                   </div>
               </div>
           </div>
@@ -274,8 +298,30 @@ export default function FileManager() {
             </div>
         </div>
       )}
+      <Dialog open={isUrlModalOpen} onOpenChange={setUrlModalOpen}>
+        <DialogContent className="glow-modal">
+            <DialogHeader>
+                <DialogTitle>Upload from URL</DialogTitle>
+                <DialogDescription>
+                    Enter a direct link to a file you want to upload.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+                <Label htmlFor="url" className="text-right">File URL</Label>
+                <Input
+                    id="url"
+                    value={urlToUpload}
+                    onChange={(e) => setUrlToUpload(e.target.value)}
+                    className="glow-input mt-2"
+                    placeholder="https://example.com/file.csv"
+                />
+            </div>
+            <DialogFooter>
+                <Button variant="outline" onClick={() => setUrlModalOpen(false)}>Cancel</Button>
+                <Button className="glow-button" onClick={handleUrlSubmit}>Upload</Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
-
-    
