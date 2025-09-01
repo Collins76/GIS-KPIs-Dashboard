@@ -1,6 +1,7 @@
 
 import type { Kpi, Role, ManagedFile, BusinessUnit, WeatherData } from '@/lib/types';
 import { Cloudy, Sun, CloudRain, Zap, CloudSun, Wind, Droplets, CloudDrizzle, Waves } from 'lucide-react';
+import { format, addDays } from 'date-fns';
 
 // Add display names for using them in class names
 Sun.displayName = 'Sun';
@@ -73,11 +74,45 @@ export const files: ManagedFile[] = [
     { id: 'file7', name: 'GIS_Strategy.pptx', type: 'PowerPoint', size: '8.9 MB', uploadedAt: '2023-10-22', url: '#' }
 ];
 
-export const weatherData: WeatherData[] = [
-    { dayOfWeek: 'Sun', date: 'Sep 5', temp: 32, minTemp: 29, maxTemp: 34, condition: 'Sunny', humidity: 60, windSpeed: 6, icon: Sun, isToday: true },
-    { dayOfWeek: 'Mon', date: 'Sep 6', temp: 30, minTemp: 28, maxTemp: 32, condition: 'Partly Cloudy', humidity: 70, windSpeed: 7, icon: CloudSun, isToday: false },
-    { dayOfWeek: 'Tue', date: 'Sep 7', temp: 25, minTemp: 24, maxTemp: 28, condition: 'Light Rain', humidity: 67, windSpeed: 9, icon: CloudRain, isToday: false },
-    { dayOfWeek: 'Wed', date: 'Sep 8', temp: 28, minTemp: 25, maxTemp: 29, condition: 'Scattered Showers', humidity: 70, windSpeed: 9, icon: CloudDrizzle, isToday: false },
-    { dayOfWeek: 'Thu', date: 'Sep 9', temp: 26, minTemp: 24, maxTemp: 28, condition: 'Light Rain', humidity: 86, windSpeed: 8, icon: CloudRain, isToday: false },
-    { dayOfWeek: 'Fri', date: 'Sep 10', temp: 25, minTemp: 24, maxTemp: 28, condition: 'Light Rain', humidity: 86, windSpeed: 5, icon: CloudRain, isToday: false },
-];
+const generateWeatherData = (): WeatherData[] => {
+  const today = new Date();
+  const weather: WeatherData[] = [];
+  const conditions = [
+    { condition: 'Sunny', icon: Sun },
+    { condition: 'Partly Cloudy', icon: CloudSun },
+    { condition: 'Light Rain', icon: CloudRain },
+    { condition: 'Scattered Showers', icon: CloudDrizzle },
+    { condition: 'Cloudy', icon: Cloudy },
+    { condition: 'Thunderstorm', icon: Zap },
+  ];
+
+  for (let i = 0; i < 6; i++) {
+    const date = addDays(today, i);
+    const dayOfWeek = format(date, 'EEE');
+    const dateString = format(date, 'MMM d');
+    const isToday = i === 0;
+
+    // Simulate weather data
+    const temp = 25 + Math.floor(Math.random() * 8); // Temp between 25 and 32
+    const minTemp = temp - Math.floor(Math.random() * 3) - 1;
+    const maxTemp = temp + Math.floor(Math.random() * 3) + 1;
+    const humidity = 60 + Math.floor(Math.random() * 25);
+    const windSpeed = 5 + Math.floor(Math.random() * 5);
+    const condition = conditions[i % conditions.length];
+
+    weather.push({
+      dayOfWeek,
+      date: dateString,
+      temp,
+      minTemp,
+      maxTemp,
+      ...condition,
+      humidity,
+      windSpeed,
+      isToday,
+    });
+  }
+  return weather;
+};
+
+export const weatherData: WeatherData[] = generateWeatherData();
