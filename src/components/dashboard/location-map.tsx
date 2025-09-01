@@ -175,6 +175,18 @@ export default function LocationMap() {
             </h2>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {businessUnits.map((unit) => (
+                <LocationCard 
+                    key={unit.id} 
+                    unit={unit} 
+                    onEditAddress={handleEditAddress}
+                    onResetAddress={handleResetAddress}
+                    onViewOnMap={handleViewOnMap}
+                />
+            ))}
+        </div>
+        
         <div className="network-map-display h-[450px]">
             {googleMapsApiKey ? (
                 <iframe
@@ -190,18 +202,6 @@ export default function LocationMap() {
                     Google Maps API Key is missing.
                 </div>
             )}
-        </div>
-       
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {businessUnits.map((unit) => (
-                <LocationCard 
-                    key={unit.id} 
-                    unit={unit} 
-                    onEditAddress={handleEditAddress}
-                    onResetAddress={handleResetAddress}
-                    onViewOnMap={handleViewOnMap}
-                />
-            ))}
         </div>
     </div>
   )
