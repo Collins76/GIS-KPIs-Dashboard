@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -41,21 +41,18 @@ export default function FileManager() {
     }
   };
 
+  const handleFiles = useCallback((files: FileList) => {
+    console.log(`${files.length} files selected.`);
+    toast({
+      title: "Files selected",
+      description: `${files.length} files are ready for upload.`,
+    });
+  }, [toast]);
+
+
   useEffect(() => {
     const uploadArea = uploadAreaRef.current;
-    const fileInput = fileInputRef.current;
-
-    if (!uploadArea || !fileInput) {
-        return;
-    }
-
-    const handleFiles = (files: FileList) => {
-        console.log(`${files.length} files selected.`);
-        toast({
-          title: "Files selected",
-          description: `${files.length} files are ready for upload.`,
-        });
-    };
+    if (!uploadArea) return;
 
     const dragOverHandler = (e: DragEvent) => {
         e.preventDefault();
@@ -75,6 +72,23 @@ export default function FileManager() {
             handleFiles(e.dataTransfer.files);
         }
     };
+    
+    uploadArea.addEventListener('dragover', dragOverHandler);
+    uploadArea.addEventListener('dragleave', dragLeaveHandler);
+    uploadArea.addEventListener('drop', dropHandler);
+    
+    return () => {
+        uploadArea.removeEventListener('dragover', dragOverHandler);
+        uploadArea.removeEventListener('dragleave', dragLeaveHandler);
+        uploadArea.removeEventListener('drop', dropHandler);
+    };
+  }, [handleFiles]);
+
+
+  useEffect(() => {
+    const fileInput = fileInputRef.current;
+    if (!fileInput) return;
+
     const fileSelectHandler = (e: Event) => {
         const target = e.target as HTMLInputElement;
         if (target.files) {
@@ -82,22 +96,12 @@ export default function FileManager() {
         }
     };
     
-    uploadArea.addEventListener('dragover', dragOverHandler);
-    uploadArea.addEventListener('dragleave', dragLeaveHandler);
-    uploadArea.addEventListener('drop', dropHandler);
     fileInput.addEventListener('change', fileSelectHandler);
     
     return () => {
-        if (uploadArea) {
-            uploadArea.removeEventListener('dragover', dragOverHandler);
-            uploadArea.removeEventListener('dragleave', dragLeaveHandler);
-            uploadArea.removeEventListener('drop', dropHandler);
-        }
-        if (fileInput) {
-            fileInput.removeEventListener('change', fileSelectHandler);
-        }
+        fileInput.removeEventListener('change', fileSelectHandler);
     };
-  }, []);
+  }, [handleFiles]);
 
   return (
     <>
@@ -201,13 +205,21 @@ export default function FileManager() {
                       <div className="bg-cyan-500 bg-opacity-20 text-cyan-400 px-2 py-1 rounded text-xs font-semibold">KML</div>
                   </div>
                   
-                  <Input type="file" ref={fileInputRef} className="hidden" multiple accept=".csv,.xlsx,.pdf,.jpg,.jpeg,.png,.docx,.doc,.shp,.gdb,.ppt,.pptx,.kmz,.kml" />
+                  <Input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    multiple 
+                    accept=".csv,.xlsx,.pdf,.jpg,.jpeg,.png,.docx,.doc,.shp,.gdb,.ppt,.pptx,.kmz,.kml" 
+                  />
+
                   <div className="flex justify-center space-x-4">
                       <Button onClick={() => fileInputRef.current?.click()} className="glow-button text-lg px-8 py-3">
                           <FolderOpen className="mr-2 h-5 w-5" />Browse Files
                       </Button>
                       <Button 
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setUrlModalOpen(true);
                         }}
                         variant="secondary" 
