@@ -19,7 +19,7 @@ const getKpisForBusinessUnit = (buId: string, allKpis: Kpi[]): Kpi[] => {
     return allKpis.filter((_, index) => (index % initialBusinessUnits.length) + 1 === buIndex);
 };
 
-const LocationCard = ({ unit, onEditAddress, onResetAddress }: { unit: BusinessUnit, onEditAddress: (unit: BusinessUnit, address: string) => void, onResetAddress: (unitId: string) => void }) => {
+const LocationCard = ({ unit, onEditAddress, onResetAddress, onViewOnMap }: { unit: BusinessUnit, onEditAddress: (unit: BusinessUnit, address: string) => void, onResetAddress: (unitId: string) => void, onViewOnMap: (unit: BusinessUnit) => void }) => {
     const unitKpis = getKpisForBusinessUnit(unit.id, kpis);
     const completedKpis = unitKpis.filter(k => k.status === 'Completed').length;
     const inProgressKpis = unitKpis.filter(k => k.status === 'On Track').length;
@@ -32,13 +32,6 @@ const LocationCard = ({ unit, onEditAddress, onResetAddress }: { unit: BusinessU
         onEditAddress(unit, address);
         setAddressModalOpen(false);
     }
-
-    const onViewMap = (unit: BusinessUnit) => {
-        if (unit.coordinates.lat !== 0 && unit.coordinates.lng !== 0) {
-            const { lat, lng } = unit.coordinates;
-            window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank');
-        }
-    };
     
     const coordinatesString = unit.address && unit.coordinates.lat !== 0 ? `${unit.coordinates.lat.toFixed(4)}, ${unit.coordinates.lng.toFixed(4)}` : 'N/A';
 
@@ -83,9 +76,9 @@ const LocationCard = ({ unit, onEditAddress, onResetAddress }: { unit: BusinessU
                     </div>
                 </div>
 
-                <Button className="w-full glow-button" onClick={() => onViewMap(unit)} disabled={!unit.address || unit.coordinates.lat === 0}>
+                <Button className="w-full glow-button" onClick={() => onViewOnMap(unit)} disabled={!unit.address || unit.coordinates.lat === 0}>
                     <MapPin className="w-4 h-4 mr-2"/>
-                    View on Google Map
+                    View on Map
                 </Button>
             </div>
              <Dialog open={isAddressModalOpen} onOpenChange={setAddressModalOpen}>
@@ -114,16 +107,22 @@ const LocationCard = ({ unit, onEditAddress, onResetAddress }: { unit: BusinessU
 export default function LocationMap() {
     const { toast } = useToast();
     const [businessUnits, setBusinessUnits] = useState<BusinessUnit[]>(initialBusinessUnits);
-    
+    const [selectedUnit, setSelectedUnit] = useState<BusinessUnit | null>(null);
+    const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
     useEffect(() => {
         const storedUnits = localStorage.getItem('gis-business-units');
         if (storedUnits) {
-            setBusinessUnits(JSON.parse(storedUnits));
+            const parsedUnits = JSON.parse(storedUnits);
+            setBusinessUnits(parsedUnits);
+            // Set a default selected unit
+            setSelectedUnit(parsedUnits.find((u: BusinessUnit) => u.coordinates.lat !== 0) || parsedUnits[0]);
         } else {
             // On first load, clear addresses and set default coordinates to 0
             const clearedUnits = initialBusinessUnits.map(u => ({...u, address: '', coordinates: {lat: 0, lng: 0}}));
             setBusinessUnits(clearedUnits);
             localStorage.setItem('gis-business-units', JSON.stringify(clearedUnits));
+            setSelectedUnit(clearedUnits[0]);
         }
     }, []);
 
@@ -141,6 +140,10 @@ export default function LocationMap() {
             title: "Address Updated",
             description: `Coordinates for ${unit.name} have been generated.`,
         });
+        // If the updated unit is the one being viewed, refresh the map
+        if(selectedUnit && selectedUnit.id === unit.id) {
+            setSelectedUnit({ ...unit, address: address, coordinates: { lat: newLat, lng: newLng } });
+        }
     };
 
     const handleResetAddress = (unitId: string) => {
@@ -154,6 +157,14 @@ export default function LocationMap() {
             description: `Address for the selected unit has been cleared.`,
         });
     };
+
+    const handleViewOnMap = (unit: BusinessUnit) => {
+        setSelectedUnit(unit);
+    };
+
+    const mapSrc = selectedUnit && selectedUnit.coordinates.lat !== 0
+    ? `https://www.google.com/maps/embed/v1/place?key=${googleMapsApiKey}&q=${selectedUnit.coordinates.lat},${selectedUnit.coordinates.lng}`
+    : `https://www.google.com/maps/embed/v1/view?key=${googleMapsApiKey}&center=6.5244,3.3792&zoom=11`;
     
     return (
     <div className="space-y-8">
@@ -163,6 +174,23 @@ export default function LocationMap() {
                 Location Management
             </h2>
         </div>
+
+        <div className="network-map-display h-[450px]">
+            {googleMapsApiKey ? (
+                <iframe
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                    allowFullScreen
+                    src={mapSrc}>
+                </iframe>
+            ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                    Google Maps API Key is missing.
+                </div>
+            )}
+        </div>
        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {businessUnits.map((unit) => (
@@ -171,6 +199,7 @@ export default function LocationMap() {
                     unit={unit} 
                     onEditAddress={handleEditAddress}
                     onResetAddress={handleResetAddress}
+                    onViewOnMap={handleViewOnMap}
                 />
             ))}
         </div>
