@@ -159,13 +159,13 @@ export default function FileManager() {
   };
   
   const viewFile = (file: ManagedFile) => {
-    if (file.file && (file.type.startsWith('image/') || file.type === 'application/pdf')) {
+    if (file.file) {
         const fileUrl = URL.createObjectURL(file.file);
         window.open(fileUrl, '_blank');
     } else {
         toast({
             title: "Preview not available",
-            description: "This file type cannot be previewed.",
+            description: "Cannot preview this file.",
             variant: "default",
         });
     }
@@ -206,13 +206,13 @@ export default function FileManager() {
         </div>
         <div className={cn("flex items-center gap-2", { 'mt-4': viewMode === 'grid' })}>
             <Button onClick={() => viewFile(file)} variant="ghost" size="icon" className="text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 transition-all transform hover:scale-110">
-                <Eye className="h-5 w-5"/>
+                <Eye className="h-5 w-5 glow-text-blue animate-pulse"/>
             </Button>
             <Button onClick={() => downloadFile(file)} variant="ghost" size="icon" className="text-green-400 hover:bg-green-500/10 hover:text-green-300 transition-all transform hover:scale-110">
-                <Download className="h-5 w-5"/>
+                <Download className="h-5 w-5 glow-text-green animate-pulse"/>
             </Button>
             <Button onClick={() => removeFile(file.id)} variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10 hover:text-red-300 transition-all transform hover:scale-110">
-                <Trash2 className="h-5 w-5"/>
+                <Trash2 className="h-5 w-5 glow-text-yellow animate-pulse"/>
             </Button>
         </div>
     </Card>
