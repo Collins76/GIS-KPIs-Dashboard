@@ -1,12 +1,13 @@
 
 "use client"
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { FileUp, List, Trash2, RotateCcw, LayoutGrid, Undo, FolderOpen, Link, Pencil, Download, Eye, Search } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 // Helper to safely call window functions
 const callWindowFunc = (funcName: keyof Window, ...args: any[]) => {
@@ -19,7 +20,24 @@ const callWindowFunc = (funcName: keyof Window, ...args: any[]) => {
 
 
 export default function FileManager() {
-  
+  const [isUrlModalOpen, setUrlModalOpen] = useState(false);
+  const { toast } = useToast();
+
+  const handleUrlUpload = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const urlInput = form.elements.namedItem('fileUrl') as HTMLInputElement;
+    const url = urlInput.value;
+    if (url) {
+        console.log("Uploading from URL:", url);
+        toast({
+            title: "Upload Started",
+            description: `File from ${url} is being uploaded.`,
+        });
+        setUrlModalOpen(false);
+    }
+  };
+
   useEffect(() => {
     // This logic is moved from the old upload.js to ensure it runs after the component mounts.
     const initializeUploadArea = () => {
@@ -34,6 +52,10 @@ export default function FileManager() {
         const handleFiles = (files: FileList) => {
             // Placeholder for file handling logic that was in upload.js
             console.log(`${files.length} files selected.`);
+            toast({
+              title: "Files selected",
+              description: `${files.length} files are ready for upload.`,
+            });
             // You can add file processing, state updates, and UI rendering here.
         };
 
@@ -63,13 +85,13 @@ export default function FileManager() {
             }
         };
         
+        // We use a direct click handler on the upload area instead of a global one.
         uploadArea.addEventListener('click', clickHandler);
         uploadArea.addEventListener('dragover', dragOverHandler);
         uploadArea.addEventListener('dragleave', dragLeaveHandler);
         uploadArea.addEventListener('drop', dropHandler);
         fileInput.addEventListener('change', fileSelectHandler);
 
-        // Assign functions to window object so inline onClick handlers can call them
         window.triggerBrowseFiles = () => fileInput.click();
         
         // Cleanup function to remove event listeners
@@ -192,11 +214,14 @@ export default function FileManager() {
                   
                   <Input type="file" id="fileInput" className="hidden" multiple accept=".csv,.xlsx,.pdf,.jpg,.jpeg,.png,.docx,.doc,.shp,.gdb,.ppt,.pptx,.kmz,.kml" />
                   <div className="flex justify-center space-x-4">
-                      <Button onClick={() => callWindowFunc('triggerBrowseFiles')} className="glow-button text-lg px-8 py-3">
+                      <Button onClick={() => window.triggerBrowseFiles && window.triggerBrowseFiles()} className="glow-button text-lg px-8 py-3">
                           <FolderOpen className="mr-2 h-5 w-5" />Browse Files
                       </Button>
                       <Button 
-                        onClick={() => callWindowFunc('uploadFromUrl')} 
+                        onClick={(e) => {
+                          e.stopPropagation(); // prevent triggering the upload area's click event
+                          setUrlModalOpen(true);
+                        }}
                         variant="secondary" 
                         className="px-8 py-3 text-lg bg-blue-600 hover:bg-blue-700 text-white border-blue-700">
                           <Link className="mr-2 h-5 w-5" />Upload from URL
@@ -226,18 +251,20 @@ export default function FileManager() {
       <div id="noFilesPlaceholder" className="text-center py-16 hidden flex-col items-center">
           <FolderOpen className="mx-auto h-24 w-24 text-gray-600 mb-6" />
           <p className="text-gray-400 text-xl mb-4">No files uploaded yet</p>
-          <Button onClick={() => callWindowFunc('triggerBrowseFiles')} className="glow-button">
+          <Button onClick={() => window.triggerBrowseFiles && window.triggerBrowseFiles()} className="glow-button">
               <FileUp className="mr-2 h-4 w-4" />Upload Your First File
           </Button>
       </div>
 
-      <div id="urlUploadModal" className="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+      {isUrlModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="glow-modal w-full max-w-md p-6 m-4">
               <h3 className="text-2xl font-bold text-white font-orbitron mb-6 text-center animate-neon-glow">Upload from URL</h3>
-              <form id="urlUploadForm" className="space-y-4">
+              <form onSubmit={handleUrlUpload} className="space-y-4">
                   <div>
                       <Input 
                           type="url" 
+                          name="fileUrl"
                           id="fileUrl"
                           placeholder="https://example.com/file.pdf"
                           className="glow-input w-full text-lg h-12"
@@ -245,7 +272,7 @@ export default function FileManager() {
                       />
                   </div>
                   <div className="flex space-x-4 pt-2">
-                      <Button type="button" onClick={() => callWindowFunc('closeUrlUploadModal')} className="flex-1 py-3 text-lg" variant="outline">
+                      <Button type="button" onClick={() => setUrlModalOpen(false)} className="flex-1 py-3 text-lg" variant="outline">
                           Cancel
                       </Button>
                       <Button type="submit" className="glow-button flex-1 py-3 text-lg bg-blue-600 hover:bg-blue-700">
@@ -254,7 +281,8 @@ export default function FileManager() {
                   </div>
               </form>
           </div>
-      </div>
+        </div>
+      )}
     </>
   );
 }
@@ -268,8 +296,6 @@ declare global {
         filterFiles: () => void;
         sortFiles: () => void;
         resetFileFilters: () => void;
-        uploadFromUrl: () => void;
-        closeUrlUploadModal: () => void;
         removeFile: (fileId: string, event?: MouseEvent) => void;
         editFile: (fileId: string, event?: MouseEvent) => void;
         downloadFile: (fileId: string, event?: MouseEvent) => void;
@@ -281,8 +307,5 @@ declare global {
         triggerBrowseFiles: () => void;
         editSelectedFile: (event?: MouseEvent) => void;
         deleteSelectedFile: (event?: MouseEvent) => void;
-        handleUrlUpload: (e: Event) => void;
     }
 }
-
-    
