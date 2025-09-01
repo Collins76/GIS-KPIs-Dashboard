@@ -19,7 +19,7 @@ const getKpisForBusinessUnit = (buId: string, allKpis: Kpi[]): Kpi[] => {
     return allKpis.filter((_, index) => (index % initialBusinessUnits.length) + 1 === buIndex);
 };
 
-const LocationCard = ({ unit, onEditAddress, onViewMap, onResetAddress }: { unit: BusinessUnit, onEditAddress: (unit: BusinessUnit, address: string) => void, onViewMap: (unit: BusinessUnit) => void, onResetAddress: (unitId: string) => void }) => {
+const LocationCard = ({ unit, onEditAddress, onResetAddress }: { unit: BusinessUnit, onEditAddress: (unit: BusinessUnit, address: string) => void, onResetAddress: (unitId: string) => void }) => {
     const unitKpis = getKpisForBusinessUnit(unit.id, kpis);
     const completedKpis = unitKpis.filter(k => k.status === 'Completed').length;
     const inProgressKpis = unitKpis.filter(k => k.status === 'On Track').length;
@@ -32,6 +32,13 @@ const LocationCard = ({ unit, onEditAddress, onViewMap, onResetAddress }: { unit
         onEditAddress(unit, address);
         setAddressModalOpen(false);
     }
+
+    const onViewMap = (unit: BusinessUnit) => {
+        if (unit.coordinates.lat !== 0 && unit.coordinates.lng !== 0) {
+            const { lat, lng } = unit.coordinates;
+            window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank');
+        }
+    };
     
     const coordinatesString = unit.address && unit.coordinates.lat !== 0 ? `${unit.coordinates.lat.toFixed(4)}, ${unit.coordinates.lng.toFixed(4)}` : 'N/A';
 
@@ -107,11 +114,7 @@ const LocationCard = ({ unit, onEditAddress, onViewMap, onResetAddress }: { unit
 export default function LocationMap() {
     const { toast } = useToast();
     const [businessUnits, setBusinessUnits] = useState<BusinessUnit[]>(initialBusinessUnits);
-    const [selectedUnit, setSelectedUnit] = useState<BusinessUnit | null>(null);
-    const [mapUrl, setMapUrl] = useState('');
     
-    const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-
     useEffect(() => {
         const storedUnits = localStorage.getItem('gis-business-units');
         if (storedUnits) {
@@ -152,40 +155,6 @@ export default function LocationMap() {
         });
     };
     
-    const handleViewMap = (unit: BusinessUnit) => {
-        if (!API_KEY) {
-            toast({
-                title: "API Key Missing",
-                description: "Google Maps API key is not configured.",
-                variant: "destructive",
-            });
-            return;
-        }
-        setSelectedUnit(unit);
-        // Default to roadmap view
-        handleMapTypeChange('roadmap', unit);
-    }
-    
-    const handleMapTypeChange = (type: 'roadmap' | 'satellite', unit: BusinessUnit) => {
-        if (unit && API_KEY) {
-             const { lat, lng } = unit.coordinates;
-             const url = new URL("https://www.google.com/maps/embed/v1/view");
-             url.searchParams.append("key", API_KEY);
-             url.searchParams.append("center", `${lat},${lng}`);
-             url.searchParams.append("zoom", "15");
-             url.searchParams.append("maptype", type);
-             setMapUrl(url.toString());
-        }
-    }
-
-    const openInGoogleMaps = (unit: BusinessUnit) => {
-        if (unit) {
-            const { lat, lng } = unit.coordinates;
-            window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank');
-        }
-    }
-
-
     return (
     <div className="space-y-8">
         <div className="flex items-center space-x-3">
@@ -201,47 +170,10 @@ export default function LocationMap() {
                     key={unit.id} 
                     unit={unit} 
                     onEditAddress={handleEditAddress}
-                    onViewMap={handleViewMap}
                     onResetAddress={handleResetAddress}
                 />
             ))}
         </div>
-        
-        {selectedUnit && (
-             <div className="network-map-display p-6 flex flex-col items-center justify-center text-center relative">
-                 <div className="absolute top-4 right-4 flex space-x-2 z-10">
-                    <Button onClick={() => handleMapTypeChange('roadmap', selectedUnit)} className="bg-blue-500 hover:bg-blue-600 text-white font-semibold">Roadmap</Button>
-                    <Button onClick={() => handleMapTypeChange('satellite', selectedUnit)} className="bg-teal-500 hover:bg-teal-600 text-white font-semibold">Satellite</Button>
-                    <Button onClick={() => openInGoogleMaps(selectedUnit)} className="bg-green-500 hover:bg-green-600 text-white font-semibold">Open in Google Maps</Button>
-                </div>
-
-                <div className="w-full h-[400px] bg-gray-800 rounded-lg overflow-hidden mt-4">
-                     {API_KEY ? (
-                        <iframe
-                            width="100%"
-                            height="100%"
-                            frameBorder="0"
-                            scrolling="no"
-                            marginHeight={0}
-                            marginWidth={0}
-                            src={mapUrl}
-                            style={{ border: 0 }}
-                            allowFullScreen
-                        ></iframe>
-                     ) : (
-                        <div className="flex items-center justify-center h-full text-red-500">
-                           Google Maps API Key is missing.
-                        </div>
-                     )}
-                </div>
-                 <div className="mt-4">
-                    <h3 className="text-2xl font-bold text-white font-orbitron mb-2">Map for {selectedUnit.name}</h3>
-                    <p className="text-gray-400 max-w-lg mx-auto">
-                        Displaying map for address: <span className="text-white">{selectedUnit.address}</span>
-                    </p>
-                </div>
-             </div>
-        )}
     </div>
   )
 }
