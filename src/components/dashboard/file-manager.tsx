@@ -218,10 +218,7 @@ export default function FileManager() {
                           <FolderOpen className="mr-2 h-5 w-5" />Browse Files
                       </Button>
                       <Button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setUrlModalOpen(true);
-                        }}
+                        onClick={() => setUrlModalOpen(true)}
                         variant="secondary" 
                         className="px-8 py-3 text-lg bg-blue-600 hover:bg-blue-700 text-white border-blue-700">
                           <Link className="mr-2 h-5 w-5" />Upload from URL
