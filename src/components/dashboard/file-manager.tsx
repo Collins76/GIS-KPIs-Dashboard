@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -22,6 +22,9 @@ const callWindowFunc = (funcName: keyof Window, ...args: any[]) => {
 export default function FileManager() {
   const [isUrlModalOpen, setUrlModalOpen] = useState(false);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadAreaRef = useRef<HTMLDivElement>(null);
+
 
   const handleUrlUpload = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -39,74 +42,64 @@ export default function FileManager() {
   };
 
   useEffect(() => {
-    // This logic is moved from the old upload.js to ensure it runs after the component mounts.
-    const initializeUploadArea = () => {
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+    const uploadArea = uploadAreaRef.current;
+    const fileInput = fileInputRef.current;
 
-        if (!uploadArea || !fileInput) {
-            console.error("Upload area or file input not found!");
-            return;
+    if (!uploadArea || !fileInput) {
+        console.error("Upload area or file input not found!");
+        return;
+    }
+
+    const handleFiles = (files: FileList) => {
+        console.log(`${files.length} files selected.`);
+        toast({
+          title: "Files selected",
+          description: `${files.length} files are ready for upload.`,
+        });
+    };
+
+    const dragOverHandler = (e: DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.classList.add('dragging');
+    };
+    const dragLeaveHandler = (e: DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.classList.remove('dragging');
+    };
+    const dropHandler = (e: DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.classList.remove('dragging');
+        if (e.dataTransfer?.files) {
+            handleFiles(e.dataTransfer.files);
         }
+    };
+    const fileSelectHandler = (e: Event) => {
+        const target = e.target as HTMLInputElement;
+        if (target.files) {
+            handleFiles(target.files);
+        }
+    };
+    
+    uploadArea.addEventListener('dragover', dragOverHandler);
+    uploadArea.addEventListener('dragleave', dragLeaveHandler);
+    uploadArea.addEventListener('drop', dropHandler);
+    fileInput.addEventListener('change', fileSelectHandler);
 
-        const handleFiles = (files: FileList) => {
-            // Placeholder for file handling logic that was in upload.js
-            console.log(`${files.length} files selected.`);
-            toast({
-              title: "Files selected",
-              description: `${files.length} files are ready for upload.`,
-            });
-            // You can add file processing, state updates, and UI rendering here.
-        };
-
-        const clickHandler = () => fileInput.click();
-        const dragOverHandler = (e: DragEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-            uploadArea.classList.add('dragging');
-        };
-        const dragLeaveHandler = (e: DragEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-            uploadArea.classList.remove('dragging');
-        };
-        const dropHandler = (e: DragEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-            uploadArea.classList.remove('dragging');
-            if (e.dataTransfer?.files) {
-                handleFiles(e.dataTransfer.files);
-            }
-        };
-        const fileSelectHandler = (e: Event) => {
-            const target = e.target as HTMLInputElement;
-            if (target.files) {
-                handleFiles(target.files);
-            }
-        };
-        
-        // We use a direct click handler on the upload area instead of a global one.
-        uploadArea.addEventListener('click', clickHandler);
-        uploadArea.addEventListener('dragover', dragOverHandler);
-        uploadArea.addEventListener('dragleave', dragLeaveHandler);
-        uploadArea.addEventListener('drop', dropHandler);
-        fileInput.addEventListener('change', fileSelectHandler);
-
-        window.triggerBrowseFiles = () => fileInput.click();
-        
-        // Cleanup function to remove event listeners
-        return () => {
-            uploadArea.removeEventListener('click', clickHandler);
+    window.triggerBrowseFiles = () => fileInput.click();
+    
+    return () => {
+        if (uploadArea) {
             uploadArea.removeEventListener('dragover', dragOverHandler);
             uploadArea.removeEventListener('dragleave', dragLeaveHandler);
             uploadArea.removeEventListener('drop', dropHandler);
+        }
+        if (fileInput) {
             fileInput.removeEventListener('change', fileSelectHandler);
-        };
+        }
     };
-
-    const cleanup = initializeUploadArea();
-
-    return cleanup;
   }, []);
 
   return (
@@ -194,11 +187,11 @@ export default function FileManager() {
 
       <Card className="glow-container p-6 mb-8">
         <CardContent className="p-0">
-          <div className="upload-area cursor-pointer" id="uploadArea">
+          <div className="upload-area" ref={uploadAreaRef}>
               <div className="text-center">
                   <FileUp className="mx-auto h-20 w-20 text-yellow-400 mb-6 animate-float" />
                   <h3 className="text-2xl font-bold text-white mb-4 font-orbitron">Upload Your Files</h3>
-                  <p className="text-white text-lg mb-2">Drag and drop files here or click to browse</p>
+                  <p className="text-white text-lg mb-2">Drag and drop files here or click a button below</p>
                   <p className="text-gray-400 text-sm mb-4">Maximum file size: 500MB per file</p>
                   
                   <div className="grid grid-cols-4 md:grid-cols-8 gap-2 mb-6 max-w-lg mx-auto">
@@ -212,16 +205,13 @@ export default function FileManager() {
                       <div className="bg-cyan-500 bg-opacity-20 text-cyan-400 px-2 py-1 rounded text-xs font-semibold">KML</div>
                   </div>
                   
-                  <Input type="file" id="fileInput" className="hidden" multiple accept=".csv,.xlsx,.pdf,.jpg,.jpeg,.png,.docx,.doc,.shp,.gdb,.ppt,.pptx,.kmz,.kml" />
+                  <Input type="file" ref={fileInputRef} className="hidden" multiple accept=".csv,.xlsx,.pdf,.jpg,.jpeg,.png,.docx,.doc,.shp,.gdb,.ppt,.pptx,.kmz,.kml" />
                   <div className="flex justify-center space-x-4">
-                      <Button onClick={(e) => { e.stopPropagation(); window.triggerBrowseFiles && window.triggerBrowseFiles()}} className="glow-button text-lg px-8 py-3">
+                      <Button onClick={() => fileInputRef.current?.click()} className="glow-button text-lg px-8 py-3">
                           <FolderOpen className="mr-2 h-5 w-5" />Browse Files
                       </Button>
                       <Button 
-                        onClick={(e) => {
-                          e.stopPropagation(); // prevent triggering the upload area's click event
-                          setUrlModalOpen(true);
-                        }}
+                        onClick={() => setUrlModalOpen(true)}
                         variant="secondary" 
                         className="px-8 py-3 text-lg bg-blue-600 hover:bg-blue-700 text-white border-blue-700">
                           <Link className="mr-2 h-5 w-5" />Upload from URL
@@ -251,7 +241,7 @@ export default function FileManager() {
       <div id="noFilesPlaceholder" className="text-center py-16 hidden flex-col items-center">
           <FolderOpen className="mx-auto h-24 w-24 text-gray-600 mb-6" />
           <p className="text-gray-400 text-xl mb-4">No files uploaded yet</p>
-          <Button onClick={() => window.triggerBrowseFiles && window.triggerBrowseFiles()} className="glow-button">
+          <Button onClick={() => fileInputRef.current?.click()} className="glow-button">
               <FileUp className="mr-2 h-4 w-4" />Upload Your First File
           </Button>
       </div>
