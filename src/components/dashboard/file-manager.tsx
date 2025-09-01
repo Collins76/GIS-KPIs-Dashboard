@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { FileUp, List, Trash2, RotateCcw, LayoutGrid, FolderOpen, Link, Eye, Share2, Download, Search, File as FileIcon, Image as ImageIcon, FileText, FileSpreadsheet, Folder, UploadCloud, Hourglass, CheckCircle, Database } from 'lucide-react';
+import { FileUp, List, Trash2, RotateCcw, LayoutGrid, FolderOpen, Link, Eye, Share2, Download, Search, File as FileIcon, Image as ImageIcon, FileText, FileSpreadsheet, Folder, UploadCloud, Hourglass, CheckCircle, Database, XSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
 
 
 type ManagedFile = {
@@ -49,6 +50,37 @@ export default function FileManager() {
   const [urlToUpload, setUrlToUpload] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<ManagedFile[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  
+  // Effect for handling file upload simulation
+  useEffect(() => {
+    const uploadIntervals = new Map<string, NodeJS.Timeout>();
+
+    uploadedFiles.forEach(file => {
+      if (file.status === 'uploading' && !uploadIntervals.has(file.id)) {
+        const interval = setInterval(() => {
+          setUploadedFiles(prevFiles => 
+            prevFiles.map(f => {
+              if (f.id === file.id && f.status === 'uploading') {
+                const newProgress = f.progress + 10;
+                if (newProgress >= 100) {
+                  clearInterval(uploadIntervals.get(file.id));
+                  uploadIntervals.delete(file.id);
+                  return { ...f, progress: 100, status: 'completed' };
+                }
+                return { ...f, progress: newProgress };
+              }
+              return f;
+            })
+          );
+        }, 200);
+        uploadIntervals.set(file.id, interval);
+      }
+    });
+
+    return () => {
+      uploadIntervals.forEach(interval => clearInterval(interval));
+    };
+  }, [uploadedFiles]);
 
 
   const handleFiles = useCallback((files: FileList | null) => {
@@ -61,18 +93,15 @@ export default function FileManager() {
         type: file.type,
         file: file,
         progress: 0,
-        status: 'pending',
+        status: 'uploading',
         uploadedAt: new Date(),
     }));
 
-    // Simulate upload and set status to completed
-    const completedFiles = newFiles.map(f => ({...f, status: 'completed' as 'completed', progress: 100}));
-
-    setUploadedFiles(prev => [...prev, ...completedFiles]);
+    setUploadedFiles(prev => [...prev, ...newFiles]);
 
     toast({
-      title: "Files added",
-      description: `${files.length} file(s) are ready.`,
+      title: "Upload started",
+      description: `${files.length} file(s) are now uploading.`,
     });
   }, [toast]);
   
@@ -111,15 +140,15 @@ export default function FileManager() {
             size: Math.floor(Math.random() * 10000000) + 100000,
             type: fileType,
             url: urlToUpload,
-            progress: 100,
-            status: 'completed',
+            progress: 0,
+            status: 'uploading',
             uploadedAt: new Date(),
         };
 
         setUploadedFiles(prev => [...prev, newFile]);
         toast({
-          title: "URL processed",
-          description: `${fileName} has been added to the list.`,
+          title: "URL upload started",
+          description: `${fileName} is now uploading.`,
         });
 
     } catch (error) {
@@ -155,6 +184,11 @@ export default function FileManager() {
 
   const removeFile = (fileId: string) => {
     setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
+  };
+  
+   const cancelUpload = (fileId: string) => {
+    setUploadedFiles(prevFiles => prevFiles.filter(f => f.id !== fileId));
+    toast({ title: "Upload Canceled", description: "The file upload has been canceled." });
   };
   
   const viewFile = (file: ManagedFile) => {
@@ -203,23 +237,44 @@ export default function FileManager() {
   }
 
   const FileItem = ({ file }: { file: ManagedFile }) => (
-     <Card className={cn("glow-container p-3 flex items-center gap-4", { 'flex-col text-center': viewMode === 'grid' })}>
-        <div className={cn("flex-grow overflow-hidden w-full", {'flex flex-col items-center': viewMode === 'grid' })}>
-            {getFileIcon(file.type)}
-            <p className="font-semibold text-sm truncate text-white mt-2">{file.name}</p>
-            <p className="text-xs text-gray-400">{formatFileSize(file.size)}</p>
-        </div>
-        <div className={cn("flex items-center gap-2", { 'mt-4': viewMode === 'grid' })}>
-            <Button onClick={() => viewFile(file)} variant="ghost" size="icon" className="text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 transition-all transform hover:scale-110">
-                <Eye className="h-5 w-5 glow-text-blue animate-pulse-glow"/>
-            </Button>
-            <Button onClick={() => downloadFile(file)} variant="ghost" size="icon" className="text-green-400 hover:bg-green-500/10 hover:text-green-300 transition-all transform hover:scale-110">
-                <Download className="h-5 w-5 glow-text-green animate-pulse-glow"/>
-            </Button>
-            <Button onClick={() => removeFile(file.id)} variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10 hover:text-red-300 transition-all transform hover:scale-110">
-                <Trash2 className="h-5 w-5 glow-text-yellow animate-pulse-glow"/>
-            </Button>
-        </div>
+     <Card className={cn("glow-container p-3 flex flex-col gap-3", { 'items-center text-center': viewMode === 'grid' })}>
+        
+        {file.status === 'uploading' ? (
+          <>
+            <div className="flex items-center gap-4 w-full">
+              <div className="w-12 h-12 flex-shrink-0 bg-gray-700 rounded-lg flex items-center justify-center animate-pulse-glow">
+                <Hourglass className="h-6 w-6 text-yellow-400" />
+              </div>
+              <div className="flex-grow overflow-hidden">
+                <p className="font-semibold text-sm truncate text-white">{file.name}</p>
+                <p className="text-xs text-gray-400">Uploading... {file.progress}%</p>
+                <Progress value={file.progress} className="h-1.5 mt-1" />
+              </div>
+              <Button onClick={() => cancelUpload(file.id)} variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10 hover:text-red-300">
+                <XSquare className="h-5 w-5" />
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+             <div className={cn("flex-grow overflow-hidden w-full", {'flex flex-col items-center': viewMode === 'grid' })}>
+                {getFileIcon(file.type)}
+                <p className="font-semibold text-sm truncate text-white mt-2">{file.name}</p>
+                <p className="text-xs text-gray-400">{formatFileSize(file.size)}</p>
+            </div>
+            <div className={cn("flex items-center gap-2", { 'mt-4': viewMode === 'grid' })}>
+                <Button onClick={() => viewFile(file)} variant="ghost" size="icon" className="text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 transition-all transform hover:scale-110">
+                    <Eye className="h-5 w-5 glow-text-blue animate-pulse-glow"/>
+                </Button>
+                <Button onClick={() => downloadFile(file)} variant="ghost" size="icon" className="text-green-400 hover:bg-green-500/10 hover:text-green-300 transition-all transform hover:scale-110">
+                    <Download className="h-5 w-5 glow-text-green animate-pulse-glow"/>
+                </Button>
+                <Button onClick={() => removeFile(file.id)} variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10 hover:text-red-300 transition-all transform hover:scale-110">
+                    <Trash2 className="h-5 w-5 glow-text-yellow animate-pulse-glow"/>
+                </Button>
+            </div>
+          </>
+        )}
     </Card>
   );
 
