@@ -26,8 +26,9 @@ export default function RootLayout({
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src="/js/charts.js" defer></script>
         <script src="/js/map.js" defer></script>
-        <script src="/js/upload.js" defer></script>
       </body>
     </html>
   );
 }
+
+    

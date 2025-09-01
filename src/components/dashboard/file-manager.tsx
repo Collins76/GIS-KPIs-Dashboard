@@ -13,7 +13,7 @@ const callWindowFunc = (funcName: keyof Window, ...args: any[]) => {
   if (typeof window !== 'undefined' && typeof window[funcName] === 'function') {
     (window[funcName] as Function)(...args);
   } else {
-    console.warn(`${funcName} function not available on window object.`);
+    // console.warn(`${funcName} function not available on window object.`);
   }
 };
 
@@ -21,14 +21,70 @@ const callWindowFunc = (funcName: keyof Window, ...args: any[]) => {
 export default function FileManager() {
   
   useEffect(() => {
-    const init = () => {
-      if (typeof window.initializeUploadArea === 'function') {
-        window.initializeUploadArea();
-      } else {
-        setTimeout(init, 100);
-      }
-    }
-    init();
+    // This logic is moved from the old upload.js to ensure it runs after the component mounts.
+    const initializeUploadArea = () => {
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+
+        if (!uploadArea || !fileInput) {
+            console.error("Upload area or file input not found!");
+            return;
+        }
+
+        const handleFiles = (files: FileList) => {
+            // Placeholder for file handling logic that was in upload.js
+            console.log(`${files.length} files selected.`);
+            // You can add file processing, state updates, and UI rendering here.
+        };
+
+        const clickHandler = () => fileInput.click();
+        const dragOverHandler = (e: DragEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.add('dragging');
+        };
+        const dragLeaveHandler = (e: DragEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.remove('dragging');
+        };
+        const dropHandler = (e: DragEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.remove('dragging');
+            if (e.dataTransfer?.files) {
+                handleFiles(e.dataTransfer.files);
+            }
+        };
+        const fileSelectHandler = (e: Event) => {
+            const target = e.target as HTMLInputElement;
+            if (target.files) {
+                handleFiles(target.files);
+            }
+        };
+        
+        uploadArea.addEventListener('click', clickHandler);
+        uploadArea.addEventListener('dragover', dragOverHandler);
+        uploadArea.addEventListener('dragleave', dragLeaveHandler);
+        uploadArea.addEventListener('drop', dropHandler);
+        fileInput.addEventListener('change', fileSelectHandler);
+
+        // Assign functions to window object so inline onClick handlers can call them
+        window.triggerBrowseFiles = () => fileInput.click();
+        
+        // Cleanup function to remove event listeners
+        return () => {
+            uploadArea.removeEventListener('click', clickHandler);
+            uploadArea.removeEventListener('dragover', dragOverHandler);
+            uploadArea.removeEventListener('dragleave', dragLeaveHandler);
+            uploadArea.removeEventListener('drop', dropHandler);
+            fileInput.removeEventListener('change', fileSelectHandler);
+        };
+    };
+
+    const cleanup = initializeUploadArea();
+
+    return cleanup;
   }, []);
 
   return (
@@ -218,7 +274,6 @@ declare global {
         editFile: (fileId: string, event?: MouseEvent) => void;
         downloadFile: (fileId: string, event?: MouseEvent) => void;
         previewFile: (fileId: string, event?: MouseEvent) => void;
-        initializeUploadArea: () => void;
         handleFileSelect: (e: Event) => void;
         createFileDownload: (originalFile: File, fileName: string) => boolean;
         showFilePreviewModal: (file: any) => void;
