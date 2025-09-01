@@ -49,7 +49,9 @@ export default function AiInsights({ kpis, role }: AiInsightsProps) {
 
   const handleOpenChange = (open: boolean) => {
     setIsModalOpen(open);
-    if (!open) {
+    if (open) {
+      handleAnalyze(); // Fetch analysis when dialog opens
+    } else {
       // Reset state when closing the modal
       setAnalysis(null);
       setLoading(false);
@@ -69,7 +71,7 @@ export default function AiInsights({ kpis, role }: AiInsightsProps) {
       </CardContent>
       <CardFooter>
         <DialogTrigger asChild>
-            <Button onClick={handleAnalyze} disabled={kpis.length === 0} className="w-full glow-button">
+            <Button disabled={kpis.length === 0} className="w-full glow-button">
                 <Sparkles className="mr-2 h-4 w-4" />
                 Analyze Dashboard Data
             </Button>
