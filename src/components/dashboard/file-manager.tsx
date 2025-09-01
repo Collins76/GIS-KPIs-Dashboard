@@ -46,7 +46,6 @@ export default function FileManager() {
     const fileInput = fileInputRef.current;
 
     if (!uploadArea || !fileInput) {
-        console.error("Upload area or file input not found!");
         return;
     }
 
@@ -87,8 +86,6 @@ export default function FileManager() {
     uploadArea.addEventListener('dragleave', dragLeaveHandler);
     uploadArea.addEventListener('drop', dropHandler);
     fileInput.addEventListener('change', fileSelectHandler);
-
-    window.triggerBrowseFiles = () => fileInput.click();
     
     return () => {
         if (uploadArea) {
@@ -211,7 +208,10 @@ export default function FileManager() {
                           <FolderOpen className="mr-2 h-5 w-5" />Browse Files
                       </Button>
                       <Button 
-                        onClick={() => setUrlModalOpen(true)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setUrlModalOpen(true);
+                        }}
                         variant="secondary" 
                         className="px-8 py-3 text-lg bg-blue-600 hover:bg-blue-700 text-white border-blue-700">
                           <Link className="mr-2 h-5 w-5" />Upload from URL
