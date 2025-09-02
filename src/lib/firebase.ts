@@ -1,6 +1,6 @@
 
-import { initializeApp, getApps, getApp, FirebaseOptions } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp, getApps, getApp, FirebaseOptions, FirebaseApp } from "firebase/app";
+import { getAuth, Auth } from "firebase/auth";
 
 const firebaseConfig: FirebaseOptions = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,8 +11,29 @@ const firebaseConfig: FirebaseOptions = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const auth = getAuth(app);
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
 
-export { app, auth };
+function getFirebaseAuth() {
+  if (auth) {
+    return { app, auth };
+  }
+
+  if (!firebaseConfig.apiKey) {
+    console.error("Firebase API key is missing. Please check your .env file.");
+    // Return nulls to prevent app crash if config is missing
+    return { app: null, auth: null };
+  }
+  
+  if (getApps().length === 0) {
+    app = initializeApp(firebaseConfig);
+  } else {
+    app = getApp();
+  }
+
+  auth = getAuth(app);
+  return { app, auth };
+}
+
+// Export a function that components can call to get the auth instance.
+export { getFirebaseAuth };

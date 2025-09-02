@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Zap, Check, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { auth } from '@/lib/firebase';
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getFirebaseAuth } from '@/lib/firebase';
+import { GoogleAuthProvider, signInWithPopup, Auth } from "firebase/auth";
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -43,6 +43,16 @@ export default function LoginPage() {
     const { toast } = useToast();
     
     const handleGoogleSignIn = async () => {
+        const { auth } = getFirebaseAuth();
+        if (!auth) {
+            toast({
+                title: "Authentication Not Ready",
+                description: "Firebase is not configured correctly. Please check the console.",
+                variant: "destructive"
+            });
+            return;
+        }
+
         const provider = new GoogleAuthProvider();
         try {
             const result = await signInWithPopup(auth, provider);

@@ -27,7 +27,7 @@ import { User, LogOut, Camera, UserCircle, LogIn, ChevronDown } from 'lucide-rea
 import type { User as UserType, Role } from '@/lib/types';
 import { roles, businessUnits } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { auth } from '@/lib/firebase';
+import { getFirebaseAuth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 
 
@@ -111,6 +111,11 @@ export default function UserProfile() {
   };
   
   const handleLogout = async () => {
+    const { auth } = getFirebaseAuth();
+    if (!auth) {
+        toast({ title: "Logout Failed", description: "Firebase not initialized.", variant: "destructive" });
+        return;
+    }
     try {
         await signOut(auth);
         localStorage.removeItem('gis-user-profile');
