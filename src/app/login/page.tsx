@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Zap, Check, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -41,6 +41,11 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
 export default function LoginPage() {
     const router = useRouter();
     const { toast } = useToast();
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
     
     const handleGoogleSignIn = async () => {
         const { auth } = getFirebaseAuth();
@@ -122,7 +127,7 @@ export default function LoginPage() {
               onClick={handleGoogleSignIn}
               className="glow-button w-full text-lg !bg-blue-600 hover:!bg-blue-700"
             >
-              <GoogleIcon className="mr-3" />
+              {isClient && <GoogleIcon className="mr-3" />}
               Sign in with Google
             </Button>
           </div>
