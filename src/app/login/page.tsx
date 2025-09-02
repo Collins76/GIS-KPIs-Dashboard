@@ -87,7 +87,22 @@ export default function LoginPage() {
             console.error("Authentication error:", error);
             let errorMessage = "Could not sign in with Google. Please try again.";
             if (error.code) {
-                errorMessage = error.message;
+                switch (error.code) {
+                    case 'auth/operation-not-allowed':
+                        errorMessage = "Sign-in with Google is not enabled for this project. Please contact support.";
+                        break;
+                    case 'auth/popup-blocked':
+                        errorMessage = "Popup blocked by browser. Please allow popups for this site to sign in.";
+                        break;
+                    case 'auth/popup-closed-by-user':
+                        errorMessage = "Sign-in window closed. Please try again.";
+                        break;
+                    case 'auth/unauthorized-domain':
+                        errorMessage = "This domain is not authorized for authentication. Please contact support.";
+                        break;
+                    default:
+                        errorMessage = `An unknown error occurred: ${error.message}`;
+                }
             }
             toast({
                 title: "Authentication Failed",
@@ -96,6 +111,14 @@ export default function LoginPage() {
             });
         }
     };
+
+    if (!isClient) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-background">
+                <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"></div>
+            </div>
+        );
+    }
 
   return (
     <div className="min-h-screen font-space bg-black text-white">
@@ -133,7 +156,7 @@ export default function LoginPage() {
               onClick={handleGoogleSignIn}
               className="glow-button w-full text-lg !bg-blue-600 hover:!bg-blue-700"
             >
-              {isClient && <GoogleIcon className="mr-3" />}
+              <GoogleIcon className="mr-3" />
               Sign in with Google
             </Button>
           </div>
