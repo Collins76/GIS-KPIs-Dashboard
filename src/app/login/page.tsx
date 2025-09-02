@@ -46,13 +46,19 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
 export default function LoginPage() {
     const router = useRouter();
     const { toast } = useToast();
-    const { setUser } = useContext(UserContext);
+    const { user, setUser } = useContext(UserContext);
     const [isClient, setIsClient] = useState(false);
     const [isSigningIn, setIsSigningIn] = useState(false);
 
     useEffect(() => {
         setIsClient(true);
     }, []);
+
+    useEffect(() => {
+        if (user) {
+            router.push('/');
+        }
+    }, [user, router]);
     
     const handleGoogleSignIn = async () => {
         setIsSigningIn(true);
@@ -69,27 +75,13 @@ export default function LoginPage() {
 
         const provider = new GoogleAuthProvider();
         try {
-            const result = await signInWithPopup(auth, provider);
-            const firebaseUser = result.user;
-
-            const userProfile: User = {
-                name: firebaseUser.displayName || "Anonymous",
-                email: firebaseUser.email || "no-email@example.com",
-                role: "GIS Analyst", 
-                location: "CHQ",
-                avatar: firebaseUser.photoURL || `https://i.pravatar.cc/150?u=${firebaseUser.email}`,
-            };
-            
-            setUser(userProfile);
-            
-            const todaysWeather = weatherData.find(d => d.isToday) || null;
-            await addUserSignInActivity(userProfile, todaysWeather);
-
+            await signInWithPopup(auth, provider);
+            // The onAuthStateChanged listener in UserProvider will handle setting the user and redirecting.
             toast({
                 title: 'Login Successful',
-                description: `Welcome, ${userProfile.name}! Redirecting...`,
+                description: `Welcome! Redirecting to the dashboard...`,
             });
-            router.push('/');
+            // The useEffect hook will handle the redirect once the user state is updated.
         } catch (error: any) {
             console.error("Authentication error:", error);
             let errorMessage = "Could not sign in with Google. Please try again.";
