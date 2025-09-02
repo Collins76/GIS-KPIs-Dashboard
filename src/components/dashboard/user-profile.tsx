@@ -162,7 +162,7 @@ export default function UserProfile() {
         </DropdownMenu>
         <div className="hidden sm:block">
             <p className="text-sm font-semibold text-white">{user.name}</p>
-            <p className="text-xs text-gray-400">{user.role}</p>
+            <div className="text-xs text-gray-400">{user.role}</div>
         </div>
     </div>
       {editedUser && (

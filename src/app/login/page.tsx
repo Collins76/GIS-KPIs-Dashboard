@@ -126,11 +126,7 @@ export default function LoginPage() {
     };
 
     if (!isClient) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-background">
-                <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"></div>
-            </div>
-        );
+        return null;
     }
 
   return (
@@ -183,10 +179,10 @@ export default function LoginPage() {
             <p className="text-gray-500 text-xs">
               © {new Date().getFullYear()} Ikeja Electric Plc. All rights reserved.
             </p>
-            <p className="text-gray-600 text-xs mt-2">
+            <div className="text-gray-600 text-xs mt-2">
               <Shield className="inline-block mr-1 text-green-500" />
               Secure Login System
-            </p>
+            </div>
           </div>
         </div>
       </div>
