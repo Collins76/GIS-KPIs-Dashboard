@@ -60,6 +60,8 @@ export default function LoginPage() {
 
         const provider = new GoogleAuthProvider();
         try {
+            // Explicitly set tenantId to null to ensure it uses the main project
+            auth.tenantId = null; 
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
 
