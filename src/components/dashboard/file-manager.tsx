@@ -15,20 +15,11 @@ import { Progress } from '@/components/ui/progress';
 import { getFirebase } from '@/lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject, UploadTask } from 'firebase/storage';
 import { addFileUploadActivity } from '@/lib/firestore';
-import type { User } from '@/lib/types';
+import type { User, ManagedFile as ManagedFileType } from '@/lib/types';
 import { UserContext } from '@/context/user-context';
 
 
-type ManagedFile = {
-  id: string;
-  name: string;
-  size: number; // Store size in bytes for accurate calculation
-  type: string;
-  file?: File;
-  url?: string;
-  progress: number;
-  status: 'pending' | 'uploading' | 'completed' | 'error';
-  uploadedAt: Date;
+type ManagedFile = ManagedFileType & {
   uploadTask?: UploadTask;
   storagePath?: string;
 };
@@ -60,15 +51,15 @@ export default function FileManager() {
   const { user: currentUser } = useContext(UserContext);
   
 
-  const handleFileUpload = (file: File) => {
+  const handleFileUpload = (file: File, user: User | null) => {
     const { storage } = getFirebase();
-    if (!storage) {
-        toast({ title: "Firebase Storage not configured", description: "Please check your Firebase setup.", variant: "destructive" });
+    if (!storage || !user) {
+        toast({ title: "Upload error", description: "Storage not configured or user not logged in.", variant: "destructive" });
         return;
     }
 
     const id = `${file.name}-${file.lastModified}-${file.size}-${Date.now()}-${Math.random()}`;
-    const storagePath = `uploads/${currentUser?.email || 'unknown'}/${id}/${file.name}`;
+    const storagePath = `uploads/${user.email}/${id}/${file.name}`;
     const storageRef = ref(storage, storagePath);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -103,14 +94,22 @@ export default function FileManager() {
       },
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          const completedFile: ManagedFile = { ...newFile, url: downloadURL, status: 'completed', progress: 100 };
-          setUploadedFiles(prevFiles => 
-            prevFiles.map(f => f.id === id ? completedFile : f)
+           setUploadedFiles(prevFiles => 
+            prevFiles.map(f => f.id === id ? { ...f, url: downloadURL, status: 'completed', progress: 100 } : f)
           );
           toast({ title: `Upload successful`, description: `${file.name} is now available.` });
-          if(currentUser) {
-            addFileUploadActivity(currentUser, completedFile);
-          }
+          
+          const completedFileForDb: ManagedFileType = {
+            id,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            progress: 100,
+            status: 'completed',
+            uploadedAt: new Date(),
+            url: downloadURL,
+          };
+          addFileUploadActivity(user, completedFileForDb);
         });
       }
     );
@@ -119,7 +118,7 @@ export default function FileManager() {
 
   const handleFiles = useCallback((files: FileList | null) => {
     if (!files) return;
-    Array.from(files).forEach(handleFileUpload);
+    Array.from(files).forEach(file => handleFileUpload(file, currentUser));
   }, [currentUser]);
   
   const handleUrlSubmit = () => {
