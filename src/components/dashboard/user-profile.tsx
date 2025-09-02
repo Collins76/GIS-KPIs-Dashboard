@@ -154,56 +154,58 @@ export default function UserProfile() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {editedUser && <Dialog open={isProfileModalOpen} onOpenChange={setProfileModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Edit Profile</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-             <div className="flex justify-center">
-              <div className="relative">
-                <Avatar className="h-24 w-24">
-                  <AvatarImage src={previewAvatar || ''} alt={editedUser.name} />
-                  <AvatarFallback><UserCircle className="h-12 w-12" /></AvatarFallback>
-                </Avatar>
-                <Label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1.5 cursor-pointer hover:bg-primary/90">
-                  <Camera className="h-4 w-4" />
-                </Label>
-                <Input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+      {editedUser && (
+        <Dialog open={isProfileModalOpen} onOpenChange={setProfileModalOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit Profile</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="flex justify-center">
+                <div className="relative">
+                  <Avatar className="h-24 w-24">
+                    <AvatarImage src={previewAvatar || ''} alt={editedUser.name} />
+                    <AvatarFallback><UserCircle className="h-12 w-12" /></AvatarFallback>
+                  </Avatar>
+                  <Label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-1.5 cursor-pointer hover:bg-primary/90">
+                    <Camera className="h-4 w-4" />
+                  </Label>
+                  <Input id="avatar-upload" type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">Name</Label>
+                <Input id="name" value={editedUser.name} onChange={(e) => setEditedUser({...editedUser, name: e.target.value})} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="role" className="text-right">Role</Label>
+                <Select value={editedUser.role} onValueChange={(value) => setEditedUser({...editedUser, role: value as Role})}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select a role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="location" className="text-right">Location</Label>
+                <Select value={editedUser.location} onValueChange={(value) => setEditedUser({...editedUser, location: value})}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select a location" />
+                    </Trigger>
+                    <SelectContent>
+                      {businessUnits.map(bu => <SelectItem key={bu.id} value={bu.name}>{bu.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
               </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">Name</Label>
-              <Input id="name" value={editedUser.name} onChange={(e) => setEditedUser({...editedUser, name: e.target.value})} className="col-span-3" />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="role" className="text-right">Role</Label>
-               <Select value={editedUser.role} onValueChange={(value) => setEditedUser({...editedUser, role: value as Role})}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-            </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="location" className="text-right">Location</Label>
-               <Select value={editedUser.location} onValueChange={(value) => setEditedUser({...editedUser, location: value})}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select a location" />
-                  </Trigger>
-                  <SelectContent>
-                    {businessUnits.map(bu => <SelectItem key={bu.id} value={bu.name}>{bu.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={handleSaveChanges}>Save changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>}
+            <DialogFooter>
+              <Button onClick={handleSaveChanges}>Save changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 }
