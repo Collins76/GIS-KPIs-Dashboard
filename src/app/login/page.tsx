@@ -7,7 +7,7 @@ import { Zap, Check, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getFirebase } from '@/lib/firebase';
-import { GoogleAuthProvider, signInWithPopup, Auth, User as FirebaseUser } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { addUserSignInActivity } from '@/lib/firestore';
 import { weatherData } from '@/lib/data';
 import { UserContext } from '@/context/user-context';

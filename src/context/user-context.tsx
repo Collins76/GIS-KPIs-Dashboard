@@ -20,15 +20,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUserState] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const setUser = (userToSet: User | null) => {
-    setUserState(userToSet);
-    if (userToSet) {
-      localStorage.setItem('gis-user-profile', JSON.stringify(userToSet));
-    } else {
-      localStorage.removeItem('gis-user-profile');
-    }
-  };
-
   useEffect(() => {
     try {
       const storedUser = localStorage.getItem('gis-user-profile');
@@ -42,6 +33,15 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
     }
   }, []);
+
+  const setUser = (userToSet: User | null) => {
+    setUserState(userToSet);
+    if (userToSet) {
+      localStorage.setItem('gis-user-profile', JSON.stringify(userToSet));
+    } else {
+      localStorage.removeItem('gis-user-profile');
+    }
+  };
 
   const value = useMemo(() => ({ user, loading, setUser }), [user, loading]);
 
