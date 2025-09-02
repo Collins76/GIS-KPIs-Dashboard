@@ -14,6 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Progress } from '@/components/ui/progress';
 import { getFirebase } from '@/lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject, UploadTask } from 'firebase/storage';
+import { addFileUploadActivity } from '@/lib/firestore';
+import type { User } from '@/lib/types';
 
 
 type ManagedFile = {
@@ -54,6 +56,14 @@ export default function FileManager() {
   const [urlToUpload, setUrlToUpload] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<ManagedFile[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('gis-user-profile');
+    if (storedUser) {
+      setCurrentUser(JSON.parse(storedUser));
+    }
+  }, []);
   
 
   const handleFileUpload = (file: File) => {
@@ -64,7 +74,7 @@ export default function FileManager() {
     }
 
     const id = `${file.name}-${file.lastModified}-${file.size}-${Date.now()}-${Math.random()}`;
-    const storagePath = `uploads/${id}/${file.name}`;
+    const storagePath = `uploads/${currentUser?.email || 'unknown'}/${id}/${file.name}`;
     const storageRef = ref(storage, storagePath);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -99,10 +109,14 @@ export default function FileManager() {
       },
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          const completedFile: ManagedFile = { ...newFile, url: downloadURL, status: 'completed', progress: 100 };
           setUploadedFiles(prevFiles => 
-            prevFiles.map(f => f.id === id ? { ...f, url: downloadURL, status: 'completed', progress: 100 } : f)
+            prevFiles.map(f => f.id === id ? completedFile : f)
           );
           toast({ title: `Upload successful`, description: `${file.name} is now available.` });
+          if(currentUser) {
+            addFileUploadActivity(currentUser, completedFile);
+          }
         });
       }
     );
@@ -112,7 +126,7 @@ export default function FileManager() {
   const handleFiles = useCallback((files: FileList | null) => {
     if (!files) return;
     Array.from(files).forEach(handleFileUpload);
-  }, []);
+  }, [currentUser]);
   
   const handleUrlSubmit = () => {
     if (!urlToUpload) {
@@ -154,6 +168,9 @@ export default function FileManager() {
         };
 
         setUploadedFiles(prev => [...prev, newFile]);
+        if (currentUser) {
+          addFileUploadActivity(currentUser, newFile);
+        }
 
     } catch (error) {
         toast({ title: "Invalid URL", description: "Please enter a valid URL.", variant: "destructive" });

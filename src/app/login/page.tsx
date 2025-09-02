@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getFirebase } from '@/lib/firebase';
 import { GoogleAuthProvider, signInWithPopup, Auth } from "firebase/auth";
+import { addUserSignInActivity } from '@/lib/firestore';
+import { weatherData } from '@/lib/data';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -60,7 +62,6 @@ export default function LoginPage() {
 
         const provider = new GoogleAuthProvider();
         try {
-            // Explicitly set tenantId to null to ensure it uses the main project
             auth.tenantId = null; 
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
@@ -68,10 +69,13 @@ export default function LoginPage() {
             const userProfile = {
                 name: user.displayName || "Anonymous",
                 email: user.email || "no-email@example.com",
-                role: "GIS Analyst", // Default role, can be changed in profile
-                location: "CHQ", // Default location
+                role: "GIS Analyst", 
+                location: "CHQ",
                 avatar: user.photoURL || `https://i.pravatar.cc/150?u=${user.email}`,
             };
+            
+            const todaysWeather = weatherData.find(d => d.isToday) || null;
+            await addUserSignInActivity(userProfile, todaysWeather);
 
             localStorage.setItem('gis-user-profile', JSON.stringify(userProfile));
             toast({
