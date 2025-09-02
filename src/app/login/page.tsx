@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Zap, Check, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { getFirebaseAuth } from '@/lib/firebase';
+import { getFirebase } from '@/lib/firebase';
 import { GoogleAuthProvider, signInWithPopup, Auth } from "firebase/auth";
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -48,7 +48,7 @@ export default function LoginPage() {
     }, []);
     
     const handleGoogleSignIn = async () => {
-        const { auth } = getFirebaseAuth();
+        const { auth } = getFirebase();
         if (!auth) {
             toast({
                 title: "Authentication Not Ready",

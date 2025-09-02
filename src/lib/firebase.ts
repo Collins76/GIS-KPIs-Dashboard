@@ -1,6 +1,7 @@
 
 import { initializeApp, getApps, getApp, FirebaseOptions, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
+import { getStorage, FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig: FirebaseOptions = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -13,16 +14,17 @@ const firebaseConfig: FirebaseOptions = {
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
+let storage: FirebaseStorage | null = null;
 
-function getFirebaseAuth() {
-  if (auth) {
-    return { app, auth };
+function getFirebase() {
+  if (app && auth && storage) {
+    return { app, auth, storage };
   }
 
   if (!firebaseConfig.apiKey) {
     console.error("Firebase API key is missing. Please check your .env file.");
     // Return nulls to prevent app crash if config is missing
-    return { app: null, auth: null };
+    return { app: null, auth: null, storage: null };
   }
   
   if (getApps().length === 0) {
@@ -32,8 +34,9 @@ function getFirebaseAuth() {
   }
 
   auth = getAuth(app);
-  return { app, auth };
+  storage = getStorage(app);
+  return { app, auth, storage };
 }
 
-// Export a function that components can call to get the auth instance.
-export { getFirebaseAuth };
+// Export a function that components can call to get the instances.
+export { getFirebase };

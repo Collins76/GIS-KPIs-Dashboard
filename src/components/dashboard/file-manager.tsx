@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
+import { getFirebase } from '@/lib/firebase';
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject, UploadTask } from 'firebase/storage';
 
 
 type ManagedFile = {
@@ -24,6 +26,8 @@ type ManagedFile = {
   progress: number;
   status: 'pending' | 'uploading' | 'completed' | 'error';
   uploadedAt: Date;
+  uploadTask?: UploadTask;
+  storagePath?: string;
 };
 
 const getFileIcon = (fileType: string) => {
@@ -51,59 +55,64 @@ export default function FileManager() {
   const [uploadedFiles, setUploadedFiles] = useState<ManagedFile[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
-  // Effect for handling file upload simulation
-  useEffect(() => {
-    const uploadIntervals = new Map<string, NodeJS.Timeout>();
 
-    uploadedFiles.forEach(file => {
-      if (file.status === 'uploading' && !uploadIntervals.has(file.id)) {
-        const interval = setInterval(() => {
-          setUploadedFiles(prevFiles => 
-            prevFiles.map(f => {
-              if (f.id === file.id && f.status === 'uploading') {
-                const newProgress = f.progress + 10;
-                if (newProgress >= 100) {
-                  clearInterval(uploadIntervals.get(file.id));
-                  uploadIntervals.delete(file.id);
-                  return { ...f, progress: 100, status: 'completed' };
-                }
-                return { ...f, progress: newProgress };
-              }
-              return f;
-            })
-          );
-        }, 200);
-        uploadIntervals.set(file.id, interval);
-      }
-    });
+  const handleFileUpload = (file: File) => {
+    const { storage } = getFirebase();
+    if (!storage) {
+        toast({ title: "Firebase Storage not configured", description: "Please check your Firebase setup.", variant: "destructive" });
+        return;
+    }
 
-    return () => {
-      uploadIntervals.forEach(interval => clearInterval(interval));
+    const id = `${file.name}-${file.lastModified}-${file.size}-${Date.now()}-${Math.random()}`;
+    const storagePath = `uploads/${id}/${file.name}`;
+    const storageRef = ref(storage, storagePath);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    const newFile: ManagedFile = {
+      id,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      file: file,
+      progress: 0,
+      status: 'uploading',
+      uploadedAt: new Date(),
+      uploadTask: uploadTask,
+      storagePath: storagePath
     };
-  }, [uploadedFiles]);
+    
+    setUploadedFiles(prev => [...prev, newFile]);
+
+    uploadTask.on('state_changed', 
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadedFiles(prevFiles => 
+          prevFiles.map(f => f.id === id ? { ...f, progress } : f)
+        );
+      },
+      (error) => {
+        console.error("Upload error:", error);
+        setUploadedFiles(prevFiles => 
+          prevFiles.map(f => f.id === id ? { ...f, status: 'error' } : f)
+        );
+        toast({ title: `Upload failed for ${file.name}`, description: error.message, variant: "destructive" });
+      },
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          setUploadedFiles(prevFiles => 
+            prevFiles.map(f => f.id === id ? { ...f, url: downloadURL, status: 'completed', progress: 100 } : f)
+          );
+          toast({ title: `Upload successful`, description: `${file.name} is now available.` });
+        });
+      }
+    );
+  };
 
 
   const handleFiles = useCallback((files: FileList | null) => {
     if (!files) return;
-
-    const newFiles: ManagedFile[] = Array.from(files).map(file => ({
-        id: `${file.name}-${file.lastModified}-${file.size}-${Date.now()}-${Math.random()}`,
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        file: file,
-        progress: 0,
-        status: 'uploading',
-        uploadedAt: new Date(),
-    }));
-
-    setUploadedFiles(prev => [...prev, ...newFiles]);
-
-    toast({
-      title: "Upload started",
-      description: `${files.length} file(s) are now uploading.`,
-    });
-  }, [toast]);
+    Array.from(files).forEach(handleFileUpload);
+  }, []);
   
   const handleUrlSubmit = () => {
     if (!urlToUpload) {
@@ -111,6 +120,8 @@ export default function FileManager() {
         return;
     }
     
+    toast({ title: "URL Upload Notice", description: "Direct URL uploads are simulated and not stored in Firebase.", variant: "default" });
+
     try {
         const url = new URL(urlToUpload);
         const pathname = url.pathname;
@@ -126,10 +137,7 @@ export default function FileManager() {
                 'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                 'ppt': 'application/vnd.ms-powerpoint',
                 'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                'shp': 'application/octet-stream', // SHP is complex, often a zip. octet-stream is safe.
-                'kml': 'application/vnd.google-earth.kml+xml',
-                'kmz': 'application/vnd.google-earth.kmz',
-                'gdb': 'application/octet-stream', // GDB is a folder, often zipped.
+                'shp': 'application/octet-stream', 'kml': 'application/vnd.google-earth.kml+xml', 'kmz': 'application/vnd.google-earth.kmz', 'gdb': 'application/octet-stream',
             };
             fileType = types[extension] || 'application/octet-stream';
         }
@@ -137,19 +145,15 @@ export default function FileManager() {
         const newFile: ManagedFile = {
             id: `${fileName}-${Date.now()}-${Math.random()}`,
             name: fileName,
-            size: Math.floor(Math.random() * 10000000) + 100000,
+            size: 0,
             type: fileType,
             url: urlToUpload,
-            progress: 0,
-            status: 'uploading',
+            progress: 100,
+            status: 'completed',
             uploadedAt: new Date(),
         };
 
         setUploadedFiles(prev => [...prev, newFile]);
-        toast({
-          title: "URL upload started",
-          description: `${fileName} is now uploading.`,
-        });
 
     } catch (error) {
         toast({ title: "Invalid URL", description: "Please enter a valid URL.", variant: "destructive" });
@@ -160,8 +164,21 @@ export default function FileManager() {
   };
   
   const clearAllFiles = () => {
+    const { storage } = getFirebase();
+    if (!storage) {
+        toast({ title: "Storage not available", variant: "destructive" });
+        return;
+    }
+    
+    uploadedFiles.forEach(file => {
+      if (file.storagePath) {
+        const fileRef = ref(storage, file.storagePath);
+        deleteObject(fileRef).catch(error => console.error(`Failed to delete ${file.name}:`, error));
+      }
+    });
+
     setUploadedFiles([]);
-     toast({
+    toast({
       title: "All files cleared",
       description: `The file list has been emptied.`,
     });
@@ -171,57 +188,58 @@ export default function FileManager() {
     clearAllFiles();
     toast({
       title: "File Manager Reset",
-      description: "All files, filters, and sorting have been reset.",
+      description: "All files have been cleared.",
     });
   };
 
-  const showAllFiles = () => {
-    toast({
-      title: "Showing All Files",
-      description: "Filters have been reset to show all uploaded files.",
-    });
-  };
-
-  const removeFile = (fileId: string) => {
-    setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
+  const removeFile = (file: ManagedFile) => {
+    const { storage } = getFirebase();
+    if (!storage) {
+        toast({ title: "Storage not available", variant: "destructive" });
+        return;
+    }
+    
+    if (file.storagePath) {
+        const fileRef = ref(storage, file.storagePath);
+        deleteObject(fileRef).then(() => {
+            setUploadedFiles(prev => prev.filter(f => f.id !== file.id));
+            toast({ title: `${file.name} deleted successfully.` });
+        }).catch(error => {
+            console.error("Deletion error:", error);
+            toast({ title: `Failed to delete ${file.name}`, variant: "destructive" });
+        });
+    } else {
+       setUploadedFiles(prev => prev.filter(f => f.id !== file.id));
+    }
   };
   
-   const cancelUpload = (fileId: string) => {
-    setUploadedFiles(prevFiles => prevFiles.filter(f => f.id !== fileId));
+   const cancelUpload = (file: ManagedFile) => {
+    file.uploadTask?.cancel();
+    setUploadedFiles(prevFiles => prevFiles.filter(f => f.id !== file.id));
     toast({ title: "Upload Canceled", description: "The file upload has been canceled." });
   };
   
   const viewFile = (file: ManagedFile) => {
     if (file.url) {
         window.open(file.url, '_blank');
-    } else if (file.file && file.file.size > 0) {
-        const fileUrl = URL.createObjectURL(file.file);
-        window.open(fileUrl, '_blank');
     } else {
         toast({
             title: "Preview not available",
-            description: "This file does not have a valid source to preview.",
+            description: "File is still uploading or has no URL.",
             variant: "destructive",
         });
     }
   };
 
   const downloadFile = (file: ManagedFile) => {
-    const link = document.createElement('a');
-    link.download = file.name;
-    if (file.url) {
-        link.href = file.url;
-        link.target = '_blank';
-    } else if (file.file) {
-        link.href = URL.createObjectURL(file.file);
-    } else {
-        toast({
-            title: "Download not available",
-            description: "No file source to download.",
-            variant: "destructive"
-        });
+    if (!file.url) {
+        toast({ title: "Download not available", description: "File has no URL.", variant: "destructive" });
         return;
     }
+    const link = document.createElement('a');
+    link.href = file.url;
+    link.download = file.name;
+    link.target = '_blank';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -246,10 +264,10 @@ export default function FileManager() {
             </div>
             <div className="flex-grow overflow-hidden">
               <p className="font-semibold text-sm truncate text-white">{file.name}</p>
-              <p className="text-xs text-gray-400">Uploading... {file.progress}%</p>
+              <p className="text-xs text-gray-400">Uploading... {Math.round(file.progress)}%</p>
               <Progress value={file.progress} className="h-1.5 mt-1" />
             </div>
-            <Button onClick={() => cancelUpload(file.id)} variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10 hover:text-red-300">
+            <Button onClick={() => cancelUpload(file)} variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10 hover:text-red-300">
               <XSquare className="h-5 w-5" />
             </Button>
           </div>
@@ -267,7 +285,7 @@ export default function FileManager() {
                 <Button onClick={() => downloadFile(file)} variant="ghost" size="icon" className="text-green-400 hover:bg-green-500/10 hover:text-green-300 transition-all transform hover:scale-110">
                     <Download className="h-5 w-5 glow-text-green animate-pulse-glow"/>
                 </Button>
-                <Button onClick={() => removeFile(file.id)} variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10 hover:text-red-300 transition-all transform hover:scale-110">
+                <Button onClick={() => removeFile(file)} variant="ghost" size="icon" className="text-red-500 hover:bg-red-500/10 hover:text-red-300 transition-all transform hover:scale-110">
                     <Trash2 className="h-5 w-5 glow-text-yellow animate-pulse-glow"/>
                 </Button>
             </div>
@@ -451,7 +469,7 @@ export default function FileManager() {
             <DialogHeader>
                 <DialogTitle>Upload from URL</DialogTitle>
                 <DialogDescription>
-                    Enter a direct link to a file you want to upload.
+                    Enter a direct link to a file you want to upload. Note: This is a simulation and won't be stored in Firebase.
                 </DialogDescription>
             </DialogHeader>
             <div className="py-4">

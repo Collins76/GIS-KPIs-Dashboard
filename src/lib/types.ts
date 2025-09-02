@@ -37,15 +37,17 @@ export interface User {
   avatar: string;
 }
 
-export type FileType = 'CSV' | 'Excel' | 'PDF' | 'Image' | 'GIS' | 'Word' | 'PowerPoint';
+export type FileType = 'CSV' | 'Excel' | 'PDF' | 'Image' | 'GIS' | 'Word' | 'PowerPoint' | 'application/octet-stream' | 'application/pdf' | 'image/jpeg' | 'image/png' | 'image/gif' | 'text/csv' | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' | 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' | 'application/vnd.ms-powerpoint' | 'application/vnd.openxmlformats-officedocument.presentationml.presentation' | 'application/vnd.google-earth.kml+xml' | 'application/vnd.google-earth.kmz';
+
 
 export interface ManagedFile {
   id: string;
   name: string;
-  type: FileType;
-  size: string;
-  uploadedAt: string;
-  url: string;
+  type: string;
+  size: number;
+  uploadedAt: Date;
+  url?: string;
+  file?: File;
 }
 
 export interface BusinessUnit {
