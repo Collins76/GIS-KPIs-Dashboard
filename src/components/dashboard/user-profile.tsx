@@ -153,7 +153,6 @@ export default function UserProfile() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
       {editedUser && (
         <Dialog open={isProfileModalOpen} onOpenChange={setProfileModalOpen}>
           <DialogContent className="sm:max-w-[425px]">
