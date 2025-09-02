@@ -43,45 +43,22 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
 export default function LoginPage() {
     const router = useRouter();
     const { toast } = useToast();
-    const [formData, setFormData] = useState({
-        email: '',
-        fullname: '',
-        location: '',
-    });
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleLocationChange = (value: string) => {
-        setFormData(prev => ({ ...prev, location: value }));
-    };
-
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        
-        if (!formData.email.endsWith('@gmail.com')) {
-            toast({
-                variant: 'destructive',
-                title: 'Invalid Email',
-                description: 'Please use a valid Gmail account.',
-            });
-            return;
-        }
-
+    
+    const handleGoogleSignIn = () => {
+        // In a real application, you would use Firebase Auth or another OAuth provider.
+        // For this demo, we'll simulate a successful sign-in.
         const userProfile = {
-            name: formData.fullname,
-            email: formData.email,
-            role: "GIS Analyst", // Default role, can be changed later
-            location: formData.location,
-            avatar: `https://i.pravatar.cc/150?u=${formData.email}`,
+            name: "Collins Anyanwu",
+            email: "collins.anyanwu@gmail.com",
+            role: "GIS Coordinator", 
+            location: "CHQ",
+            avatar: `https://i.pravatar.cc/150?u=collins.anyanwu@gmail.com`,
         };
 
         localStorage.setItem('gis-user-profile', JSON.stringify(userProfile));
         toast({
             title: 'Login Successful',
-            description: `Welcome, ${formData.fullname}!`,
+            description: `Welcome, ${userProfile.name}!`,
         });
         router.push('/');
     };
@@ -117,65 +94,15 @@ export default function LoginPage() {
             <p className="text-yellow-400 text-sm font-rajdhani tracking-wide">⚡ GIS KPI Dashboard ⚡</p>
           </div>
 
-          <form id="loginForm" className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <Label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                <GoogleIcon className="inline-block mr-2" />
-                Gmail Account
-              </Label>
-              <Input
-                type="email"
-                id="email"
-                name="email"
-                required
-                placeholder="yourname@gmail.com"
-                className="glow-input w-full"
-                value={formData.email}
-                onChange={handleInputChange}
-              />
-              <p className="mt-1 text-xs text-gray-500">Only Gmail accounts are allowed</p>
-            </div>
-
-            <div>
-               <Label htmlFor="fullname" className="block text-sm font-medium text-gray-300 mb-2">
-                <User className="inline-block mr-2 text-blue-500" />
-                Full Name
-              </Label>
-              <Input
-                type="text"
-                id="fullname"
-                name="fullname"
-                required
-                placeholder="Enter your full name"
-                className="glow-input w-full"
-                value={formData.fullname}
-                onChange={handleInputChange}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="location" className="block text-sm font-medium text-gray-300 mb-2">
-                <MapPin className="inline-block mr-2 text-green-500" />
-                Location
-              </Label>
-              <Select name="location" required onValueChange={handleLocationChange}>
-                  <SelectTrigger className="glow-input w-full">
-                    <SelectValue placeholder="Select your location" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-black text-white">
-                    {businessUnits.map(bu => <SelectItem key={bu.id} value={bu.name} className="focus:bg-yellow-500">{bu.name}</SelectItem>)}
-                  </SelectContent>
-              </Select>
-            </div>
-
+          <div className="space-y-6">
             <Button
-              type="submit"
-              className="glow-button w-full text-lg"
+              onClick={handleGoogleSignIn}
+              className="glow-button w-full text-lg !bg-blue-600 hover:!bg-blue-700"
             >
-              <LogIn className="mr-2" />
-              Sign In
+              <GoogleIcon className="mr-3" />
+              Sign in with Google
             </Button>
-          </form>
+          </div>
 
           <div className="mt-8 text-center">
             <p className="text-gray-500 text-xs">
@@ -191,3 +118,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

@@ -1,6 +1,8 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,23 +23,45 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { User, LogOut, Camera, UserCircle } from 'lucide-react';
+import { User, LogOut, Camera, UserCircle, LogIn } from 'lucide-react';
 import type { User as UserType, Role } from '@/lib/types';
 import { roles, businessUnits } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const DEFAULT_USER: UserType = {
-  name: "GIS Professional",
-  email: "gis.pro@ikejaelectric.com",
-  role: "GIS Coordinator",
-  location: "CHQ",
-  avatar: `https://i.pravatar.cc/150?u=gis.pro@ikejaelectric.com`,
-};
+function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 48 48"
+        width="1em"
+        height="1em"
+        {...props}
+      >
+        <path
+          fill="#FFC107"
+          d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"
+        />
+        <path
+          fill="#FF3D00"
+          d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"
+        />
+        <path
+          fill="#4CAF50"
+          d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025A20.02 20.02 0 0 0 24 44z"
+        />
+        <path
+          fill="#1976D2"
+          d="M43.611 20.083H42V20H24v8h11.303c-.792 2.443-2.212 4.482-4.123 5.962l6.19 5.238C42.012 36.425 44 30.8 44 24c0-1.341-.138-2.65-.389-3.917z"
+        />
+      </svg>
+    );
+  }
 
 export default function UserProfile() {
-  const [user, setUser] = useState<UserType>(DEFAULT_USER);
+  const router = useRouter();
+  const [user, setUser] = useState<UserType | null>(null);
   const [isProfileModalOpen, setProfileModalOpen] = useState(false);
-  const [editedUser, setEditedUser] = useState<UserType>(DEFAULT_USER);
+  const [editedUser, setEditedUser] = useState<UserType | null>(null);
   const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
 
   const { toast } = useToast();
@@ -50,18 +74,22 @@ export default function UserProfile() {
   }, []);
 
   const handleEditProfile = () => {
-    setEditedUser(user);
-    setPreviewAvatar(user.avatar);
-    setProfileModalOpen(true);
+    if (user) {
+        setEditedUser(user);
+        setPreviewAvatar(user.avatar);
+        setProfileModalOpen(true);
+    }
   };
   
   const handleSaveChanges = () => {
-    const finalUser = {...editedUser, avatar: previewAvatar || editedUser.avatar};
-    setUser(finalUser);
-    localStorage.setItem('gis-user-profile', JSON.stringify(finalUser));
-    setProfileModalOpen(false);
-    toast({ title: "Profile updated successfully!" });
-    window.location.reload();
+    if (editedUser) {
+        const finalUser = {...editedUser, avatar: previewAvatar || editedUser.avatar};
+        setUser(finalUser);
+        localStorage.setItem('gis-user-profile', JSON.stringify(finalUser));
+        setProfileModalOpen(false);
+        toast({ title: "Profile updated successfully!" });
+        window.location.reload();
+    }
   };
 
   const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,6 +106,21 @@ export default function UserProfile() {
       reader.readAsDataURL(file);
     }
   };
+  
+  const handleLogout = () => {
+    localStorage.removeItem('gis-user-profile');
+    setUser(null);
+    router.push('/login');
+  }
+
+  if (!user) {
+    return (
+        <Button onClick={() => router.push('/login')} className="glow-button !bg-blue-600 hover:!bg-blue-700">
+            <GoogleIcon className="mr-2" />
+            Sign in with Google
+        </Button>
+    )
+  }
 
   return (
     <>
@@ -103,14 +146,14 @@ export default function UserProfile() {
             <span>Profile</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={isProfileModalOpen} onOpenChange={setProfileModalOpen}>
+      {editedUser && <Dialog open={isProfileModalOpen} onOpenChange={setProfileModalOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Profile</DialogTitle>
@@ -159,7 +202,7 @@ export default function UserProfile() {
             <Button onClick={handleSaveChanges}>Save changes</Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog>}
     </>
   );
 }

@@ -6,12 +6,15 @@ import UserProfile from '@/components/dashboard/user-profile';
 import Clock from '@/components/dashboard/clock';
 import WeatherForecast from '@/components/dashboard/weather-forecast';
 import { Button } from '../ui/button';
+import { useRouter } from 'next/navigation';
 
 export default function Header() {
+  const router = useRouter();
+  
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
         localStorage.removeItem('gis-user-profile');
-        window.location.href = '/login';
+        router.push('/login');
     }
   }
 
@@ -38,9 +41,6 @@ export default function Header() {
               <WeatherForecast />
             </div>
             <UserProfile />
-            <Button onClick={handleLogout} variant="destructive" size="icon">
-              <LogOut className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </div>
