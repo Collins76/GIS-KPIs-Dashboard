@@ -77,14 +77,14 @@ export default function LoginPage() {
                 avatar: firebaseUser.photoURL || `https://i.pravatar.cc/150?u=${firebaseUser.email}`,
             };
             
-            setUser(userProfile); // Update context
+            setUser(userProfile);
             
             const todaysWeather = weatherData.find(d => d.isToday) || null;
             await addUserSignInActivity(userProfile, todaysWeather);
 
             toast({
                 title: 'Login Successful',
-                description: `Welcome, ${userProfile.name}!`,
+                description: `Welcome, ${userProfile.name}! Redirecting...`,
             });
             router.push('/');
         } catch (error: any) {

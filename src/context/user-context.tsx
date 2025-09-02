@@ -2,8 +2,6 @@
 "use client";
 
 import { createContext, useState, useEffect, ReactNode, useMemo } from 'react';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { getFirebase } from '@/lib/firebase';
 import type { User } from '@/lib/types';
 
 interface UserContextType {
@@ -32,35 +30,17 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    const { auth } = getFirebase();
-    if (!auth) {
-        setLoading(false);
-        return;
-    }
-
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser) {
-        const storedUser = localStorage.getItem('gis-user-profile');
-        if (storedUser) {
-          setUserState(JSON.parse(storedUser));
-        } else {
-          // If no local profile, create a basic one from firebase user
-          const newUser: User = {
-            name: firebaseUser.displayName || 'Anonymous',
-            email: firebaseUser.email || '',
-            role: 'GIS Analyst',
-            location: 'CHQ',
-            avatar: firebaseUser.photoURL || `https://i.pravatar.cc/150?u=${firebaseUser.email}`,
-          };
-          setUser(newUser);
-        }
-      } else {
-        setUser(null);
+    try {
+      const storedUser = localStorage.getItem('gis-user-profile');
+      if (storedUser) {
+        setUserState(JSON.parse(storedUser));
       }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    } catch (error) {
+      console.error("Failed to parse user from localStorage", error);
+      localStorage.removeItem('gis-user-profile');
+    } finally {
+        setLoading(false);
+    }
   }, []);
 
   const value = useMemo(() => ({ user, loading, setUser }), [user, loading]);
