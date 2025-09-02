@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
@@ -29,6 +29,7 @@ import { roles, businessUnits } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getFirebase } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
+import { UserContext } from '@/context/user-context';
 
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -62,19 +63,12 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
 
 export default function UserProfile() {
   const router = useRouter();
-  const [user, setUser] = useState<UserType | null>(null);
+  const { user, setUser } = useContext(UserContext);
   const [isProfileModalOpen, setProfileModalOpen] = useState(false);
   const [editedUser, setEditedUser] = useState<UserType | null>(null);
   const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
 
   const { toast } = useToast();
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('gis-user-profile');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
 
   const handleEditProfile = () => {
     if (user) {
@@ -88,7 +82,6 @@ export default function UserProfile() {
     if (editedUser) {
         const finalUser = {...editedUser, avatar: previewAvatar || editedUser.avatar};
         setUser(finalUser);
-        localStorage.setItem('gis-user-profile', JSON.stringify(finalUser));
         setProfileModalOpen(false);
         toast({ title: "Profile updated successfully!" });
         window.location.reload();
@@ -118,7 +111,6 @@ export default function UserProfile() {
     }
     try {
         await signOut(auth);
-        localStorage.removeItem('gis-user-profile');
         setUser(null);
         toast({ title: "Logged Out", description: "You have been successfully logged out." });
         router.push('/login');

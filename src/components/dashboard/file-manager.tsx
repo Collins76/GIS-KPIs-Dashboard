@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,7 @@ import { getFirebase } from '@/lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject, UploadTask } from 'firebase/storage';
 import { addFileUploadActivity } from '@/lib/firestore';
 import type { User } from '@/lib/types';
+import { UserContext } from '@/context/user-context';
 
 
 type ManagedFile = {
@@ -56,14 +57,7 @@ export default function FileManager() {
   const [urlToUpload, setUrlToUpload] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<ManagedFile[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('gis-user-profile');
-    if (storedUser) {
-      setCurrentUser(JSON.parse(storedUser));
-    }
-  }, []);
+  const { user: currentUser } = useContext(UserContext);
   
 
   const handleFileUpload = (file: File) => {

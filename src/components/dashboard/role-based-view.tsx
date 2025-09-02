@@ -8,7 +8,8 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Loader, AlertTriangle, Users, Mail, User as UserIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { UserContext } from '@/context/user-context';
 
 interface RoleBasedViewProps {
   kpis: Kpi[];
@@ -35,15 +36,7 @@ const getUserByRole = (role: Role, loggedInUser: User | null): User => {
 };
 
 export default function RoleBasedView({ kpis }: RoleBasedViewProps) {
-  const [loggedInUser, setLoggedInUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('gis-user-profile');
-    if (storedUser) {
-      setLoggedInUser(JSON.parse(storedUser));
-    }
-  }, []);
-
+  const { user: loggedInUser } = useContext(UserContext);
 
   const getRoleStats = (role: Role) => {
     const roleKpis = kpis.filter(kpi => kpi.role === role);

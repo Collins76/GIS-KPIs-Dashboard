@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import Head from 'next/head';
+import { UserProvider } from '@/context/user-context';
 
 export const metadata: Metadata = {
   title: 'Ikeja Electric GIS Pulse',
@@ -21,7 +22,9 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
       </Head>
       <body className={cn('min-h-screen bg-black font-space antialiased text-white')}>
-        {children}
+        <UserProvider>
+          {children}
+        </UserProvider>
         <Toaster />
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src="/js/charts.js" defer></script>
@@ -30,5 +33,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-    
