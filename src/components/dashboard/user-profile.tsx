@@ -27,6 +27,7 @@ import { User, LogOut, Camera, UserCircle, LogIn } from 'lucide-react';
 import type { User as UserType, Role } from '@/lib/types';
 import { roles, businessUnits } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -133,7 +134,7 @@ export default function UserProfile() {
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuContent className={cn("w-56 glow-container")} align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">{user.name}</p>
@@ -191,7 +192,7 @@ export default function UserProfile() {
                <Select value={editedUser.location} onValueChange={(value) => setEditedUser({...editedUser, location: value})}>
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select a location" />
-                  </SelectTrigger>
+                  </Trigger>
                   <SelectContent>
                     {businessUnits.map(bu => <SelectItem key={bu.id} value={bu.name}>{bu.name}</SelectItem>)}
                   </SelectContent>
