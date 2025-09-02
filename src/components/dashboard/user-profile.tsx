@@ -84,7 +84,6 @@ export default function UserProfile() {
         setUser(finalUser);
         setProfileModalOpen(false);
         toast({ title: "Profile updated successfully!" });
-        window.location.reload();
     }
   };
 
