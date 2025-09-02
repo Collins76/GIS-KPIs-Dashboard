@@ -48,6 +48,8 @@ export interface ManagedFile {
   uploadedAt: Date;
   url?: string;
   file?: File;
+  progress: number;
+  status: 'pending' | 'uploading' | 'completed' | 'error';
 }
 
 export interface BusinessUnit {
