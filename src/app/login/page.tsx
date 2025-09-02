@@ -99,7 +99,7 @@ export default function LoginPage() {
                         errorMessage = "Popup blocked by browser. Please allow popups for this site to sign in.";
                         break;
                     case 'auth/popup-closed-by-user':
-                        errorMessage = "Sign-in window closed. Please try again.";
+                        errorMessage = "The sign-in window was closed. Please try again.";
                         break;
                     case 'auth/unauthorized-domain':
                         errorMessage = "This domain is not authorized for authentication. Please contact support.";
