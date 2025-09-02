@@ -192,7 +192,7 @@ export default function UserProfile() {
                 <Select value={editedUser.location} onValueChange={(value) => setEditedUser({...editedUser, location: value})}>
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Select a location" />
-                    </Trigger>
+                    </SelectTrigger>
                     <SelectContent>
                       {businessUnits.map(bu => <SelectItem key={bu.id} value={bu.name}>{bu.name}</SelectItem>)}
                     </SelectContent>

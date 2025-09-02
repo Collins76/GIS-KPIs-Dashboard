@@ -56,7 +56,7 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
   
   const [selectedRole, setSelectedRole] = useState<Role | 'All'>('All');
-  const [selectedStatus, setSelectedStatus] = useState<KpiStatus | 'All'>('Completed');
+  const [selectedStatus, setSelectedStatus] = useState<KpiStatus | 'All'>('All');
   const [selectedCategory, setSelectedCategory] = useState<KpiCategory | 'All'>('All');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [userChartType, setUserChartType] = useState<'pie' | 'bar'>('pie');
