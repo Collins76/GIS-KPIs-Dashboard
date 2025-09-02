@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
-import { Zap, Check, Shield } from 'lucide-react';
+import { Zap, Check, Shield, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getFirebase } from '@/lib/firebase';
@@ -48,12 +48,14 @@ export default function LoginPage() {
     const { toast } = useToast();
     const { setUser } = useContext(UserContext);
     const [isClient, setIsClient] = useState(false);
+    const [isSigningIn, setIsSigningIn] = useState(false);
 
     useEffect(() => {
         setIsClient(true);
     }, []);
     
     const handleGoogleSignIn = async () => {
+        setIsSigningIn(true);
         const { auth } = getFirebase();
         if (!auth) {
             toast({
@@ -61,6 +63,7 @@ export default function LoginPage() {
                 description: "Firebase is not configured correctly. Please check the console.",
                 variant: "destructive"
             });
+            setIsSigningIn(false);
             return;
         }
 
@@ -101,6 +104,10 @@ export default function LoginPage() {
                     case 'auth/popup-closed-by-user':
                         errorMessage = "The sign-in window was closed. Please try again.";
                         break;
+                    case 'auth/cancelled-popup-request':
+                    case 'auth/popup-already-opened':
+                        errorMessage = "Authentication is already in progress. Please complete the existing sign-in.";
+                        break;
                     case 'auth/unauthorized-domain':
                         errorMessage = "This domain is not authorized for authentication. Please contact support.";
                         break;
@@ -113,6 +120,8 @@ export default function LoginPage() {
                 description: errorMessage,
                 variant: "destructive"
             });
+        } finally {
+            setIsSigningIn(false);
         }
     };
 
@@ -158,10 +167,15 @@ export default function LoginPage() {
           <div className="space-y-6">
             <Button
               onClick={handleGoogleSignIn}
+              disabled={isSigningIn}
               className="glow-button w-full text-lg !bg-blue-600 hover:!bg-blue-700"
             >
-              <GoogleIcon className="mr-3" />
-              Sign in with Google
+              {isSigningIn ? (
+                <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+              ) : (
+                <GoogleIcon className="mr-3" />
+              )}
+              {isSigningIn ? 'Signing in...' : 'Sign in with Google'}
             </Button>
           </div>
 
