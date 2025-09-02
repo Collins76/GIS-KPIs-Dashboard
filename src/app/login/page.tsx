@@ -3,13 +3,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Zap, Check, User, MapPin, LogIn, Shield } from 'lucide-react';
+import { Zap, Check, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { businessUnits } from '@/lib/data';
+import { auth } from '@/lib/firebase';
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -44,23 +42,34 @@ export default function LoginPage() {
     const router = useRouter();
     const { toast } = useToast();
     
-    const handleGoogleSignIn = () => {
-        // In a real application, you would use Firebase Auth or another OAuth provider.
-        // For this demo, we'll simulate a successful sign-in.
-        const userProfile = {
-            name: "Collins Anyanwu",
-            email: "collins.anyanwu@gmail.com",
-            role: "GIS Coordinator", 
-            location: "CHQ",
-            avatar: `https://i.pravatar.cc/150?u=collins.anyanwu@gmail.com`,
-        };
+    const handleGoogleSignIn = async () => {
+        const provider = new GoogleAuthProvider();
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
 
-        localStorage.setItem('gis-user-profile', JSON.stringify(userProfile));
-        toast({
-            title: 'Login Successful',
-            description: `Welcome, ${userProfile.name}!`,
-        });
-        router.push('/');
+            const userProfile = {
+                name: user.displayName || "Anonymous",
+                email: user.email || "no-email@example.com",
+                role: "GIS Analyst", // Default role, can be changed in profile
+                location: "CHQ", // Default location
+                avatar: user.photoURL || `https://i.pravatar.cc/150?u=${user.email}`,
+            };
+
+            localStorage.setItem('gis-user-profile', JSON.stringify(userProfile));
+            toast({
+                title: 'Login Successful',
+                description: `Welcome, ${userProfile.name}!`,
+            });
+            router.push('/');
+        } catch (error) {
+            console.error("Authentication error:", error);
+            toast({
+                title: "Authentication Failed",
+                description: "Could not sign in with Google. Please try again.",
+                variant: "destructive"
+            });
+        }
     };
 
   return (
@@ -118,4 +127,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

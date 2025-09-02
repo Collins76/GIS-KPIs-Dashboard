@@ -27,7 +27,9 @@ import { User, LogOut, Camera, UserCircle, LogIn, ChevronDown } from 'lucide-rea
 import type { User as UserType, Role } from '@/lib/types';
 import { roles, businessUnits } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
+
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -108,10 +110,17 @@ export default function UserProfile() {
     }
   };
   
-  const handleLogout = () => {
-    localStorage.removeItem('gis-user-profile');
-    setUser(null);
-    router.push('/login');
+  const handleLogout = async () => {
+    try {
+        await signOut(auth);
+        localStorage.removeItem('gis-user-profile');
+        setUser(null);
+        toast({ title: "Logged Out", description: "You have been successfully logged out." });
+        router.push('/login');
+    } catch (error) {
+        console.error("Logout error:", error);
+        toast({ title: "Logout Failed", description: "Something went wrong during logout.", variant: "destructive" });
+    }
   }
 
   if (!user) {
@@ -156,7 +165,7 @@ export default function UserProfile() {
         </DropdownMenu>
         <div className="hidden sm:block">
             <p className="text-sm font-semibold text-white">{user.name}</p>
-            <p className="text-xs text-gray-400">{user.email}</p>
+            <p className="text-xs text-gray-400">{user.role}</p>
         </div>
     </div>
       {editedUser && (

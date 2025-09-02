@@ -5,19 +5,8 @@ import { LogOut, Zap } from 'lucide-react';
 import UserProfile from '@/components/dashboard/user-profile';
 import Clock from '@/components/dashboard/clock';
 import WeatherForecast from '@/components/dashboard/weather-forecast';
-import { Button } from '../ui/button';
-import { useRouter } from 'next/navigation';
 
 export default function Header() {
-  const router = useRouter();
-  
-  const handleLogout = () => {
-    if (typeof window !== 'undefined') {
-        localStorage.removeItem('gis-user-profile');
-        router.push('/login');
-    }
-  }
-
   return (
     <header className="glow-container shadow-lg relative z-20">
       <div className="container mx-auto px-4 py-4">
