@@ -113,7 +113,8 @@ export default function UserProfile() {
         await signOut(auth);
         setUser(null);
         toast({ title: "Logged Out", description: "You have been successfully logged out." });
-        router.push('/login');
+        // Force a hard navigation to the login page to reset all application state.
+        window.location.href = '/login';
     } catch (error) {
         console.error("Logout error:", error);
         toast({ title: "Logout Failed", description: "Something went wrong during logout.", variant: "destructive" });
