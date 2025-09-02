@@ -7,7 +7,7 @@ import { Zap, Check, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getFirebaseAuth } from '@/lib/firebase';
-import { GoogleAuthProvider, signInWithPopup, Auth } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup, Auth, FirebaseError } from "firebase/auth";
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
     return (
@@ -74,9 +74,13 @@ export default function LoginPage() {
             router.push('/');
         } catch (error) {
             console.error("Authentication error:", error);
+            let errorMessage = "Could not sign in with Google. Please try again.";
+            if (error instanceof FirebaseError) {
+                errorMessage = error.message;
+            }
             toast({
                 title: "Authentication Failed",
-                description: "Could not sign in with Google. Please try again.",
+                description: errorMessage,
                 variant: "destructive"
             });
         }
