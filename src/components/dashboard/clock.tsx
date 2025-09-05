@@ -6,8 +6,10 @@ import { MapPin, Calendar } from 'lucide-react';
 
 export default function Clock() {
   const [time, setTime] = useState(new Date());
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     const timerId = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timerId);
   }, []);
@@ -17,13 +19,15 @@ export default function Clock() {
 
   return (
     <div className="glow-container p-4 text-center">
-        <div id="digitalClock" className="digital-clock">{formattedTime}</div>
+        <div id="digitalClock" className="digital-clock">
+          {isClient ? formattedTime : '00:00:00'}
+        </div>
         <p className="text-xs text-yellow-400 font-rajdhani tracking-widest mt-2">
             <MapPin className="mr-1 inline-block h-3 w-3" />LAGOS, NIGERIA
         </p>
         <div className="text-xs text-gray-400 mt-1 font-space">
             <Calendar className="mr-1 inline-block h-3 w-3" />
-            <span id="currentDate">{formattedDate}</span>
+            <span id="currentDate">{isClient ? formattedDate : 'Loading...'}</span>
         </div>
     </div>
   );
