@@ -68,8 +68,6 @@ function AdminPage() {
         if (!selectedActivity) return;
         try {
             const updatedData = JSON.parse(editedContent);
-            // Firestore does not allow updating the document ID.
-            // The ID is part of the document path, not its data.
             const dataToUpdate = { ...updatedData };
             delete dataToUpdate.id;
 
