@@ -1,4 +1,5 @@
 
+
 import { getFirebase } from './firebase';
 import { collection, addDoc, serverTimestamp, getDocs, doc, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
 import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog, Role, KpiCategory, KpiStatus } from './types';
@@ -64,6 +65,29 @@ export const addUserSignInActivity = async (user: User, weather: WeatherData | n
     console.error("Error adding user sign-in activity to Firestore: ", error);
   }
 };
+
+export const addUserSignOutActivity = async (user: User, duration: number) => {
+    const { db } = getFirebase();
+    if (!db || !user) return;
+  
+    try {
+      await addDoc(collection(db, DB_COLLECTION_NAME), {
+        activityType: 'user_signout',
+        user: {
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          location: user.location,
+          avatar: user.avatar,
+        },
+        duration: Math.round(duration), // Duration in minutes
+        timestamp: serverTimestamp(),
+      });
+      console.log("Sign-out activity logged for", user.email);
+    } catch (error) {
+      console.error("Error adding user sign-out activity to Firestore: ", error);
+    }
+  };
 
 export const addUserProfileUpdateActivity = async (user: User) => {
   const { db } = getFirebase();

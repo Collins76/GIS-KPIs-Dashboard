@@ -77,7 +77,7 @@ export interface WeatherData {
 
 export interface ActivityLog {
     id: string;
-    activityType: 'user_signin' | 'profile_update' | 'file_upload' | 'kpi_update' | 'filter_change';
+    activityType: 'user_signin' | 'profile_update' | 'file_upload' | 'kpi_update' | 'filter_change' | 'user_signout';
     user: User;
     weather?: {
       condition: string;
@@ -97,6 +97,7 @@ export interface ActivityLog {
         tab: string;
     },
     timestamp: string;
+    duration?: number; // Session duration in minutes
   }
 
 declare global {

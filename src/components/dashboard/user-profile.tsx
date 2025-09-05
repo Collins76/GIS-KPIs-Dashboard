@@ -30,7 +30,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { getFirebase } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { UserContext } from '@/context/user-context';
-import { addUserProfileUpdateActivity } from '@/lib/firestore';
+import { addUserProfileUpdateActivity, addUserSignOutActivity } from '@/lib/firestore';
 
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -106,11 +106,18 @@ export default function UserProfile() {
   
   const handleLogout = async () => {
     const { auth } = getFirebase();
-    if (!auth) {
-        toast({ title: "Logout Failed", description: "Firebase not initialized.", variant: "destructive" });
+    if (!auth || !user) {
+        toast({ title: "Logout Failed", description: "Firebase not initialized or user not found.", variant: "destructive" });
         return;
     }
     try {
+        const signInTime = localStorage.getItem('gis-signin-time');
+        if (signInTime) {
+            const duration = (new Date().getTime() - new Date(signInTime).getTime()) / (1000 * 60); // minutes
+            await addUserSignOutActivity(user, duration);
+            localStorage.removeItem('gis-signin-time');
+        }
+
         await signOut(auth);
         setUser(null);
         toast({ title: "Logged Out", description: "You have been successfully logged out." });
