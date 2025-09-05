@@ -67,14 +67,19 @@ function AdminPage() {
     const handleUpdate = async () => {
         if (!selectedActivity) return;
         try {
-            const updatedData = JSON.parse(editedContent);
-            const dataToUpdate = { ...updatedData };
-            delete dataToUpdate.id;
+            const parsedData = JSON.parse(editedContent);
+            // Reconstruct the data to ensure it's clean and doesn't contain forbidden fields like 'id'
+            const dataToUpdate: { [key: string]: any } = {};
+            for (const key in parsedData) {
+                if (key !== 'id') { // Explicitly exclude the 'id' field
+                    dataToUpdate[key] = parsedData[key];
+                }
+            }
 
             await updateActivity(selectedActivity.id, dataToUpdate);
             toast({ title: "Success", description: "Record updated successfully." });
-            setEditModalOpen(false);
-            fetchActivities();
+            setEditModalOpen(false); // Close modal on success
+            fetchActivities(); // Refresh data to show changes
         } catch (error) {
             console.error("Failed to update activity:", error);
             toast({ title: "Update Error", description: "Failed to update record. Check if JSON is valid.", variant: "destructive" });
@@ -202,3 +207,5 @@ function AdminPage() {
 }
 
 export default withAuth(AdminPage);
+
+    
