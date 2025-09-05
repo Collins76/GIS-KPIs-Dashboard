@@ -50,6 +50,8 @@ export interface ManagedFile {
   file?: File;
   progress: number;
   status: 'pending' | 'uploading' | 'completed' | 'error';
+  uploadTask?: any;
+  storagePath?: string;
 }
 
 export interface BusinessUnit {
@@ -68,7 +70,7 @@ export interface WeatherData {
   condition: string;
   humidity: number;
   windSpeed: number;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string, displayName?: string }>;
   isToday: boolean;
 }
 

@@ -31,6 +31,29 @@ export const addUserSignInActivity = async (user: User, weather: WeatherData | n
   }
 };
 
+export const addUserProfileUpdateActivity = async (user: User) => {
+  const { db } = getFirebase();
+  if (!db || !user) return;
+
+  try {
+    await addDoc(collection(db, DB_COLLECTION_NAME), {
+      activityType: 'profile_update',
+      user: {
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        location: user.location,
+        avatar: user.avatar,
+      },
+      timestamp: serverTimestamp(),
+    });
+    console.log("Profile update activity logged for", user.email);
+  } catch (error) {
+    console.error("Error adding profile update activity to Firestore: ", error);
+  }
+};
+
+
 export const addFileUploadActivity = async (user: User | null, file: AppFile) => {
     const { db } = getFirebase();
     if (!db || !user || !file) return;

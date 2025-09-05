@@ -34,6 +34,7 @@ const createProfileFromFirebaseUser = (firebaseUser: FirebaseUser): User => {
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUserState] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastLoggedInEmail, setLastLoggedInEmail] = useState<string | null>(null);
 
   useEffect(() => {
     const { auth } = getFirebase();
@@ -49,31 +50,41 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
             if (storedUserJson) {
                 const storedUser = JSON.parse(storedUserJson);
-                // Sync with Firebase auth data
-                profile = {
-                    ...storedUser,
-                    name: firebaseUser.displayName || storedUser.name,
-                    email: firebaseUser.email, // email is source of truth
-                    avatar: firebaseUser.photoURL || storedUser.avatar,
-                };
+                // Sync with Firebase auth data if email matches
+                 if (storedUser.email === firebaseUser.email) {
+                    profile = {
+                        ...storedUser,
+                        name: firebaseUser.displayName || storedUser.name,
+                        avatar: firebaseUser.photoURL || storedUser.avatar,
+                    };
+                } else {
+                    // New user has logged in, create a fresh profile
+                    profile = createProfileFromFirebaseUser(firebaseUser);
+                }
             } else {
                 // This case handles a fresh login where no profile is in local storage yet.
                 profile = createProfileFromFirebaseUser(firebaseUser);
-                // Also log their sign-in activity
-                addUserSignInActivity(profile, weatherData.find(d => d.isToday) || null);
             }
             
             setUser(profile);
+            
+             // Log sign-in activity only when a new user logs in
+             if (firebaseUser.email !== lastLoggedInEmail) {
+                addUserSignInActivity(profile, weatherData.find(d => d.isToday) || null);
+                setLastLoggedInEmail(firebaseUser.email);
+            }
+
         } else {
             // User is signed out.
             setUser(null);
+            setLastLoggedInEmail(null);
         }
         setLoading(false);
     });
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, []);
+  }, [lastLoggedInEmail]);
   
 
   const setUser = (userToSet: User | null) => {
