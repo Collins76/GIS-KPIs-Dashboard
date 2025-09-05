@@ -32,7 +32,7 @@ export default function KpiTable({
   const [selectedKpi, setSelectedKpi] = useState<Kpi | null>(null);
   const { user } = useContext(UserContext);
 
-  const handleProgressChange = (kpi: Kpi, newProgress: number) => {
+  const handleUpdate = (kpi: Kpi, newProgress: number) => {
     let newStatus: KpiStatus;
     if (newProgress === 100) newStatus = 'Completed'
     else if (newProgress > 75) newStatus = 'On Track';
@@ -42,16 +42,12 @@ export default function KpiTable({
 
     const updatedKpi = { ...kpi, progress: newProgress, status: newStatus };
     onKpiUpdate(updatedKpi);
+    setSelectedKpi(null);
   };
   
   const handleOpenDialog = (kpi: Kpi) => {
     setSelectedKpi(kpi);
   };
-  
-  const handleUpdate = (kpi: Kpi, progress: number) => {
-    handleProgressChange(kpi, progress);
-    setSelectedKpi(null);
-  }
 
   const getStatusVariant = (status: KpiStatus) => {
     switch (status) {
