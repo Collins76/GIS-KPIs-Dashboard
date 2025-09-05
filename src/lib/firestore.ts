@@ -16,10 +16,11 @@ export const getActivities = async (): Promise<ActivityLog[]> => {
   const activities: ActivityLog[] = [];
   querySnapshot.forEach((doc) => {
     const data = doc.data();
-    // Check if data.timestamp is a Firestore Timestamp object before calling toDate()
-    const timestampStr = data.timestamp && typeof data.timestamp.toDate === 'function'
-      ? data.timestamp.toDate().toISOString()
-      : (data.timestamp || new Date()).toString();
+    // Firestore Timestamps need to be converted to JS Dates.
+    // This handles cases where the timestamp might be missing or in an incorrect format.
+    const timestampStr = data.timestamp && typeof data.timestamp.toDate === 'function' 
+      ? data.timestamp.toDate().toISOString() 
+      : new Date().toISOString();
 
     activities.push({
       id: doc.id,
@@ -27,6 +28,7 @@ export const getActivities = async (): Promise<ActivityLog[]> => {
       timestamp: timestampStr,
     } as ActivityLog);
   });
+  // Sort by most recent first
   return activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 };
 
@@ -34,10 +36,6 @@ export const updateActivity = async (id: string, data: Partial<ActivityLog>) => 
     const { db } = getFirebase();
     if (!db) return;
     const docRef = doc(db, DB_COLLECTION_NAME, id);
-    // When updating, remove the id field if it exists in the payload
-    if ('id' in data) {
-        delete (data as {id?: string}).id;
-    }
     await updateDoc(docRef, data);
 };
 
