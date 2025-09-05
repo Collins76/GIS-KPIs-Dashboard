@@ -1,6 +1,6 @@
 import { getFirebase } from './firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import type { User, ManagedFile as AppFile, WeatherData } from './types';
+import type { User, ManagedFile as AppFile, WeatherData, Kpi } from './types';
 
 const DB_COLLECTION_NAME = 'gis-team15';
 
@@ -55,4 +55,31 @@ export const addFileUploadActivity = async (user: User | null, file: AppFile) =>
     } catch (error) {
         console.error("Error adding file upload activity to Firestore: ", error);
     }
+}
+
+export const addKpiUpdateActivity = async (user: User | null, kpi: Kpi) => {
+  const { db } = getFirebase();
+  if (!db || !user || !kpi) return;
+
+  try {
+    await addDoc(collection(db, DB_COLLECTION_NAME), {
+      activityType: 'kpi_update',
+      user: {
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        location: user.location,
+        avatar: user.avatar,
+      },
+      kpi: {
+        id: kpi.id,
+        title: kpi.title,
+        progress: kpi.progress,
+        status: kpi.status,
+      },
+      timestamp: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("Error adding KPI update activity to Firestore: ", error);
+  }
 }

@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useContext } from 'react';
 import type { Role, Kpi, KpiStatus, KpiCategory } from '@/lib/types';
 import { kpis as allKpis, roles } from '@/lib/data';
 import {
@@ -38,6 +38,8 @@ import { cn } from '@/lib/utils';
 import KpiUserPerformanceChart from './kpi-user-performance-chart';
 import RoleBasedView from './role-based-view';
 import TrendsComparisonChart from './trends-comparison-chart';
+import { addKpiUpdateActivity } from '@/lib/firestore';
+import { UserContext } from '@/context/user-context';
 
 
 const TABS = [
@@ -61,6 +63,7 @@ export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [userChartType, setUserChartType] = useState<'pie' | 'bar'>('pie');
   const [trendsChartType, setTrendsChartType] = useState<'bar' | 'doughnut'>('bar');
+  const { user } = useContext(UserContext);
 
 
   const { toast } = useToast();
@@ -92,6 +95,7 @@ export default function DashboardPage() {
   const handleKpiUpdate = (updatedKpi: Kpi) => {
     const newData = kpiData.map(kpi => (kpi.id === updatedKpi.id ? updatedKpi : kpi));
     setKpiData(newData);
+    addKpiUpdateActivity(user, updatedKpi);
     toast({
       title: "KPI Updated",
       description: `Progress for "${updatedKpi.title}" is now ${updatedKpi.progress}%.`,
