@@ -30,6 +30,7 @@ export default function RootLayout({
       </Head>
       <body 
         className={cn('min-h-screen bg-black font-space antialiased text-white')}
+        suppressHydrationWarning={true}
       >
         <UserProvider>
           {children}
