@@ -9,7 +9,8 @@ import type { ActivityLog } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -47,15 +48,13 @@ function AdminPage() {
     }, []);
 
     const handleDelete = async (id: string) => {
-        if (confirm('Are you sure you want to delete this record?')) {
-            try {
-                await deleteActivity(id);
-                toast({ title: "Success", description: "Record deleted successfully." });
-                fetchActivities();
-            } catch (error) {
-                console.error("Failed to delete activity:", error);
-                toast({ title: "Error", description: "Failed to delete record.", variant: "destructive" });
-            }
+        try {
+            await deleteActivity(id);
+            toast({ title: "Success", description: "Record deleted successfully." });
+            fetchActivities(); // Refresh the list after deletion
+        } catch (error) {
+            console.error("Failed to delete activity:", error);
+            toast({ title: "Error", description: "Failed to delete record.", variant: "destructive" });
         }
     };
     
@@ -69,8 +68,12 @@ function AdminPage() {
         if (!selectedActivity) return;
         try {
             const updatedData = JSON.parse(editedContent);
-            delete updatedData.id; // Don't try to update the ID
-            await updateActivity(selectedActivity.id, updatedData);
+            // Firestore does not allow updating the document ID.
+            // The ID is part of the document path, not its data.
+            const dataToUpdate = { ...updatedData };
+            delete dataToUpdate.id;
+
+            await updateActivity(selectedActivity.id, dataToUpdate);
             toast({ title: "Success", description: "Record updated successfully." });
             setEditModalOpen(false);
             fetchActivities();
@@ -130,22 +133,40 @@ function AdminPage() {
                             <TableBody>
                                 {activities.map((activity) => (
                                     <TableRow key={activity.id}>
-                                        <TableCell>{format(new Date(activity.timestamp), 'PPpp')}</TableCell>
+                                        <TableCell>{activity.timestamp ? format(new Date(activity.timestamp), 'PPpp') : 'N/A'}</TableCell>
                                         <TableCell>{activity.activityType}</TableCell>
-                                        <TableCell>{activity.user.email}</TableCell>
+                                        <TableCell>{activity.user?.email || 'N/A'}</TableCell>
                                         <TableCell>
                                             <pre className="text-xs bg-gray-900 p-2 rounded-md max-w-sm overflow-x-auto">
-                                                {JSON.stringify(activity, (key, value) => key === 'id' || key === 'timestamp' || key === 'user' || key === 'activityType' ? undefined : value, 2)}
+                                                {JSON.stringify(activity, (key, value) => ['id', 'timestamp', 'user', 'activityType'].includes(key) ? undefined : value, 2)}
                                             </pre>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex gap-2">
-                                                <Button variant="ghost" size="icon" onClick={() => openEditModal(activity)} title="Edit">
-                                                    <Edit className="w-4 h-4 text-blue-400"/>
+                                                <Button variant="ghost" size="icon" onClick={() => openEditModal(activity)} title="Edit" className="group">
+                                                    <Edit className="w-4 h-4 text-blue-400 transition-transform group-hover:scale-125 group-hover:animate-pulse"/>
                                                 </Button>
-                                                <Button variant="ghost" size="icon" onClick={() => handleDelete(activity.id)} title="Delete">
-                                                    <Trash className="w-4 h-4 text-red-400"/>
-                                                </Button>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                         <Button variant="ghost" size="icon" title="Delete" className="group">
+                                                            <Trash className="w-4 h-4 text-red-400 transition-transform group-hover:scale-125 group-hover:animate-pulse"/>
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent className="glow-modal">
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                This action cannot be undone. This will permanently delete the record from the database.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => handleDelete(activity.id)} className="bg-red-600 hover:bg-red-700">
+                                                                Yes, delete record
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             </div>
                                         </TableCell>
                                     </TableRow>
