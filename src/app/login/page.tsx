@@ -87,14 +87,14 @@ export default function LoginPage() {
             let errorMessage = "Could not sign in with Google. Please try again.";
             if (error.code) {
                 switch (error.code) {
+                    case 'auth/popup-closed-by-user':
+                        errorMessage = "The sign-in window was closed before completing. Please try again.";
+                        break;
                     case 'auth/operation-not-allowed':
                         errorMessage = "Sign-in with Google is not enabled for this project. Please contact support.";
                         break;
                     case 'auth/popup-blocked':
                         errorMessage = "Popup blocked by browser. Please allow popups for this site to sign in.";
-                        break;
-                    case 'auth/popup-closed-by-user':
-                        errorMessage = "The sign-in window was closed before completing. Please try again.";
                         break;
                     case 'auth/cancelled-popup-request':
                     case 'auth/popup-already-opened':
@@ -181,5 +181,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    
