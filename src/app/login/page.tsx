@@ -94,7 +94,7 @@ export default function LoginPage() {
                         errorMessage = "Popup blocked by browser. Please allow popups for this site to sign in.";
                         break;
                     case 'auth/popup-closed-by-user':
-                        errorMessage = "The sign-in window was closed. Please try again.";
+                        errorMessage = "The sign-in window was closed before completing. Please try again.";
                         break;
                     case 'auth/cancelled-popup-request':
                     case 'auth/popup-already-opened':
@@ -181,3 +181,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
