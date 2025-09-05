@@ -94,7 +94,7 @@ function AdminPage() {
                     <Database className="w-8 h-8 text-yellow-400" />
                     <div>
                         <h1 className="text-3xl font-bold font-orbitron text-white">Admin Panel</h1>
-                        <p className="text-gray-400">Database Management for 'gis-team15'</p>
+                        <p className="text-gray-400">Database Management for 'dashboard_updates'</p>
                     </div>
                 </div>
                  <div className="flex gap-2">
