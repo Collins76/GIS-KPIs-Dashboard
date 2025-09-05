@@ -5,7 +5,7 @@ import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog, Role,
 import { signInAnonymously } from 'firebase/auth';
 
 
-const DB_COLLECTION_NAME = 'gis-team15';
+const DB_COLLECTION_NAME = 'dashboard_updates';
 
 export const getActivities = async (): Promise<ActivityLog[]> => {
   const { db } = getFirebase();
