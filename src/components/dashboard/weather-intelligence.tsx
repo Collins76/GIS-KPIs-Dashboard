@@ -2,42 +2,97 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { weatherData as initialWeatherData } from '@/lib/data';
+import { initialWeatherData } from '@/lib/data';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Wind, Droplets, CloudSun } from 'lucide-react';
+import { RefreshCw, Wind, Droplets, CloudSun, Sun, CloudRain, Cloudy, CloudDrizzle, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { WeatherData } from '@/lib/types';
+import { addDays, format } from 'date-fns';
+
+
+const generateWeatherData = (): WeatherData[] => {
+  const today = new Date();
+  const weather: WeatherData[] = [];
+  const conditions = [
+    { condition: 'Sunny', icon: Sun },
+    { condition: 'Partly Cloudy', icon: CloudSun },
+    { condition: 'Light Rain', icon: CloudRain },
+    { condition: 'Scattered Showers', icon: CloudDrizzle },
+    { condition: 'Cloudy', icon: Cloudy },
+    { condition: 'Thunderstorm', icon: Zap },
+  ];
+
+  for (let i = 0; i < 6; i++) {
+    const date = addDays(today, i);
+    const dayOfWeek = format(date, 'EEE');
+    const dateString = format(date, 'MMM d');
+    const isToday = i === 0;
+
+    // Simulate weather data
+    const temp = 25 + Math.floor(Math.random() * 8); // Temp between 25 and 32
+    const minTemp = temp - Math.floor(Math.random() * 3) - 1;
+    const maxTemp = temp + Math.floor(Math.random() * 3) + 1;
+    const humidity = 60 + Math.floor(Math.random() * 25);
+    const windSpeed = 5 + Math.floor(Math.random() * 5);
+    const condition = conditions[Math.floor(Math.random() * conditions.length)];
+
+    weather.push({
+      dayOfWeek,
+      date: dateString,
+      temp,
+      minTemp,
+      maxTemp,
+      ...condition,
+      humidity,
+      windSpeed,
+      isToday,
+    });
+  }
+  return weather;
+};
+
 
 export default function WeatherIntelligence() {
-  const [weatherData, setWeatherData] = useState<WeatherData[]>(initialWeatherData);
+  const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Generate data on the client side to avoid hydration mismatch
+    setWeatherData(generateWeatherData());
+  }, []);
 
   const handleRefresh = () => {
     setLoading(true);
     // Simulate API call
     setTimeout(() => {
-      // In a real app, you'd fetch new data. Here we just shuffle for demonstration.
-      const shuffled = [...weatherData].sort(() => Math.random() - 0.5);
-      // Ensure there's always one 'isToday'
-      const todayIndex = shuffled.findIndex(d => d.isToday);
-      if (todayIndex > 0) {
-        const todayData = shuffled[todayIndex];
-        shuffled.splice(todayIndex, 1);
-        shuffled.unshift(todayData);
-      }
-      setWeatherData(shuffled);
+      setWeatherData(generateWeatherData());
       setLoading(false);
     }, 1000);
   };
-
+  
+  // Auto-refresh logic can remain if desired
   useEffect(() => {
     const interval = setInterval(() => {
       handleRefresh();
     }, 5 * 60 * 1000); // 5 minutes
 
-    return () => clearInterval(interval); // Cleanup on component unmount
-  }, [weatherData]);
+    return () => clearInterval(interval);
+  }, []);
+  
+  if (weatherData.length === 0) {
+    return (
+        <div className="glow-container p-4">
+             <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-white font-orbitron flex items-center">
+                    <CloudSun className="mr-2 h-6 w-6 text-yellow-400 animate-float" />
+                    Lagos Weather Intelligence
+                </h2>
+            </div>
+            <div className="text-center p-8 text-gray-400">Loading weather data...</div>
+        </div>
+    )
+  }
 
   const today = weatherData.find(d => d.isToday) || weatherData[0];
   const forecast = weatherData.filter(d => !d.isToday).slice(0, 5);
@@ -83,7 +138,7 @@ export default function WeatherIntelligence() {
                     </div>
                     <div className="flex items-center gap-1">
                         <Wind className="w-3 h-3" />
-                        <span>{day.windSpeed}</span>
+                        <span>{day.windSpeed}km/h</span>
                     </div>
                 </div>
             </CardContent>

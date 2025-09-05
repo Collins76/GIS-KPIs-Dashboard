@@ -74,45 +74,14 @@ export const files: ManagedFile[] = [
     { id: 'file7', name: 'GIS_Strategy.pptx', type: 'PowerPoint', size: '8.9 MB', uploadedAt: '2023-10-22', url: '#' }
 ];
 
-const generateWeatherData = (): WeatherData[] => {
-  const today = new Date();
-  const weather: WeatherData[] = [];
-  const conditions = [
-    { condition: 'Sunny', icon: Sun },
-    { condition: 'Partly Cloudy', icon: CloudSun },
-    { condition: 'Light Rain', icon: CloudRain },
-    { condition: 'Scattered Showers', icon: CloudDrizzle },
-    { condition: 'Cloudy', icon: Cloudy },
-    { condition: 'Thunderstorm', icon: Zap },
-  ];
+export const initialWeatherData: WeatherData[] = [
+  { dayOfWeek: 'Mon', date: 'Jul 29', temp: 29, minTemp: 24, maxTemp: 33, condition: 'Partly Cloudy', icon: CloudSun, humidity: 75, windSpeed: 12, isToday: true },
+  { dayOfWeek: 'Tue', date: 'Jul 30', temp: 31, minTemp: 25, maxTemp: 35, condition: 'Sunny', icon: Sun, humidity: 70, windSpeed: 10, isToday: false },
+  { dayOfWeek: 'Wed', date: 'Jul 31', temp: 28, minTemp: 23, maxTemp: 31, condition: 'Light Rain', icon: CloudRain, humidity: 85, windSpeed: 15, isToday: false },
+  { dayOfWeek: 'Thu', date: 'Aug 1', temp: 27, minTemp: 22, maxTemp: 30, condition: 'Cloudy', icon: Cloudy, humidity: 80, windSpeed: 13, isToday: false },
+  { dayOfWeek: 'Fri', date: 'Aug 2', temp: 30, minTemp: 24, maxTemp: 34, condition: 'Partly Cloudy', icon: CloudSun, humidity: 72, windSpeed: 11, isToday: false },
+  { dayOfWeek: 'Sat', date: 'Aug 3', temp: 26, minTemp: 23, maxTemp: 29, condition: 'Thunderstorm', icon: Zap, humidity: 90, windSpeed: 18, isToday: false },
+];
 
-  for (let i = 0; i < 6; i++) {
-    const date = addDays(today, i);
-    const dayOfWeek = format(date, 'EEE');
-    const dateString = format(date, 'MMM d');
-    const isToday = i === 0;
 
-    // Simulate weather data
-    const temp = 25 + Math.floor(Math.random() * 8); // Temp between 25 and 32
-    const minTemp = temp - Math.floor(Math.random() * 3) - 1;
-    const maxTemp = temp + Math.floor(Math.random() * 3) + 1;
-    const humidity = 60 + Math.floor(Math.random() * 25);
-    const windSpeed = 5 + Math.floor(Math.random() * 5);
-    const condition = conditions[i % conditions.length];
-
-    weather.push({
-      dayOfWeek,
-      date: dateString,
-      temp,
-      minTemp,
-      maxTemp,
-      ...condition,
-      humidity,
-      windSpeed,
-      isToday,
-    });
-  }
-  return weather;
-};
-
-export const weatherData: WeatherData[] = generateWeatherData();
+export const weatherData: WeatherData[] = initialWeatherData;
