@@ -21,6 +21,7 @@ import {
   PieChart,
   RefreshCcw,
   Shield,
+  Database,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -51,6 +52,7 @@ const TABS = [
     { id: 'tracking', label: 'KPIs Status & Tracking', icon: ListChecks },
     { id: 'map', label: 'Location Map', icon: Map },
     { id: 'upload', label: 'Data Upload', icon: FileIcon },
+    { id: 'admin', label: 'Admin', icon: Database },
 ];
 
 const PARAMETER_CATEGORIES: KpiCategory[] = ['Business Growth', 'People Development', 'Operational Process', 'Customer'];
