@@ -114,22 +114,28 @@ export default function DashboardPage() {
   }, [activeTab, kpiData, router]);
 
    useEffect(() => {
-      if (prevRole !== undefined && prevRole !== selectedRole) {
-          addFilterChangeActivity(user, { type: 'role', value: selectedRole, tab: activeTab });
-      }
-      if (prevCategory !== undefined && prevCategory !== selectedCategory) {
-          addFilterChangeActivity(user, { type: 'category', value: selectedCategory, tab: activeTab });
-      }
-      if (prevStatus !== undefined && prevStatus !== selectedStatus) {
-          addFilterChangeActivity(user, { type: 'status', value: selectedStatus, tab: activeTab });
-      }
+    const logFilterChange = (type: string, value: string) => {
+        if (user) {
+            addFilterChangeActivity(user, { type, value, tab: activeTab });
+        }
+    };
+
+    if (prevRole !== undefined && prevRole !== selectedRole) {
+        logFilterChange('role', selectedRole);
+    }
+    if (prevCategory !== undefined && prevCategory !== selectedCategory) {
+        logFilterChange('category', selectedCategory);
+    }
+    if (prevStatus !== undefined && prevStatus !== selectedStatus) {
+        logFilterChange('status', selectedStatus);
+    }
   }, [selectedRole, selectedCategory, selectedStatus, user, activeTab, prevRole, prevCategory, prevStatus]);
+
 
   const handleKpiUpdate = (updatedKpi: Kpi) => {
     const newData = kpiData.map(kpi => (kpi.id === updatedKpi.id ? updatedKpi : kpi));
     setKpiData(newData);
     
-    // Log the update to Firestore with filter context
     if (user) {
         addKpiUpdateActivity(user, updatedKpi, {
             role: selectedRole,
@@ -138,7 +144,7 @@ export default function DashboardPage() {
             date: selectedDate,
         });
         toast({
-          title: "KPI Updated & Logged",
+          title: "KPI Updated & Logged to Backend",
           description: `Progress for "${updatedKpi.title}" is now ${updatedKpi.progress}%.`,
         });
     } else {

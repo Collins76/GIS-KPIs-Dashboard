@@ -18,10 +18,8 @@ export const getActivities = async (): Promise<ActivityLog[]> => {
     const data = doc.data();
     // Firestore Timestamps need to be converted to JS Dates.
     // This handles cases where the timestamp might be missing or in an incorrect format.
-    const timestampStr = data.timestamp && typeof data.timestamp.toDate === 'function' 
-      ? data.timestamp.toDate().toISOString() 
-      : new Date().toISOString();
-
+    const timestampStr = data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : new Date().toISOString();
+    
     activities.push({
       id: doc.id,
       ...data,
@@ -36,6 +34,10 @@ export const updateActivity = async (id: string, data: Partial<ActivityLog>) => 
     const { db } = getFirebase();
     if (!db) return;
     const docRef = doc(db, DB_COLLECTION_NAME, id);
+    // Remove id from data to prevent it from being written to the document
+    if ('id' in data) {
+        delete data.id;
+    }
     await updateDoc(docRef, data);
 };
 
