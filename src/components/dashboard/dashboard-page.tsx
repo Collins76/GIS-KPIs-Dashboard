@@ -104,11 +104,26 @@ export default function DashboardPage() {
   const handleKpiUpdate = (updatedKpi: Kpi) => {
     const newData = kpiData.map(kpi => (kpi.id === updatedKpi.id ? updatedKpi : kpi));
     setKpiData(newData);
-    // The firestore update logic is now handled inside KpiTable component
-    toast({
-      title: "KPI Updated",
-      description: `Progress for "${updatedKpi.title}" is now ${updatedKpi.progress}%.`,
-    });
+    
+    // Log the update to Firestore with filter context
+    if (user) {
+        addKpiUpdateActivity(user, updatedKpi, {
+            role: selectedRole,
+            category: selectedCategory,
+            status: selectedStatus,
+            date: selectedDate,
+        });
+        toast({
+          title: "KPI Updated & Logged",
+          description: `Progress for "${updatedKpi.title}" is now ${updatedKpi.progress}%.`,
+        });
+    } else {
+        toast({
+          title: "KPI Updated (Local)",
+          description: "Update was not logged to database. Please sign in.",
+          variant: "destructive"
+        });
+    }
   };
 
   const filteredKpis = useMemo(() => {

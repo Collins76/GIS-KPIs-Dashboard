@@ -85,6 +85,12 @@ export interface ActivityLog {
     };
     file?: Partial<ManagedFile>;
     kpi?: Partial<Kpi>;
+    filter_settings?: {
+        role: Role | 'All',
+        category: KpiCategory | 'All',
+        status: KpiStatus | 'All',
+        date: string | null,
+    },
     timestamp: string;
   }
 

@@ -18,8 +18,6 @@ import { KpiUpdateDialog } from './kpi-update-dialog';
 import { Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import { UserContext } from '@/context/user-context';
-import { addKpiUpdateActivity } from '@/lib/firestore';
-import { useToast } from '@/hooks/use-toast';
 
 
 type KpiTableProps = {
@@ -33,7 +31,6 @@ export default function KpiTable({
 }: KpiTableProps) {
   const [selectedKpi, setSelectedKpi] = useState<Kpi | null>(null);
   const { user } = useContext(UserContext);
-  const { toast } = useToast();
 
   const handleProgressChange = (kpi: Kpi, newProgress: number) => {
     let newStatus: KpiStatus;
@@ -45,11 +42,6 @@ export default function KpiTable({
 
     const updatedKpi = { ...kpi, progress: newProgress, status: newStatus };
     onKpiUpdate(updatedKpi);
-    addKpiUpdateActivity(user, updatedKpi);
-     toast({
-      title: "KPI Updated & Logged",
-      description: `Progress for "${updatedKpi.title}" is now ${updatedKpi.progress}%.`,
-    });
   };
   
   const handleOpenDialog = (kpi: Kpi) => {

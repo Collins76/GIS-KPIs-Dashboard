@@ -1,7 +1,7 @@
 
 import { getFirebase } from './firebase';
 import { collection, addDoc, serverTimestamp, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
-import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog } from './types';
+import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog, Role, KpiCategory, KpiStatus } from './types';
 
 const DB_COLLECTION_NAME = 'gis-team15';
 
@@ -112,7 +112,16 @@ export const addFileUploadActivity = async (user: User | null, file: AppFile) =>
     }
 }
 
-export const addKpiUpdateActivity = async (user: User | null, kpi: Kpi) => {
+export const addKpiUpdateActivity = async (
+    user: User | null, 
+    kpi: Kpi,
+    filters: {
+        role: Role | 'All',
+        category: KpiCategory | 'All',
+        status: KpiStatus | 'All',
+        date: Date | undefined,
+    }
+) => {
   const { db } = getFirebase();
   if (!db || !user || !kpi) return;
 
@@ -131,6 +140,12 @@ export const addKpiUpdateActivity = async (user: User | null, kpi: Kpi) => {
         title: kpi.title,
         progress: kpi.progress,
         status: kpi.status,
+      },
+      filter_settings: {
+        role: filters.role,
+        category: filters.category,
+        status: filters.status,
+        date: filters.date ? filters.date.toISOString() : null,
       },
       timestamp: serverTimestamp(),
     });
