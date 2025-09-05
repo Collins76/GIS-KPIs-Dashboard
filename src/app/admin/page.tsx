@@ -68,23 +68,19 @@ function AdminPage() {
         if (!selectedActivity) return;
         try {
             const parsedData = JSON.parse(editedContent);
-            // Reconstruct the data to ensure it's clean and doesn't contain forbidden fields like 'id'
-            const dataToUpdate: { [key: string]: any } = {};
-            for (const key in parsedData) {
-                if (key !== 'id') { // Explicitly exclude the 'id' field
-                    dataToUpdate[key] = parsedData[key];
-                }
-            }
+            // The document ID cannot be part of the data payload when updating.
+            delete parsedData.id;
 
-            await updateActivity(selectedActivity.id, dataToUpdate);
+            await updateActivity(selectedActivity.id, parsedData);
             toast({ title: "Success", description: "Record updated successfully." });
-            setEditModalOpen(false); // Close modal on success
-            fetchActivities(); // Refresh data to show changes
+            setEditModalOpen(false);
+            fetchActivities();
         } catch (error) {
             console.error("Failed to update activity:", error);
-            toast({ title: "Update Error", description: "Failed to update record. Check if JSON is valid.", variant: "destructive" });
+            toast({ title: "Update Error", description: "Failed to update record. Please ensure the JSON is valid and you have permission.", variant: "destructive" });
         }
     };
+
 
     const handleTestConnection = async () => {
         await testDatabaseConnection();
@@ -207,5 +203,3 @@ function AdminPage() {
 }
 
 export default withAuth(AdminPage);
-
-    
