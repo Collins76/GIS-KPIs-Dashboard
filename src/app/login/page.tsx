@@ -3,11 +3,11 @@
 
 import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
-import { Zap, Check, Shield, Loader2 } from 'lucide-react';
+import { Zap, Check, Shield, Loader2, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getFirebase } from '@/lib/firebase';
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup, signInAnonymously } from "firebase/auth";
 import { addUserSignInActivity } from '@/lib/firestore';
 import { weatherData } from '@/lib/data';
 import { UserContext } from '@/context/user-context';
@@ -117,6 +117,37 @@ export default function LoginPage() {
         }
     };
 
+    const handleAnonymousSignIn = async () => {
+      setIsSigningIn(true);
+      const { auth } = getFirebase();
+      if (!auth) {
+          toast({
+              title: "Authentication Not Ready",
+              description: "Firebase is not configured correctly.",
+              variant: "destructive"
+          });
+          setIsSigningIn(false);
+          return;
+      }
+  
+      try {
+          await signInAnonymously(auth);
+          toast({
+              title: 'Anonymous Login Successful',
+              description: `Welcome! Redirecting to the dashboard...`,
+          });
+      } catch (error: any) {
+          console.error("Anonymous authentication error:", error);
+          toast({
+              title: "Authentication Failed",
+              description: "Could not sign in anonymously. Please try again.",
+              variant: "destructive"
+          });
+      } finally {
+          setIsSigningIn(false);
+      }
+    };
+
     if (!isClient) {
         return null;
     }
@@ -152,7 +183,7 @@ export default function LoginPage() {
             <p className="text-yellow-400 text-sm font-rajdhani tracking-wide">⚡ GIS KPI Dashboard ⚡</p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             <Button
               onClick={handleGoogleSignIn}
               disabled={isSigningIn}
@@ -164,6 +195,18 @@ export default function LoginPage() {
                 <GoogleIcon className="mr-3" />
               )}
               {isSigningIn ? 'Signing in...' : 'Sign in with Google'}
+            </Button>
+            <Button
+              onClick={handleAnonymousSignIn}
+              disabled={isSigningIn}
+              className="glow-button w-full text-lg !bg-gray-600 hover:!bg-gray-700"
+            >
+              {isSigningIn ? (
+                <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+              ) : (
+                <KeyRound className="mr-3 h-5 w-5" />
+              )}
+              {isSigningIn ? 'Logging in...' : 'Quick Login (Anonymous)'}
             </Button>
           </div>
 
