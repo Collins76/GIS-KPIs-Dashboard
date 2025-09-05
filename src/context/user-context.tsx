@@ -4,7 +4,7 @@
 import { createContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import type { User } from '@/lib/types';
 import { getFirebase } from '@/lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { addUserSignInActivity } from '@/lib/firestore';
 import { weatherData } from '@/lib/data';
 
@@ -20,6 +20,17 @@ export const UserContext = createContext<UserContextType>({
   setUser: () => {},
 });
 
+const createProfileFromFirebaseUser = (firebaseUser: FirebaseUser): User => {
+    return {
+        name: firebaseUser.displayName || "Anonymous",
+        email: firebaseUser.email || "no-email@example.com",
+        role: "GIS Analyst", // Default role
+        location: "CHQ", // Default location
+        avatar: firebaseUser.photoURL || `https://i.pravatar.cc/150?u=${firebaseUser.email}`,
+    };
+}
+
+
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUserState] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,20 +44,25 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
         if (firebaseUser) {
-            // User is signed in.
-            const storedUser = localStorage.getItem('gis-user-profile');
+            const storedUserJson = localStorage.getItem('gis-user-profile');
             let profile: User;
-            if (storedUser) {
-                profile = JSON.parse(storedUser);
-                // Ensure local storage is in sync with auth state
-                if (profile.email !== firebaseUser.email) {
-                    profile = createProfileFromFirebaseUser(firebaseUser);
-                    addUserSignInActivity(profile, weatherData.find(d => d.isToday) || null);
-                }
+
+            if (storedUserJson) {
+                const storedUser = JSON.parse(storedUserJson);
+                // Sync with Firebase auth data
+                profile = {
+                    ...storedUser,
+                    name: firebaseUser.displayName || storedUser.name,
+                    email: firebaseUser.email, // email is source of truth
+                    avatar: firebaseUser.photoURL || storedUser.avatar,
+                };
             } else {
+                // This case handles a fresh login where no profile is in local storage yet.
                 profile = createProfileFromFirebaseUser(firebaseUser);
+                // Also log their sign-in activity
                 addUserSignInActivity(profile, weatherData.find(d => d.isToday) || null);
             }
+            
             setUser(profile);
         } else {
             // User is signed out.
@@ -59,15 +75,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, []);
   
-  const createProfileFromFirebaseUser = (firebaseUser: any): User => {
-    return {
-        name: firebaseUser.displayName || "Anonymous",
-        email: firebaseUser.email || "no-email@example.com",
-        role: "GIS Analyst", // Default role
-        location: "CHQ", // Default location
-        avatar: firebaseUser.photoURL || `https://i.pravatar.cc/150?u=${firebaseUser.email}`,
-    };
-  }
 
   const setUser = (userToSet: User | null) => {
     setUserState(userToSet);

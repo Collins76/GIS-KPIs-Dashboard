@@ -95,7 +95,7 @@ export default function DashboardPage() {
   const handleKpiUpdate = (updatedKpi: Kpi) => {
     const newData = kpiData.map(kpi => (kpi.id === updatedKpi.id ? updatedKpi : kpi));
     setKpiData(newData);
-    addKpiUpdateActivity(user, updatedKpi);
+    // The firestore update logic is now handled inside KpiTable component
     toast({
       title: "KPI Updated",
       description: `Progress for "${updatedKpi.title}" is now ${updatedKpi.progress}%.`,
@@ -352,12 +352,7 @@ export default function DashboardPage() {
             )}
             {activeTab === 'tracking' && (
                 <KpiTable 
-                    kpiData={kpiData}
                     onKpiUpdate={handleKpiUpdate}
-                    selectedRole={selectedRole}
-                    setSelectedRole={setSelectedRole}
-                    selectedStatus={selectedStatus}
-                    setSelectedStatus={setSelectedStatus}
                     filteredKpis={filteredKpis}
                 />
             )}

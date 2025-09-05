@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import {
   Table,
   TableBody,
@@ -12,19 +12,18 @@ import {
 } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import type { Role, KpiStatus, Kpi } from '@/lib/types';
+import type { KpiStatus, Kpi } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { KpiUpdateDialog } from './kpi-update-dialog';
 import { Edit } from 'lucide-react';
 import { format } from 'date-fns';
+import { UserContext } from '@/context/user-context';
+import { addKpiUpdateActivity } from '@/lib/firestore';
+import { useToast } from '@/hooks/use-toast';
+
 
 type KpiTableProps = {
-  kpiData: Kpi[];
   onKpiUpdate: (kpi: Kpi) => void;
-  selectedRole: Role | 'All';
-  setSelectedRole: (role: Role | 'All') => void;
-  selectedStatus: KpiStatus | 'All';
-  setSelectedStatus: (status: KpiStatus | 'All') => void;
   filteredKpis: Kpi[];
 };
 
@@ -33,6 +32,8 @@ export default function KpiTable({
   filteredKpis,
 }: KpiTableProps) {
   const [selectedKpi, setSelectedKpi] = useState<Kpi | null>(null);
+  const { user } = useContext(UserContext);
+  const { toast } = useToast();
 
   const handleProgressChange = (kpi: Kpi, newProgress: number) => {
     let newStatus: KpiStatus;
@@ -42,7 +43,13 @@ export default function KpiTable({
     else if (newProgress > 0) newStatus = 'Off Track';
     else newStatus = 'Not Started';
 
-    onKpiUpdate({ ...kpi, progress: newProgress, status: newStatus });
+    const updatedKpi = { ...kpi, progress: newProgress, status: newStatus };
+    onKpiUpdate(updatedKpi);
+    addKpiUpdateActivity(user, updatedKpi);
+     toast({
+      title: "KPI Updated & Logged",
+      description: `Progress for "${updatedKpi.title}" is now ${updatedKpi.progress}%.`,
+    });
   };
   
   const handleOpenDialog = (kpi: Kpi) => {
