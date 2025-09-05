@@ -1,8 +1,40 @@
+
 import { getFirebase } from './firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import type { User, ManagedFile as AppFile, WeatherData, Kpi } from './types';
+import { collection, addDoc, serverTimestamp, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog } from './types';
 
 const DB_COLLECTION_NAME = 'gis-team15';
+
+export const getActivities = async (): Promise<ActivityLog[]> => {
+  const { db } = getFirebase();
+  if (!db) return [];
+
+  const querySnapshot = await getDocs(collection(db, DB_COLLECTION_NAME));
+  const activities: ActivityLog[] = [];
+  querySnapshot.forEach((doc) => {
+    const data = doc.data();
+    activities.push({
+      id: doc.id,
+      ...data,
+      timestamp: data.timestamp?.toDate()?.toISOString() || new Date().toISOString(),
+    } as ActivityLog);
+  });
+  return activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+};
+
+export const updateActivity = async (id: string, data: Partial<ActivityLog>) => {
+    const { db } = getFirebase();
+    if (!db) return;
+    const docRef = doc(db, DB_COLLECTION_NAME, id);
+    await updateDoc(docRef, data);
+};
+
+export const deleteActivity = async (id: string) => {
+    const { db } = getFirebase();
+    if (!db) return;
+    await deleteDoc(doc(db, DB_COLLECTION_NAME, id));
+};
+
 
 export const addUserSignInActivity = async (user: User, weather: WeatherData | null) => {
   const { db } = getFirebase();

@@ -1,4 +1,5 @@
 
+
 export type Role =
   | 'GIS Coordinator'
   | 'GIS Lead'
@@ -73,6 +74,19 @@ export interface WeatherData {
   icon: React.ComponentType<{ className?: string, displayName?: string }>;
   isToday: boolean;
 }
+
+export interface ActivityLog {
+    id: string;
+    activityType: 'user_signin' | 'profile_update' | 'file_upload' | 'kpi_update';
+    user: User;
+    weather?: {
+      condition: string;
+      temperature: number;
+    };
+    file?: Partial<ManagedFile>;
+    kpi?: Partial<Kpi>;
+    timestamp: string;
+  }
 
 declare global {
     interface Window {

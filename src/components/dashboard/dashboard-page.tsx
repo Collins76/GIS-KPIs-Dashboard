@@ -20,7 +20,9 @@ import {
   Filter,
   PieChart,
   RefreshCcw,
+  Shield,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import Header from './header';
 import KpiSummaryCards from './kpi-summary-cards';
@@ -49,6 +51,7 @@ const TABS = [
     { id: 'tracking', label: 'KPIs Status & Tracking', icon: ListChecks },
     { id: 'map', label: 'Location Map', icon: Map },
     { id: 'upload', label: 'Data Upload', icon: FileIcon },
+    { id: 'admin', label: 'Admin', icon: Shield },
 ];
 
 const PARAMETER_CATEGORIES: KpiCategory[] = ['Business Growth', 'People Development', 'Operational Process', 'Customer'];
@@ -56,6 +59,7 @@ const PARAMETER_CATEGORIES: KpiCategory[] = ['Business Growth', 'People Developm
 export default function DashboardPage() {
   const [kpiData, setKpiData] = useState<Kpi[]>(allKpis);
   const [activeTab, setActiveTab] = useState('overview');
+  const router = useRouter();
   
   const [selectedRole, setSelectedRole] = useState<Role | 'All'>('All');
   const [selectedStatus, setSelectedStatus] = useState<KpiStatus | 'All'>('All');
@@ -69,6 +73,11 @@ export default function DashboardPage() {
   const { toast } = useToast();
 
   useEffect(() => {
+    if (activeTab === 'admin') {
+      router.push('/admin');
+      return;
+    }
+
     const initCharts = () => {
       // Ensure Chart is available before initializing
       if (typeof window.Chart === 'undefined') {
@@ -90,7 +99,7 @@ export default function DashboardPage() {
       }
     };
     initCharts();
-  }, [activeTab, kpiData]);
+  }, [activeTab, kpiData, router]);
 
   const handleKpiUpdate = (updatedKpi: Kpi) => {
     const newData = kpiData.map(kpi => (kpi.id === updatedKpi.id ? updatedKpi : kpi));
