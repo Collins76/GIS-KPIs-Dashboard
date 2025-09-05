@@ -1,7 +1,9 @@
 
 import { getFirebase } from './firebase';
-import { collection, addDoc, serverTimestamp, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, doc, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
 import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog, Role, KpiCategory, KpiStatus } from './types';
+import { signInAnonymously } from 'firebase/auth';
+
 
 const DB_COLLECTION_NAME = 'gis-team15';
 
@@ -151,5 +153,48 @@ export const addKpiUpdateActivity = async (
     });
   } catch (error) {
     console.error("Error adding KPI update activity to Firestore: ", error);
+  }
+}
+
+// Test function - call this when your dashboard loads
+export async function testDatabaseConnection() {
+  const { db, auth } = getFirebase();
+  if (!db || !auth) {
+    const message = "Firebase is not properly initialized.";
+    console.error(`❌ Database connection failed: ${message}`);
+    alert(`⚠️ Connection failed: ${message}`);
+    return;
+  }
+  
+  try {
+    // Sign in anonymously for testing
+    await signInAnonymously(auth);
+    console.log("✅ Authentication successful");
+    
+    // Test writing data
+    const testData = {
+      test_message: "Dashboard connected successfully!",
+      timestamp: new Date(),
+      dashboard_version: "GIS_KPI_v1.0",
+      location: "Lagos, Nigeria"
+    };
+    
+    // Try to write to kpi_data collection
+    const docRef = await addDoc(collection(db, "kpi_data"), testData);
+    console.log("✅ Data written successfully with ID: ", docRef.id);
+    
+    // Test writing user session
+    await setDoc(doc(db, "user_sessions", "test_session"), {
+      user_id: "dashboard_user",
+      login_time: new Date(),
+      dashboard_active: true
+    });
+    console.log("✅ User session created successfully");
+    
+    alert("🎉 Database connection successful! Check your Firestore console.");
+    
+  } catch (error: any) {
+    console.error("❌ Database connection failed:", error);
+    alert("⚠️ Connection failed: " + error.message);
   }
 }

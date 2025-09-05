@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import withAuth from '@/components/auth/with-auth';
-import { getActivities, updateActivity, deleteActivity } from '@/lib/firestore';
+import { getActivities, updateActivity, deleteActivity, testDatabaseConnection } from '@/lib/firestore';
 import type { ActivityLog } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Trash, Edit, RefreshCw, Database, Home } from 'lucide-react';
+import { Trash, Edit, RefreshCw, Database, Home, Wifi } from 'lucide-react';
 import { format } from 'date-fns';
 
 function AdminPage() {
@@ -80,6 +80,10 @@ function AdminPage() {
         }
     };
 
+    const handleTestConnection = async () => {
+        await testDatabaseConnection();
+    }
+
     return (
         <div className="min-h-screen bg-black text-white p-4 md:p-8">
             <header className="flex justify-between items-center mb-8">
@@ -98,6 +102,10 @@ function AdminPage() {
                     <Button onClick={fetchActivities} disabled={loading} className="glow-button">
                         <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                         Refresh Data
+                    </Button>
+                    <Button onClick={handleTestConnection} className="glow-button !bg-green-600 hover:!bg-green-700">
+                        <Wifi className="w-4 h-4 mr-2"/>
+                        Test Connection
                     </Button>
                  </div>
             </header>
