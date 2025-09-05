@@ -191,31 +191,34 @@ export async function testDatabaseConnection() {
   }
   
   try {
-    // Sign in anonymously for testing
-    await signInAnonymously(auth);
-    console.log("✅ Authentication successful");
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+        alert("⚠️ Connection failed: Please sign in first to test the database connection.");
+        return;
+    }
+    console.log(`✅ Authenticated as: ${currentUser.email}`);
     
     // Test writing data
     const testData = {
       test_message: "Dashboard connected successfully!",
       timestamp: new Date(),
       dashboard_version: "GIS_KPI_v1.0",
-      location: "Lagos, Nigeria"
+      location: "Lagos, Nigeria",
+      user_email: currentUser.email,
     };
     
-    // Try to write to kpi_data collection
     const docRef = await addDoc(collection(db, "kpi_data"), testData);
     console.log("✅ Data written successfully with ID: ", docRef.id);
     
     // Test writing user session
-    await setDoc(doc(db, "user_sessions", "test_session"), {
-      user_id: "dashboard_user",
+    await setDoc(doc(db, "user_sessions", currentUser.uid), {
+      user_id: currentUser.uid,
       login_time: new Date(),
       dashboard_active: true
-    });
-    console.log("✅ User session created successfully");
+    }, { merge: true });
+    console.log("✅ User session created/updated successfully");
     
-    alert("🎉 Database connection successful! Check your Firestore console.");
+    alert("🎉 Database connection successful! Check your Firestore console for 'kpi_data' and 'user_sessions' collections.");
     
   } catch (error: any) {
     console.error("❌ Database connection failed:", error);
