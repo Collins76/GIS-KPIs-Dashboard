@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useMemo, useEffect, useContext, useRef } from 'react';
@@ -407,9 +406,12 @@ export default function DashboardPage() {
             )}
             {activeTab === 'map' && <LocationMap />}
             {activeTab === 'upload' && <FileManager />}
+            {activeTab === 'admin' && <div className="text-white">Redirecting to admin...</div>}
         </div>
 
       </main>
     </div>
   );
 }
+
+    
