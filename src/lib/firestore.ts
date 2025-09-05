@@ -156,6 +156,30 @@ export const addKpiUpdateActivity = async (
   }
 }
 
+export const addFilterChangeActivity = async (
+    user: User | null,
+    filter: { type: string; value: string; tab: string }
+) => {
+    const { db } = getFirebase();
+    if (!db || !user) return;
+    try {
+        await addDoc(collection(db, DB_COLLECTION_NAME), {
+            activityType: 'filter_change',
+            user: {
+                name: user.name,
+                email: user.email,
+                role: user.role,
+            },
+            filter_interaction: {
+                ...filter
+            },
+            timestamp: serverTimestamp(),
+        });
+    } catch (error) {
+        console.error("Error logging filter change to Firestore: ", error);
+    }
+};
+
 // Test function - call this when your dashboard loads
 export async function testDatabaseConnection() {
   const { db, auth } = getFirebase();

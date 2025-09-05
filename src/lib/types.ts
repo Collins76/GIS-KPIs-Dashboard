@@ -77,7 +77,7 @@ export interface WeatherData {
 
 export interface ActivityLog {
     id: string;
-    activityType: 'user_signin' | 'profile_update' | 'file_upload' | 'kpi_update';
+    activityType: 'user_signin' | 'profile_update' | 'file_upload' | 'kpi_update' | 'filter_change';
     user: User;
     weather?: {
       condition: string;
@@ -90,6 +90,11 @@ export interface ActivityLog {
         category: KpiCategory | 'All',
         status: KpiStatus | 'All',
         date: string | null,
+    },
+    filter_interaction?: {
+        type: string;
+        value: string;
+        tab: string;
     },
     timestamp: string;
   }

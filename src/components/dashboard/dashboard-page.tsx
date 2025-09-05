@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect, useContext } from 'react';
+import { useState, useMemo, useEffect, useContext, useRef } from 'react';
 import type { Role, Kpi, KpiStatus, KpiCategory } from '@/lib/types';
 import { kpis as allKpis, roles } from '@/lib/data';
 import {
@@ -40,7 +40,7 @@ import { cn } from '@/lib/utils';
 import KpiUserPerformanceChart from './kpi-user-performance-chart';
 import RoleBasedView from './role-based-view';
 import TrendsComparisonChart from './trends-comparison-chart';
-import { addKpiUpdateActivity } from '@/lib/firestore';
+import { addKpiUpdateActivity, addFilterChangeActivity } from '@/lib/firestore';
 import { UserContext } from '@/context/user-context';
 
 
@@ -69,8 +69,20 @@ export default function DashboardPage() {
   const [trendsChartType, setTrendsChartType] = useState<'bar' | 'doughnut'>('bar');
   const { user } = useContext(UserContext);
 
-
   const { toast } = useToast();
+  
+  const usePrevious = <T,>(value: T): T | undefined => {
+    const ref = useRef<T>();
+    useEffect(() => {
+        ref.current = value;
+    });
+    return ref.current;
+  };
+  
+  const prevRole = usePrevious(selectedRole);
+  const prevCategory = usePrevious(selectedCategory);
+  const prevStatus = usePrevious(selectedStatus);
+
 
   useEffect(() => {
     if (activeTab === 'admin') {
@@ -100,6 +112,18 @@ export default function DashboardPage() {
     };
     initCharts();
   }, [activeTab, kpiData, router]);
+
+   useEffect(() => {
+      if (prevRole !== undefined && prevRole !== selectedRole) {
+          addFilterChangeActivity(user, { type: 'role', value: selectedRole, tab: activeTab });
+      }
+      if (prevCategory !== undefined && prevCategory !== selectedCategory) {
+          addFilterChangeActivity(user, { type: 'category', value: selectedCategory, tab: activeTab });
+      }
+      if (prevStatus !== undefined && prevStatus !== selectedStatus) {
+          addFilterChangeActivity(user, { type: 'status', value: selectedStatus, tab: activeTab });
+      }
+  }, [selectedRole, selectedCategory, selectedStatus, user, activeTab, prevRole, prevCategory, prevStatus]);
 
   const handleKpiUpdate = (updatedKpi: Kpi) => {
     const newData = kpiData.map(kpi => (kpi.id === updatedKpi.id ? updatedKpi : kpi));
