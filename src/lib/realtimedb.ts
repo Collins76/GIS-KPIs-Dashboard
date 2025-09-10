@@ -1,7 +1,7 @@
 
 import { getFirebase } from './firebase';
 import { ref, set, push, serverTimestamp, get, query, orderByChild } from 'firebase/database';
-import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog, Role, KpiCategory, KpiStatus } from './types';
+import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog, Role, KpiCategory, KpiStatus, StatusPost } from './types';
 import { getAuth, signInAnonymously, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
 
@@ -315,6 +315,7 @@ export const addStatusPost = async (user: User, statusText: string) => {
     const newStatusRef = push(statusPostsRef);
     await set(newStatusRef, {
       username: user.name,
+      avatar: user.avatar, // Also save avatar for easy display
       status: statusText,
       timestamp: new Date().getTime(),
     });
@@ -322,4 +323,35 @@ export const addStatusPost = async (user: User, statusText: string) => {
     console.error("Error adding status post to Realtime Database: ", error);
     throw new Error("Could not post status. Please try again.");
   }
+};
+
+export const getStatusPosts = async (): Promise<StatusPost[]> => {
+    try {
+        await initAuth();
+        const { db } = getFirebase();
+        if (!db) {
+            throw new Error("Firebase database is not available.");
+        }
+
+        const statusPostsRef = ref(db, 'status_posts');
+        const postsQuery = query(statusPostsRef, orderByChild('timestamp'));
+        const snapshot = await get(postsQuery);
+
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            const posts: StatusPost[] = Object.keys(data).map(key => ({
+                id: key,
+                ...data[key],
+            })).sort((a, b) => b.timestamp - a.timestamp); // Sort descending
+            
+            return posts;
+        } else {
+            console.log("No status posts found");
+            return [];
+        }
+
+    } catch (error: any) {
+        console.error("Error in getStatusPosts:", error);
+        throw new Error(`Could not retrieve status posts. This may be a network or permissions issue.`);
+    }
 };

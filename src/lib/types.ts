@@ -40,6 +40,14 @@ export interface User {
   status?: string;
 }
 
+export interface StatusPost {
+    id: string;
+    username: string;
+    avatar: string;
+    status: string;
+    timestamp: number;
+}
+
 export type FileType = 'CSV' | 'Excel' | 'PDF' | 'Image' | 'GIS' | 'Word' | 'PowerPoint' | 'application/octet-stream' | 'application/pdf' | 'image/jpeg' | 'image/png' | 'image/gif' | 'text/csv' | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' | 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' | 'application/vnd.ms-powerpoint' | 'application/vnd.openxmlformats-officedocument.presentationml.presentation' | 'application/vnd.google-earth.kml+xml' | 'application/vnd.google-earth.kmz';
 
 

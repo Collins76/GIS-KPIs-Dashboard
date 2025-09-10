@@ -7,13 +7,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { addStatusPost } from '@/lib/realtimedb';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, MessageSquare } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function StatusUpdate() {
     const { user } = useContext(UserContext);
     const [statusText, setStatusText] = useState('');
     const [isPosting, setIsPosting] = useState(false);
     const { toast } = useToast();
+    const router = useRouter();
 
     const handlePostStatus = async () => {
         if (!user) {
@@ -68,15 +70,20 @@ export default function StatusUpdate() {
                     rows={2}
                     maxLength={280}
                 />
-                <Button onClick={handlePostStatus} disabled={isPosting} className="glow-button h-auto">
-                    {isPosting ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                        <Send className="h-5 w-5" />
-                    )}
-                </Button>
+                <div className="flex flex-col space-y-2">
+                    <Button onClick={handlePostStatus} disabled={isPosting} className="glow-button h-auto">
+                        {isPosting ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : (
+                            <Send className="h-5 w-5" />
+                        )}
+                    </Button>
+                    <Button onClick={() => router.push('/status-feed')} variant="outline" className="glow-button !bg-blue-600 hover:!bg-blue-700 h-auto">
+                        <MessageSquare className="h-5 w-5" />
+                    </Button>
+                </div>
             </div>
-            <p className="text-xs text-right text-gray-400 mt-1 pr-20">
+            <p className="text-xs text-right text-gray-400 mt-1 pr-28">
                 {statusText.length} / 280
             </p>
         </div>
