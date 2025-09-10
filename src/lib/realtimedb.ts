@@ -273,7 +273,7 @@ export const addStatusPost = async (user: User, statusText: string) => {
   const { db } = getFirebase();
   if (!db || !user) {
     console.error("Database or user not available for status post.");
-    return;
+    throw new Error("Could not post status. Please try again.");
   }
 
   try {
