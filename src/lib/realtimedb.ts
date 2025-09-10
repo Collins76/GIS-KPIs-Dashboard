@@ -58,6 +58,16 @@ export const deleteActivity = async (id: string) => {
     await set(docRef, null);
 };
 
+const sanitizeUserForDB = (user: User) => {
+  return {
+    name: user.name || "Anonymous",
+    email: user.email || "no-email@example.com",
+    role: user.role || "GIS Analyst",
+    location: user.location || "CHQ",
+    avatar: user.avatar || "",
+  };
+};
+
 
 export const addUserSignInActivity = async (user: User, weather: WeatherData | null) => {
   const { db } = getFirebase();
@@ -68,13 +78,7 @@ export const addUserSignInActivity = async (user: User, weather: WeatherData | n
     const newActivityRef = push(activitiesRef);
     await set(newActivityRef, {
       activityType: 'user_signin',
-      user: {
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        location: user.location,
-        avatar: user.avatar,
-      },
+      user: sanitizeUserForDB(user),
       weather: weather ? {
         condition: weather.condition,
         temperature: weather.temp,
@@ -97,13 +101,7 @@ export const addUserSignOutActivity = async (user: User, duration: number) => {
         const newActivityRef = push(activitiesRef);
         await set(newActivityRef, {
             activityType: 'user_signout',
-            user: {
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            location: user.location,
-            avatar: user.avatar,
-            },
+            user: sanitizeUserForDB(user),
             duration: Math.round(duration), // Duration in minutes
             timestamp: serverTimestamp(),
         });
@@ -122,13 +120,7 @@ export const addUserProfileUpdateActivity = async (user: User) => {
     const newActivityRef = push(activitiesRef);
     await set(newActivityRef, {
       activityType: 'profile_update',
-      user: {
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        location: user.location,
-        avatar: user.avatar,
-      },
+      user: sanitizeUserForDB(user),
       timestamp: serverTimestamp(),
     });
     console.log("Profile update activity logged for", user.email);
@@ -147,12 +139,7 @@ export const addFileUploadActivity = async (user: User | null, file: AppFile) =>
         const newActivityRef = push(activitiesRef);
         await set(newActivityRef, {
             activityType: 'file_upload',
-            user: {
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                location: user.location,
-            },
+            user: sanitizeUserForDB(user),
             file: {
                 name: file.name,
                 type: file.type,
@@ -184,13 +171,7 @@ export const addKpiUpdateActivity = async (
     const newActivityRef = push(activitiesRef);
     await set(newActivityRef, {
       activityType: 'kpi_update',
-      user: {
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        location: user.location,
-        avatar: user.avatar,
-      },
+      user: sanitizeUserForDB(user),
       kpi: {
         id: kpi.id,
         title: kpi.title,
@@ -221,11 +202,7 @@ export const addFilterChangeActivity = async (
         const newActivityRef = push(activitiesRef);
         await set(newActivityRef, {
             activityType: 'filter_change',
-            user: {
-                name: user.name,
-                email: user.email,
-                role: user.role,
-            },
+            user: sanitizeUserForDB(user),
             filter_interaction: {
                 ...filter
             },
