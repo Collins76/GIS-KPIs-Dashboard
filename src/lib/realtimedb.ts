@@ -17,8 +17,9 @@ export const getActivities = async (): Promise<ActivityLog[]> => {
 
   try {
       const activitiesRef = ref(db, DB_REF_NAME);
-      const q = query(activitiesRef, orderByChild('timestamp'));
-      const snapshot = await get(q);
+      // The orderByChild query requires an index in Firebase rules.
+      // To avoid this, we fetch all data and sort on the client.
+      const snapshot = await get(activitiesRef);
       const activities: ActivityLog[] = [];
       if (snapshot.exists()) {
         snapshot.forEach((childSnapshot) => {
