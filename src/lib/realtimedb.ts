@@ -21,14 +21,14 @@ function ensureAuth(): Promise<FirebaseUser | null> {
     }
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        console.log('✅ Authenticated as:', user.uid);
+        // console.log('✅ Authenticated as:', user.uid);
         unsubscribe();
         resolve(user);
       } else {
-        console.log('🔄 Signing in anonymously...');
+        // console.log('🔄 Signing in anonymously...');
         signInAnonymously(auth)
           .then((result) => {
-            console.log('✅ Anonymous login successful');
+            // console.log('✅ Anonymous login successful');
             unsubscribe();
             resolve(result.user);
           })
@@ -48,15 +48,21 @@ export async function getActivities(): Promise<ActivityLog[]> {
     try {
       await ensureAuth();
       const activitiesRef = ref(db, DB_REF_NAME);
-      const snapshot = await get(query(activitiesRef, orderByChild('timestamp')));
+      const snapshot = await get(activitiesRef);
       
       if (snapshot.exists()) {
         const data = snapshot.val();
-        return Object.keys(data).map(key => ({
-          id: key,
-          ...data[key],
-          timestamp: new Date(data[key].timestamp).toISOString(),
-        })).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        
+        const activities = Object.keys(data).map(key => ({
+            id: key,
+            ...data[key],
+            timestamp: new Date(data[key].timestamp).toISOString(),
+        }));
+        
+        activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        
+        return activities;
+        
       } else {
         return [];
       }
@@ -122,28 +128,44 @@ export async function getStatusPosts(): Promise<StatusPost[]> {
     }
 }
 
-export async function addStatusPost(statusData: { status: string, user: User }) {
+export async function addStatusPost(statusData: { status: string, user: User, category?: KpiCategory }) {
     try {
         await ensureAuth();
-        if (!auth.currentUser) throw new Error("Authentication required.");
-
-        const newPostRef = push(ref(db, STATUS_POSTS_REF_NAME));
+        const user = auth.currentUser;
+        if (!user) {
+            throw new Error("Authentication required to post status.");
+        }
+        
+        const db = getDatabase();
+        const now = Date.now();
 
         const statusUpdate = {
-            id: newPostRef.key,
+            id: '',
             username: statusData.user.name,
             avatar: statusData.user.avatar,
             status: statusData.status,
-            timestamp: new Date().getTime(), // Use client-side timestamp
+            timestamp: now,
+            category: statusData.category || 'General'
         };
-        
+
+        const newPostRef = push(ref(db, STATUS_POSTS_REF_NAME));
+        statusUpdate.id = newPostRef.key!;
+
         await set(newPostRef, statusUpdate);
+
         return true;
     } catch (error: any) {
        console.error("❌ Error posting status:", error);
-       throw error;
+       if (error.code === 'PERMISSION_DENIED') {
+         throw new Error("Permission denied. Check user role and Firebase rules.");
+       } else if (error.code === 'NETWORK_ERROR') {
+         throw new Error("Network error. Please check your connection.");
+       } else {
+         throw new Error(`Failed to post status: ${error.message}`);
+       }
     }
 }
+
 
 export async function testDatabaseConnection() {
     try {
@@ -175,13 +197,24 @@ export async function testDatabaseConnection() {
 }
 
 
-const sanitizeUserForDB = (user: User) => ({
-    name: user.name || "Anonymous",
-    email: user.email || "no-email@example.com",
-    role: user.role || "GIS Analyst",
-    location: user.location || "CHQ",
-    avatar: user.avatar || "",
-});
+const sanitizeUserForDB = (user: User | null) => {
+    if (!user) {
+        return {
+            name: "Anonymous",
+            email: "anonymous@example.com",
+            role: "GIS Analyst",
+            location: "N/A",
+            avatar: "",
+        };
+    }
+    return {
+        name: user.name || "Anonymous",
+        email: user.email || "no-email@example.com",
+        role: user.role || "GIS Analyst",
+        location: user.location || "CHQ",
+        avatar: user.avatar || "",
+    };
+};
 
 export const addUserSignInActivity = (user: User, weather: WeatherData | null) => {
     const activityData = {
@@ -209,7 +242,7 @@ export const addUserProfileUpdateActivity = (user: User) => {
     return addActivity('profile_update', activityData);
 };
 
-export const addFileUploadActivity = (user: User, file: AppFile) => {
+export const addFileUploadActivity = (user: User | null, file: AppFile) => {
     const activityData = {
         user: sanitizeUserForDB(user),
         file: {

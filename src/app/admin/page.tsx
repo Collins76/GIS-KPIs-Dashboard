@@ -46,7 +46,6 @@ function AdminPage() {
     };
 
     useEffect(() => {
-        // Wait for the user context to be done loading and confirm there's a user.
         if (!userLoading) {
             fetchActivities();
         }
