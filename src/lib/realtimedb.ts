@@ -256,32 +256,31 @@ export async function testDatabaseConnection() {
     
     // Test writing data
     const testData = {
-      test_message: "Dashboard connected successfully!",
+      activityType: 'test_connection',
+      user: {
+          name: currentUser.displayName || "Test User",
+          email: currentUser.email || "test@example.com",
+          role: 'GIS Analyst',
+          location: 'CHQ',
+          avatar: currentUser.photoURL || ""
+      },
+      details: {
+          test_message: "Dashboard connected successfully!",
+          dashboard_version: "GIS_KPI_v1.0_RTDB",
+      },
       timestamp: serverTimestamp(),
-      dashboard_version: "GIS_KPI_v1.0_RTDB",
-      location: "Lagos, Nigeria",
-      user_email: currentUser.email,
     };
     
-    const testRef = ref(db, "kpi_data_test");
+    const testRef = ref(db, DB_REF_NAME);
     const newTestRef = push(testRef);
     await set(newTestRef, testData);
 
     console.log("✅ Data written successfully with ID: ", newTestRef.key);
-    
-    // Test writing user session
-    const sessionRef = ref(db, `user_sessions/${currentUser.uid}`);
-    await set(sessionRef, {
-      user_id: currentUser.uid,
-      login_time: serverTimestamp(),
-      dashboard_active: true
-    });
-    console.log("✅ User session created/updated successfully");
-    
-    alert("🎉 Database connection successful! Check your Realtime Database console for 'kpi_data_test' and 'user_sessions'.");
+        
+    alert("🎉 Database connection successful! A test record has been written to 'dashboard_updates'.");
     
   } catch (error: any) {
     console.error("❌ Database connection failed:", error);
-    alert("⚠️ Connection failed: " + error.message);
+    alert("⚠️ Connection failed: " + error.message + "\n\nPlease check your Realtime Database security rules and internet connection.");
   }
 }
