@@ -3,7 +3,6 @@
 import { getFirebase } from './firebase';
 import { ref, set, push, serverTimestamp, get, query, orderByChild, limitToLast, onValue } from 'firebase/database';
 import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog, Role, KpiCategory, KpiStatus } from './types';
-import { signInAnonymously } from 'firebase/auth';
 
 
 const DB_REF_NAME = 'dashboard_updates';
@@ -62,6 +61,7 @@ const sanitizeUserForDB = (user: User) => {
   return {
     name: user.name || "Anonymous",
     email: user.email || "no-email@example.com",
+    nickname: user.nickname || "",
     role: user.role || "GIS Analyst",
     location: user.location || "CHQ",
     avatar: user.avatar || "",
@@ -237,6 +237,7 @@ export async function testDatabaseConnection() {
       user: {
           name: currentUser.displayName || "Test User",
           email: currentUser.email || "test@example.com",
+          nickname: "test",
           role: 'GIS Analyst',
           location: 'CHQ',
           avatar: currentUser.photoURL || ""

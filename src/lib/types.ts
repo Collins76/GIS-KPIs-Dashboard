@@ -33,6 +33,7 @@ export interface Kpi {
 export interface User {
   name: string;
   email: string;
+  nickname: string;
   role: Role;
   location: string;
   avatar: string;

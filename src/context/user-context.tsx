@@ -24,6 +24,7 @@ const createProfileFromFirebaseUser = (firebaseUser: FirebaseUser): User => {
     return {
         name: firebaseUser.displayName || "Anonymous",
         email: firebaseUser.email || "no-email@example.com",
+        nickname: "", // Add default nickname
         role: "GIS Analyst", // Default role
         location: "CHQ", // Default location
         avatar: firebaseUser.photoURL || `https://i.pravatar.cc/150?u=${firebaseUser.email}`,
