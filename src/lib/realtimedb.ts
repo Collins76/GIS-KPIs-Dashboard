@@ -62,7 +62,7 @@ class ActivityService {
     try {
       await this.ensureAuth();
       const activitiesRef = ref(db, DB_REF_NAME);
-      const snapshot = await get(activitiesRef);
+      const snapshot = await get(query(activitiesRef, orderByChild('timestamp')));
       
       if (snapshot.exists()) {
         const data = snapshot.val();
@@ -188,8 +188,7 @@ class ActivityService {
 }
 
 // Instantiate and export the service
-const activityService = new ActivityService();
-export { activityService };
+export const activityService = new ActivityService();
 
 
 // Wrapper functions to maintain compatibility with existing code
@@ -201,7 +200,6 @@ const sanitizeUserForDB = (user: User) => ({
     avatar: user.avatar || "",
 });
 
-export const getActivities = () => activityService.getActivities();
 export const updateActivity = (id: string, data: Partial<ActivityLog>) => activityService.updateActivity(id, data);
 export const deleteActivity = (id: string) => activityService.deleteActivity(id);
 

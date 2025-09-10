@@ -4,7 +4,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import withAuth from '@/components/auth/with-auth';
-import { getActivities, updateActivity, deleteActivity, testDatabaseConnection } from '@/lib/realtimedb';
+import { activityService, updateActivity, deleteActivity, testDatabaseConnection } from '@/lib/realtimedb';
 import type { ActivityLog } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -31,7 +31,7 @@ function AdminPage() {
     const fetchActivities = async () => {
         setLoading(true);
         try {
-            const fetchedActivities = await getActivities();
+            const fetchedActivities = await activityService.getActivities();
             setActivities(fetchedActivities);
         } catch (error: any) {
             console.error("Failed to fetch activities:", error);
