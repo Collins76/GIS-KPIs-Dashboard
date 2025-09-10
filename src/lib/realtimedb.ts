@@ -1,7 +1,7 @@
 
 
 import { getFirebase } from './firebase';
-import { ref, set, push, serverTimestamp, get, query, orderByChild, limitToLast, onValue } from 'firebase/database';
+import { ref, set, push, serverTimestamp, get, query, orderByChild } from 'firebase/database';
 import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog, Role, KpiCategory, KpiStatus } from './types';
 
 
@@ -9,7 +9,7 @@ const DB_REF_NAME = 'activities';
 
 export const getActivities = async (): Promise<ActivityLog[]> => {
   const { db, auth } = getFirebase();
-  if (!db || !auth) {
+  if (!db) {
     throw new Error("Firebase is not available.");
   }
   
@@ -21,9 +21,9 @@ export const getActivities = async (): Promise<ActivityLog[]> => {
 
   try {
       const activitiesRef = ref(db, DB_REF_NAME);
-      // Your security rules now have an index on 'timestamp', so we can order by it.
-      const activitiesQuery = query(activitiesRef, orderByChild('timestamp'));
-      const snapshot = await get(activitiesQuery);
+      // The orderByChild query requires an index in Firebase rules.
+      // To avoid this, we fetch all data and sort on the client.
+      const snapshot = await get(activitiesRef);
 
       const activities: ActivityLog[] = [];
       if (snapshot.exists()) {
@@ -36,8 +36,8 @@ export const getActivities = async (): Promise<ActivityLog[]> => {
             } as ActivityLog);
         });
       }
-      // The snapshot is returned newest to oldest, so we reverse to get most recent first.
-      return activities.reverse();
+      // The snapshot doesn't guarantee order, so we sort here.
+      return activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   } catch (error: any) {
       console.error("Failed to fetch activities from Realtime Database:", error);
       if (error.code === 'PERMISSION_DENIED') {
@@ -70,7 +70,6 @@ const sanitizeUserForDB = (user: User) => {
   return {
     name: user.name || "Anonymous",
     email: user.email || "no-email@example.com",
-    nickname: user.nickname || "",
     role: user.role || "GIS Analyst",
     location: user.location || "CHQ",
     avatar: user.avatar || "",
@@ -246,7 +245,6 @@ export async function testDatabaseConnection() {
       user: {
           name: currentUser.displayName || "Test User",
           email: currentUser.email || "test@example.com",
-          nickname: "test",
           role: 'GIS Analyst',
           location: 'CHQ',
           avatar: currentUser.photoURL || ""
@@ -271,3 +269,25 @@ export async function testDatabaseConnection() {
     alert("⚠️ Connection failed: " + error.message + "\n\nPlease check your Realtime Database security rules and internet connection.");
   }
 }
+
+
+export const addStatusPost = async (user: User, statusText: string) => {
+  const { db } = getFirebase();
+  if (!db || !user) {
+    console.error("Database or user not available for status post.");
+    return;
+  }
+
+  try {
+    const statusPostsRef = ref(db, 'status_posts');
+    const newStatusRef = push(statusPostsRef);
+    await set(newStatusRef, {
+      username: user.name,
+      status: statusText,
+      timestamp: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("Error adding status post to Realtime Database: ", error);
+    throw new Error("Could not post status. Please try again.");
+  }
+};

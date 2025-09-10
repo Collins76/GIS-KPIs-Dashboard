@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useMemo, useEffect, useContext, useRef } from 'react';
@@ -30,6 +31,7 @@ import AiInsights from './ai-insights';
 import KpiTable from './kpi-table';
 import LocationMap from './location-map';
 import FileManager from './file-manager';
+import StatusUpdate from './status-update';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import WeatherIntelligence from './weather-intelligence';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -222,6 +224,8 @@ export default function DashboardPage() {
         </div>
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         
+        <StatusUpdate />
+
       <div className="filter-section mb-6">
             <h3 className="text-xl font-bold text-white font-orbitron glow-text-yellow mb-4 flex items-center">
               <Filter className="mr-3 h-6 w-6" />
