@@ -21,8 +21,6 @@ export const getActivities = async (): Promise<ActivityLog[]> => {
 
   try {
       const activitiesRef = ref(db, DB_REF_NAME);
-      // The orderByChild query requires an index in Firebase rules.
-      // To avoid this, we fetch all data and sort on the client.
       const snapshot = await get(activitiesRef);
 
       const activities: ActivityLog[] = [];
@@ -284,7 +282,7 @@ export const addStatusPost = async (user: User, statusText: string) => {
     await set(newStatusRef, {
       username: user.name,
       status: statusText,
-      timestamp: serverTimestamp(),
+      timestamp: new Date().getTime(),
     });
   } catch (error) {
     console.error("Error adding status post to Realtime Database: ", error);
