@@ -5,7 +5,7 @@ import { ref, set, push, serverTimestamp, get, query, orderByChild, limitToLast,
 import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog, Role, KpiCategory, KpiStatus } from './types';
 
 
-const DB_REF_NAME = 'dashboard_updates';
+const DB_REF_NAME = 'activities';
 
 export const getActivities = async (): Promise<ActivityLog[]> => {
   const { db } = getFirebase();
@@ -255,7 +255,7 @@ export async function testDatabaseConnection() {
 
     console.log("✅ Data written successfully with ID: ", newTestRef.key);
         
-    alert("🎉 Database connection successful! A test record has been written to 'dashboard_updates'.");
+    alert("🎉 Database connection successful! A test record has been written to 'activities'.");
     
   } catch (error: any) {
     console.error("❌ Database connection failed:", error);
