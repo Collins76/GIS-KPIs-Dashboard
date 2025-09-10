@@ -47,13 +47,10 @@ function AdminPage() {
 
     useEffect(() => {
         // Wait for the user context to be done loading and confirm there's a user.
-        if (!userLoading && user) {
+        if (!userLoading) {
             fetchActivities();
-        } else if (!userLoading && !user) {
-            // If authentication is resolved and there's no user, stop the loading indicator.
-            setLoading(false);
         }
-    }, [user, userLoading]);
+    }, [userLoading]);
 
     const handleDelete = async (id: string) => {
         try {

@@ -3,199 +3,249 @@
 import { auth, db } from './firebase';
 import { ref, set, push, serverTimestamp, get, query, orderByChild } from 'firebase/database';
 import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog, Role, KpiCategory, KpiStatus, StatusPost } from './types';
-import { getAuth, signInAnonymously, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { signInAnonymously, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
 
 const DB_REF_NAME = 'activities';
+const STATUS_POSTS_REF_NAME = 'status_posts';
 
-const initAuth = (): Promise<FirebaseUser> => {
-    return new Promise((resolve, reject) => {
-        if (!auth) {
-            return reject(new Error("Firebase auth is not initialized."));
+class ActivityService {
+  private isAuthenticated: boolean = false;
+  private authPromise: Promise<FirebaseUser | null>;
+
+  constructor() {
+    this.authPromise = this.initAuth();
+  }
+
+  async initAuth(): Promise<FirebaseUser | null> {
+    return new Promise((resolve) => {
+      if (!auth) {
+        console.error("❌ Firebase auth is not initialized.");
+        return resolve(null);
+      }
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+          this.isAuthenticated = true;
+          console.log('✅ Authenticated as:', user.uid);
+          unsubscribe();
+          resolve(user);
+        } else {
+          console.log('🔄 Signing in anonymously...');
+          signInAnonymously(auth)
+            .then((result) => {
+              this.isAuthenticated = true;
+              console.log('✅ Anonymous login successful');
+              unsubscribe();
+              resolve(result.user);
+            })
+            .catch((error) => {
+              console.error('❌ Authentication failed:', error);
+              this.isAuthenticated = false;
+              unsubscribe();
+              resolve(null);
+            });
         }
-
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log('✅ User authenticated:', user.uid);
-                unsubscribe();
-                resolve(user);
-            } else {
-                console.log('🔄 No user found, signing in anonymously...');
-                signInAnonymously(auth)
-                    .then((userCredential) => {
-                        console.log('✅ Anonymous auth successful');
-                        unsubscribe();
-                        resolve(userCredential.user);
-                    })
-                    .catch((error) => {
-                        console.error('❌ Auth failed:', error);
-                        unsubscribe();
-                        reject(error);
-                    });
-            }
-        });
+      });
     });
-};
+  }
 
-
-export const getActivities = async (): Promise<ActivityLog[]> => {
-    try {
-        await initAuth();
-        if (!db) {
-            throw new Error("Firebase database is not available.");
-        }
-
-        const activitiesRef = ref(db, DB_REF_NAME);
-        const snapshot = await get(activitiesRef);
-
-        if (snapshot.exists()) {
-            const data = snapshot.val();
-            const activities: ActivityLog[] = Object.keys(data).map(key => ({
-                id: key,
-                ...data[key],
-                timestamp: new Date(data[key].timestamp).toISOString(),
-            })).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-            
-            return activities;
-        } else {
-            console.log("No activities found");
-            return [];
-        }
-
-    } catch (error: any) {
-        console.error("Error in getActivities:", error);
-        if (error.code === 'PERMISSION_DENIED') {
-            throw new Error("Permission denied. Please check Firebase security rules and authentication.");
-        } else {
-            throw new Error(`Could not retrieve activities. This may be a network or permissions issue.`);
-        }
+  private async ensureAuth() {
+    if (!this.isAuthenticated) {
+      await this.authPromise;
     }
-};
+    if (!this.isAuthenticated) {
+        throw new Error("Authentication failed and could not be established.");
+    }
+  }
 
-export const updateActivity = async (id: string, data: Partial<ActivityLog>) => {
-    if (!db) return;
+  async getActivities(): Promise<ActivityLog[]> {
+    try {
+      await this.ensureAuth();
+      const activitiesRef = ref(db, DB_REF_NAME);
+      const snapshot = await get(activitiesRef);
+      
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        return Object.keys(data).map(key => ({
+          id: key,
+          ...data[key],
+          timestamp: new Date(data[key].timestamp).toISOString(),
+        })).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      } else {
+        return [];
+      }
+    } catch (error: any) {
+      console.error('❌ Error fetching activities:', error);
+      throw new Error(`Failed to get activities: ${error.message}`);
+    }
+  }
+
+  async addActivity(activityType: string, activityData: Omit<ActivityLog, 'id' | 'activityType' | 'timestamp'>) {
+    try {
+      await this.ensureAuth();
+      const newActivityRef = push(ref(db, DB_REF_NAME));
+      await set(newActivityRef, {
+        ...activityData,
+        activityType,
+        timestamp: serverTimestamp()
+      });
+      return true;
+    } catch (error: any) {
+      console.error(`❌ Error adding activity (${activityType}):`, error);
+      throw error;
+    }
+  }
+
+  async updateActivity(id: string, data: Partial<ActivityLog>) {
+    await this.ensureAuth();
     const docRef = ref(db, `${DB_REF_NAME}/${id}`);
-    // Remove id from data to prevent it from being written to the document
     if ('id' in data) {
         delete data.id;
     }
     await set(docRef, data);
-};
+  }
 
-export const deleteActivity = async (id: string) => {
-    if (!db) return;
+  async deleteActivity(id: string) {
+    await this.ensureAuth();
     const docRef = ref(db, `${DB_REF_NAME}/${id}`);
     await set(docRef, null);
-};
+  }
 
-const sanitizeUserForDB = (user: User) => {
-  return {
+  async getStatusPosts(): Promise<StatusPost[]> {
+    try {
+      await this.ensureAuth();
+      const statusPostsRef = ref(db, STATUS_POSTS_REF_NAME);
+      const postsQuery = query(statusPostsRef, orderByChild('timestamp'));
+      const snapshot = await get(postsQuery);
+
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        return Object.keys(data).map(key => ({
+            id: key,
+            ...data[key],
+        })).sort((a, b) => b.timestamp - a.timestamp); // Sort descending
+      } else {
+        return [];
+      }
+    } catch (error: any) {
+        console.error("Error in getStatusPosts:", error);
+        throw new Error(`Could not retrieve status posts. This may be a network or permissions issue.`);
+    }
+  }
+
+  async addStatusPost(statusData: { status: string, user: User }) {
+    try {
+      await this.ensureAuth();
+      if (!auth.currentUser) throw new Error("Authentication required.");
+
+      const newPostRef = push(ref(db, STATUS_POSTS_REF_NAME));
+
+      const statusUpdate = {
+        id: newPostRef.key,
+        username: statusData.user.name,
+        avatar: statusData.user.avatar,
+        status: statusData.status,
+        timestamp: new Date().getTime(),
+      };
+      
+      await set(newPostRef, statusUpdate);
+      return true;
+    } catch (error: any) {
+       console.error("❌ Error posting status:", error);
+       throw error;
+    }
+  }
+
+    async testDatabaseConnection() {
+        try {
+            await this.ensureAuth();
+            const currentUser = auth.currentUser;
+            if (!currentUser) throw new Error("Authentication failed.");
+
+            const testData = {
+                user: {
+                    name: currentUser.displayName || "Test User",
+                    email: currentUser.email || "test@example.com",
+                    role: 'GIS Analyst',
+                    location: 'CHQ',
+                    avatar: currentUser.photoURL || ""
+                },
+                details: {
+                    test_message: "Dashboard connected successfully!",
+                    dashboard_version: "GIS_KPI_v1.0_RTDB_Class",
+                },
+            };
+
+            await this.addActivity('test_connection', testData);
+            console.log("✅ Data written successfully.");
+            alert("🎉 Database connection successful! A test record has been written to 'activities'.");
+        } catch (error: any) {
+            console.error("❌ Database connection failed:", error);
+            alert("⚠️ Connection failed: " + error.message);
+        }
+    }
+
+}
+
+// Instantiate and export the service
+const activityService = new ActivityService();
+export { activityService };
+
+
+// Wrapper functions to maintain compatibility with existing code
+const sanitizeUserForDB = (user: User) => ({
     name: user.name || "Anonymous",
     email: user.email || "no-email@example.com",
     role: user.role || "GIS Analyst",
     location: user.location || "CHQ",
     avatar: user.avatar || "",
-  };
-};
+});
 
+export const getActivities = () => activityService.getActivities();
+export const updateActivity = (id: string, data: Partial<ActivityLog>) => activityService.updateActivity(id, data);
+export const deleteActivity = (id: string) => activityService.deleteActivity(id);
 
-export const addUserSignInActivity = async (user: User, weather: WeatherData | null) => {
-  if (!db || !user) return;
-
-  try {
-    const activitiesRef = ref(db, DB_REF_NAME);
-    const newActivityRef = push(activitiesRef);
-    await set(newActivityRef, {
-      activityType: 'user_signin',
+export const addUserSignInActivity = (user: User, weather: WeatherData | null) => {
+    const activityData = {
       user: sanitizeUserForDB(user),
       weather: weather ? {
         condition: weather.condition,
         temperature: weather.temp,
-        humidity: weather.humidity,
-        windSpeed: weather.windSpeed,
       } : null,
-      timestamp: serverTimestamp(),
-    });
-  } catch (error) {
-    console.error("Error adding user sign-in activity to Realtime Database: ", error);
-  }
+    };
+    return activityService.addActivity('user_signin', activityData);
 };
 
-export const addUserSignOutActivity = async (user: User, duration: number) => {
-    if (!db || !user) return;
-  
-    try {
-        const activitiesRef = ref(db, DB_REF_NAME);
-        const newActivityRef = push(activitiesRef);
-        await set(newActivityRef, {
-            activityType: 'user_signout',
-            user: sanitizeUserForDB(user),
-            duration: Math.round(duration), // Duration in minutes
-            timestamp: serverTimestamp(),
-        });
-      console.log("Sign-out activity logged for", user.email);
-    } catch (error) {
-      console.error("Error adding user sign-out activity to Realtime Database: ", error);
-    }
-  };
-
-export const addUserProfileUpdateActivity = async (user: User) => {
-  if (!db || !user) return;
-
-  try {
-    const activitiesRef = ref(db, DB_REF_NAME);
-    const newActivityRef = push(activitiesRef);
-    await set(newActivityRef, {
-      activityType: 'profile_update',
-      user: sanitizeUserForDB(user),
-      timestamp: serverTimestamp(),
-    });
-    console.log("Profile update activity logged for", user.email);
-  } catch (error) {
-    console.error("Error adding profile update activity to Realtime Database: ", error);
-  }
+export const addUserSignOutActivity = (user: User, duration: number) => {
+    const activityData = {
+        user: sanitizeUserForDB(user),
+        duration: Math.round(duration),
+    };
+    return activityService.addActivity('user_signout', activityData);
 };
 
+export const addUserProfileUpdateActivity = (user: User) => {
+    const activityData = {
+        user: sanitizeUserForDB(user)
+    };
+    return activityService.addActivity('profile_update', activityData);
+};
 
-export const addFileUploadActivity = async (user: User | null, file: AppFile) => {
-    if (!db || !user || !file) return;
+export const addFileUploadActivity = (user: User, file: AppFile) => {
+    const activityData = {
+        user: sanitizeUserForDB(user),
+        file: {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            url: file.url,
+        },
+    };
+    return activityService.addActivity('file_upload', activityData);
+};
 
-    try {
-        const activitiesRef = ref(db, DB_REF_NAME);
-        const newActivityRef = push(activitiesRef);
-        await set(newActivityRef, {
-            activityType: 'file_upload',
-            user: sanitizeUserForDB(user),
-            file: {
-                name: file.name,
-                type: file.type,
-                size: file.size,
-                url: file.url,
-            },
-            timestamp: serverTimestamp(),
-        });
-    } catch (error) {
-        console.error("Error adding file upload activity to Realtime Database: ", error);
-    }
-}
-
-export const addKpiUpdateActivity = async (
-    user: User | null, 
-    kpi: Kpi,
-    filters: {
-        role: Role | 'All',
-        category: KpiCategory | 'All',
-        status: KpiStatus | 'All',
-        date: Date | undefined,
-    }
-) => {
-  if (!db || !user || !kpi) return;
-
-  try {
-    const activitiesRef = ref(db, DB_REF_NAME);
-    const newActivityRef = push(activitiesRef);
-    await set(newActivityRef, {
-      activityType: 'kpi_update',
+export const addKpiUpdateActivity = (user: User, kpi: Kpi, filters: any) => {
+    const activityData = {
       user: sanitizeUserForDB(user),
       kpi: {
         id: kpi.id,
@@ -209,153 +259,20 @@ export const addKpiUpdateActivity = async (
         status: filters.status,
         date: filters.date ? filters.date.toISOString() : null,
       },
-      timestamp: serverTimestamp(),
-    });
-  } catch (error) {
-    console.error("Error adding KPI update activity to Realtime Database: ", error);
-  }
-}
-
-export const addFilterChangeActivity = async (
-    user: User | null,
-    filter: { type: string; value: string; tab: string }
-) => {
-    if (!db || !user) return;
-    try {
-        const activitiesRef = ref(db, DB_REF_NAME);
-        const newActivityRef = push(activitiesRef);
-        await set(newActivityRef, {
-            activityType: 'filter_change',
-            user: sanitizeUserForDB(user),
-            filter_interaction: {
-                ...filter
-            },
-            timestamp: serverTimestamp(),
-        });
-    } catch (error) {
-        console.error("Error logging filter change to Realtime Database: ", error);
-    }
-};
-
-// Test function - call this when your dashboard loads
-export async function testDatabaseConnection() {
-  if (!db || !auth) {
-    const message = "Firebase is not properly initialized.";
-    console.error(`❌ Database connection failed: ${message}`);
-    alert(`⚠️ Connection failed: ${message}`);
-    return;
-  }
-  
-  try {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-        // Attempt anonymous sign-in if no user
-        await signInAnonymously(auth);
-        const refreshedUser = getAuth().currentUser;
-        if (!refreshedUser) {
-           alert("⚠️ Connection failed: Could not authenticate anonymously.");
-           return;
-        }
-         console.log(`✅ Authenticated anonymously as: ${refreshedUser.uid}`);
-    } else {
-        console.log(`✅ Authenticated as: ${currentUser.email || currentUser.uid}`);
-    }
-    
-    // Test writing data
-    const testData = {
-      activityType: 'test_connection',
-      user: {
-          name: auth.currentUser?.displayName || "Test User",
-          email: auth.currentUser?.email || "test@example.com",
-          role: 'GIS Analyst',
-          location: 'CHQ',
-          avatar: auth.currentUser?.photoURL || ""
-      },
-      details: {
-          test_message: "Dashboard connected successfully!",
-          dashboard_version: "GIS_KPI_v1.0_RTDB",
-      },
-      timestamp: serverTimestamp(),
     };
-    
-    const testRef = ref(db, DB_REF_NAME);
-    const newTestRef = push(testRef);
-    await set(newTestRef, testData);
-
-    console.log("✅ Data written successfully with ID: ", newTestRef.key);
-        
-    alert("🎉 Database connection successful! A test record has been written to 'activities'.");
-    
-  } catch (error: any) {
-    console.error("❌ Database connection failed:", error);
-    alert("⚠️ Connection failed: " + error.message + "\n\nPlease check your Realtime Database security rules and internet connection.");
-  }
-}
-
-export const addStatusPost = async (statusData: {status: string; category?: KpiCategory | 'General'}) => {
-    try {
-        const user = auth?.currentUser;
-
-        if (!user || !db) {
-            throw new Error("Authentication required for status updates");
-        }
-        
-        const newPostRef = push(ref(db, 'status_posts'));
-
-        // Create status update object
-        const statusUpdate = {
-            id: newPostRef.key,
-            username: user.displayName || "Anonymous User",
-            avatar: user.photoURL || `https://i.pravatar.cc/150?u=${user.email}`,
-            status: statusData.status,
-            timestamp: new Date().getTime(),
-        };
-
-        await set(newPostRef, statusUpdate);
-
-        console.log("✅ Status posted successfully");
-        return { success: true, message: "Status updated successfully" };
-
-    } catch (error: any) {
-        console.error("❌ Error posting status:", error);
-
-        if (error.code === 'PERMISSION_DENIED') {
-            throw new Error("Permission denied. Check user role and Firebase rules.");
-        } else if (error.code === 'NETWORK_ERROR') {
-            throw new Error("Network error. Please check your connection.");
-        } else {
-            throw new Error(`Failed to post status: ${error.message}`);
-        }
-    }
-}
-
-
-export const getStatusPosts = async (): Promise<StatusPost[]> => {
-    try {
-        await initAuth();
-        if (!db) {
-            throw new Error("Firebase database is not available.");
-        }
-
-        const statusPostsRef = ref(db, 'status_posts');
-        const postsQuery = query(statusPostsRef, orderByChild('timestamp'));
-        const snapshot = await get(postsQuery);
-
-        if (snapshot.exists()) {
-            const data = snapshot.val();
-            const posts: StatusPost[] = Object.keys(data).map(key => ({
-                id: key,
-                ...data[key],
-            })).sort((a, b) => b.timestamp - a.timestamp); // Sort descending
-            
-            return posts;
-        } else {
-            console.log("No status posts found");
-            return [];
-        }
-
-    } catch (error: any) {
-        console.error("Error in getStatusPosts:", error);
-        throw new Error(`Could not retrieve status posts. This may be a network or permissions issue.`);
-    }
+    return activityService.addActivity('kpi_update', activityData);
 };
+
+export const addFilterChangeActivity = (user: User, filter: any) => {
+    const activityData = {
+        user: sanitizeUserForDB(user),
+        filter_interaction: { ...filter },
+    };
+    return activityService.addActivity('filter_change', activityData);
+};
+
+export const testDatabaseConnection = () => activityService.testDatabaseConnection();
+
+export const addStatusPost = (statusData: { status: string, user: User }) => activityService.addStatusPost(statusData);
+
+export const getStatusPosts = () => activityService.getStatusPosts();
