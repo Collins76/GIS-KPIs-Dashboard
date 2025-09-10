@@ -3,46 +3,52 @@
 import { getFirebase } from './firebase';
 import { ref, set, push, serverTimestamp, get, query, orderByChild } from 'firebase/database';
 import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog, Role, KpiCategory, KpiStatus } from './types';
+import { getAuth, signInAnonymously } from 'firebase/auth';
 
 
 const DB_REF_NAME = 'activities';
 
 export const getActivities = async (): Promise<ActivityLog[]> => {
-  const { db, auth } = getFirebase();
+  const { db } = getFirebase();
   if (!db) {
     throw new Error("Firebase is not available.");
   }
-  
-  const user = auth.currentUser;
-  if (!user) {
-    // This case should ideally be prevented by the UI, but it's a good safeguard.
-    throw new Error("User must be authenticated to access activities.");
-  }
 
   try {
-      const activitiesRef = ref(db, DB_REF_NAME);
-      const snapshot = await get(activitiesRef);
+    const auth = getAuth();
+    let user = auth.currentUser;
 
-      const activities: ActivityLog[] = [];
-      if (snapshot.exists()) {
-        snapshot.forEach((childSnapshot) => {
-            const data = childSnapshot.val();
-            activities.push({
-              id: childSnapshot.key,
-              ...data,
-              timestamp: new Date(data.timestamp).toISOString(),
-            } as ActivityLog);
-        });
-      }
-      // The snapshot doesn't guarantee order, so we sort here.
-      return activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    if (!user) {
+      // If no user is signed in, sign in anonymously.
+      const userCredential = await signInAnonymously(auth);
+      user = userCredential.user;
+      console.log("Signed in anonymously:", user.uid);
+    }
+    
+    const activitiesRef = ref(db, DB_REF_NAME);
+    const snapshot = await get(activitiesRef);
+
+    const activities: ActivityLog[] = [];
+    if (snapshot.exists()) {
+      snapshot.forEach((childSnapshot) => {
+        const data = childSnapshot.val();
+        activities.push({
+          id: childSnapshot.key,
+          ...data,
+          timestamp: new Date(data.timestamp).toISOString(),
+        } as ActivityLog);
+      });
+    }
+    // The snapshot doesn't guarantee order, so we sort here by timestamp.
+    return activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
   } catch (error: any) {
-      console.error("Failed to fetch activities from Realtime Database:", error);
-      if (error.code === 'PERMISSION_DENIED') {
-          throw new Error("Permission denied. Please check Firebase security rules and authentication.");
-      }
-      // Re-throw a more generic error to be caught by the calling component
-      throw new Error("Could not retrieve activities. This may be a network or permissions issue.");
+    console.error("Failed to fetch activities from Realtime Database:", error);
+    if (error.code === 'PERMISSION_DENIED') {
+      throw new Error("Permission denied. Please check Firebase security rules and authentication.");
+    }
+    // Re-throw a more generic error to be caught by the calling component.
+    throw new Error("Could not retrieve activities. This may be a network or permissions issue.");
   }
 };
 
