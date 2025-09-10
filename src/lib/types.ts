@@ -7,7 +7,7 @@ export type Role =
   | 'Geodatabase Specialist'
   | 'GIS Analyst';
 
-export type KpiCategory = 'Business Growth' | 'People Development' | 'Operational Process' | 'Customer';
+export type KpiCategory = 'Business Growth' | 'People Development' | 'Operational Process' | 'Customer' | 'General';
 export type KpiStatus = 'On Track' | 'At Risk' | 'Off Track' | 'Not Started' | 'Completed';
 export type KpiTargetType = 'Number' | 'Percentage';
 export type KpiFrequency = 'Annually' | 'Monthly' | 'Quarterly';
@@ -46,6 +46,8 @@ export interface StatusPost {
     avatar: string;
     status: string;
     timestamp: number;
+    // Adding more flexible fields to accommodate different data structures
+    [key: string]: any;
 }
 
 export type FileType = 'CSV' | 'Excel' | 'PDF' | 'Image' | 'GIS' | 'Word' | 'PowerPoint' | 'application/octet-stream' | 'application/pdf' | 'image/jpeg' | 'image/png' | 'image/gif' | 'text/csv' | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' | 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' | 'application/vnd.ms-powerpoint' | 'application/vnd.openxmlformats-officedocument.presentationml.presentation' | 'application/vnd.google-earth.kml+xml' | 'application/vnd.google-earth.kmz';
@@ -87,8 +89,8 @@ export interface WeatherData {
 
 export interface ActivityLog {
     id: string;
-    activityType: 'user_signin' | 'profile_update' | 'file_upload' | 'kpi_update' | 'filter_change' | 'user_signout';
-    user: User;
+    activityType: 'user_signin' | 'profile_update' | 'file_upload' | 'kpi_update' | 'filter_change' | 'user_signout' | 'test_connection';
+    user: Partial<User>;
     weather?: {
       condition: string;
       temperature: number;
@@ -108,6 +110,7 @@ export interface ActivityLog {
     },
     timestamp: string;
     duration?: number; // Session duration in minutes
+    details?: any; // For flexible data like test_connection
   }
 
 declare global {

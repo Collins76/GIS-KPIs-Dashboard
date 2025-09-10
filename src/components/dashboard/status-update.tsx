@@ -39,7 +39,12 @@ export default function StatusUpdate() {
 
         setIsPosting(true);
         try {
-            await addStatusPost({ status: statusText, user });
+            await addStatusPost({ 
+                status: statusText, 
+                user: user,
+                // For now, we'll send a general category. This could be dynamic in the future.
+                category: 'General' 
+            });
             toast({
                 title: "Status Posted!",
                 description: "Your status has been saved to the database.",

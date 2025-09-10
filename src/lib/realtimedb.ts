@@ -21,25 +21,20 @@ function ensureAuth(): Promise<FirebaseUser | null> {
     }
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // console.log('✅ Authenticated as:', user.uid);
-        unsubscribe();
         resolve(user);
       } else {
-        // console.log('🔄 Signing in anonymously...');
         signInAnonymously(auth)
           .then((result) => {
-            // console.log('✅ Anonymous login successful');
-            unsubscribe();
             resolve(result.user);
           })
           .catch((error) => {
             console.error('❌ Authentication failed:', error);
-            unsubscribe();
             reject(error);
           });
       }
     });
   });
+  // Do not automatically unsubscribe to allow auth state to be monitored.
   return authPromise;
 }
 
@@ -94,7 +89,6 @@ export async function updateActivity(id: string, data: Partial<ActivityLog>) {
     if ('id' in data) {
         delete data.id;
     }
-    // The data passed to set should not contain the ID.
     const updateData = { ...data };
     delete (updateData as any).id;
     await set(docRef, updateData);
@@ -130,30 +124,48 @@ export async function getStatusPosts(): Promise<StatusPost[]> {
 
 export async function addStatusPost(statusData: { status: string, user: User, category?: KpiCategory }) {
     try {
-        await ensureAuth();
-        const user = auth.currentUser;
-        if (!user) {
-            throw new Error("Authentication required to post status.");
-        }
-        
-        const db = getDatabase();
-        const now = Date.now();
+        console.log("🔄 Attempting to post status:", statusData.status);
+        const firebaseUser = await ensureAuth();
+        console.log("✅ User authenticated:", firebaseUser?.uid);
 
-        const statusUpdate = {
-            id: '',
+        if (!firebaseUser) {
+            throw new Error("Authentication failed or is still in progress.");
+        }
+
+        const now = Date.now();
+        const postData = {
+            message: statusData.status,
             username: statusData.user.name,
             avatar: statusData.user.avatar,
-            status: statusData.status,
+            role: statusData.user.role,
+            category: statusData.category || "General",
+            status: "posted",
             timestamp: now,
-            category: statusData.category || 'General'
+            date: new Date(now).toISOString(),
+            location: statusData.user.location || "Lagos, Nigeria"
         };
+        
+        const activityId = Date.now();
+        const updates: { [key: string]: object } = {};
 
-        const newPostRef = push(ref(db, STATUS_POSTS_REF_NAME));
-        statusUpdate.id = newPostRef.key!;
+        updates[`${STATUS_POSTS_REF_NAME}/${activityId}`] = postData;
+        updates[`users/${firebaseUser.uid}/activities/${activityId}`] = postData;
+        
+        if (postData.category && postData.category !== 'General') {
+            const categoryKey = postData.category.toLowerCase().replace(/\s+/g, '_');
+            updates[`kpi_updates/${categoryKey}/${activityId}`] = postData;
+        }
 
-        await set(newPostRef, statusUpdate);
+        await Promise.all(
+            Object.entries(updates).map(([path, data]) => {
+                const dbRef = ref(db, path);
+                return set(dbRef, data);
+            })
+        );
 
-        return true;
+        console.log("✅ Status posted successfully to multiple paths");
+        return { success: true };
+
     } catch (error: any) {
        console.error("❌ Error posting status:", error);
        if (error.code === 'PERMISSION_DENIED') {
@@ -165,7 +177,6 @@ export async function addStatusPost(statusData: { status: string, user: User, ca
        }
     }
 }
-
 
 export async function testDatabaseConnection() {
     try {
@@ -195,7 +206,6 @@ export async function testDatabaseConnection() {
         alert("⚠️ Connection failed: " + error.message);
     }
 }
-
 
 const sanitizeUserForDB = (user: User | null) => {
     if (!user) {
