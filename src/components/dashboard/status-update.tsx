@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useContext } from 'react';
@@ -38,7 +39,7 @@ export default function StatusUpdate() {
 
         setIsPosting(true);
         try {
-            await addStatusPost(user, statusText);
+            await addStatusPost({ status: statusText, category: 'General' });
             toast({
                 title: "Status Posted!",
                 description: "Your status has been saved to the database.",

@@ -1,4 +1,5 @@
 
+
 import { getFirebase } from './firebase';
 import { ref, set, push, serverTimestamp, get, query, orderByChild } from 'firebase/database';
 import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog, Role, KpiCategory, KpiStatus, StatusPost } from './types';
@@ -302,28 +303,64 @@ export async function testDatabaseConnection() {
   }
 }
 
+export const addStatusPost = async (statusData: {status: string; category?: KpiCategory | 'General'}) => {
+    try {
+        const { auth, db } = getFirebase();
+        const user = auth?.currentUser;
 
-export const addStatusPost = async (user: User, statusText: string) => {
-  const { db } = getFirebase();
-  if (!db || !user) {
-    console.error("Database or user not available for status post.");
-    throw new Error("Could not post status. Please try again.");
-  }
+        if (!user || !db) {
+            throw new Error("Authentication required for status updates");
+        }
 
-  try {
-    const statusPostsRef = ref(db, 'status_posts');
-    const newStatusRef = push(statusPostsRef);
-    await set(newStatusRef, {
-      username: user.name,
-      avatar: user.avatar, // Also save avatar for easy display
-      status: statusText,
-      timestamp: new Date().getTime(),
-    });
-  } catch (error) {
-    console.error("Error adding status post to Realtime Database: ", error);
-    throw new Error("Could not post status. Please try again.");
-  }
-};
+        // Create status update object
+        const statusUpdate = {
+            ...statusData,
+            userId: user.uid,
+            userRole: "GIS Coordinator", // Collins A's role
+            timestamp: Date.now(),
+            date: new Date().toISOString(),
+            location: "Lagos, Nigeria"
+        };
+
+        // Post to multiple relevant paths
+        const updates: { [key: string]: object } = {};
+        const key = Date.now();
+
+        // Main status update
+        updates[`status_updates/${key}`] = statusUpdate;
+
+        // KPI-specific update if it's business growth related
+        if (statusData.category === 'Business Growth') {
+            updates[`kpis/business_growth/${key}`] = statusUpdate;
+        }
+
+        // User-specific status
+        updates[`users/${user.uid}/status_updates/${key}`] = statusUpdate;
+
+        // Batch update
+        await Promise.all(
+            Object.entries(updates).map(([path, data]) => {
+                const updateRef = ref(db, path);
+                return set(updateRef, data);
+            })
+        );
+
+        console.log("✅ Status posted successfully");
+        return { success: true, message: "Status updated successfully" };
+
+    } catch (error: any) {
+        console.error("❌ Error posting status:", error);
+
+        if (error.code === 'PERMISSION_DENIED') {
+            throw new Error("Permission denied. Check user role and Firebase rules.");
+        } else if (error.code === 'NETWORK_ERROR') {
+            throw new Error("Network error. Please check your connection.");
+        } else {
+            throw new Error(`Failed to post status: ${error.message}`);
+        }
+    }
+}
+
 
 export const getStatusPosts = async (): Promise<StatusPost[]> => {
     try {
