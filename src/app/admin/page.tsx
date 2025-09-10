@@ -26,7 +26,7 @@ function AdminPage() {
     const [editedContent, setEditedContent] = useState('');
     const { toast } = useToast();
     const router = useRouter();
-    const { user } = useContext(UserContext);
+    const { user, loading: userLoading } = useContext(UserContext);
 
     const fetchActivities = async () => {
         setLoading(true);
@@ -46,14 +46,14 @@ function AdminPage() {
     };
 
     useEffect(() => {
-        // Only fetch activities if the user is authenticated
-        if (user) {
+        // Wait for the user context to be done loading and confirm there's a user.
+        if (!userLoading && user) {
             fetchActivities();
-        } else {
-            // If user becomes null (e.g., logged out), don't show loading, maybe clear activities
+        } else if (!userLoading && !user) {
+            // If authentication is resolved and there's no user, stop the loading indicator.
             setLoading(false);
         }
-    }, [user]);
+    }, [user, userLoading]);
 
     const handleDelete = async (id: string) => {
         try {

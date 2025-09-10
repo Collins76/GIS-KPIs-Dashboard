@@ -47,6 +47,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        setLoading(true); // Set loading true while processing auth state
         if (firebaseUser) {
             const storedUserJson = localStorage.getItem('gis-user-profile');
             let profile: User;
