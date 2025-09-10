@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
-import { getFirebase } from '@/lib/firebase';
+import { storage } from '@/lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject, UploadTask } from 'firebase/storage';
 import { addFileUploadActivity } from '@/lib/realtimedb';
 import type { User, ManagedFile as ManagedFileType } from '@/lib/types';
@@ -52,7 +52,6 @@ export default function FileManager() {
   
 
   const handleFileUpload = (file: File, user: User | null) => {
-    const { storage } = getFirebase();
     if (!storage || !user) {
         toast({ title: "Upload error", description: "Storage not configured or user not logged in.", variant: "destructive" });
         return;
@@ -174,7 +173,6 @@ export default function FileManager() {
   };
   
   const clearAllFiles = () => {
-    const { storage } = getFirebase();
     if (!storage) {
         toast({ title: "Storage not available", variant: "destructive" });
         return;
@@ -203,7 +201,6 @@ export default function FileManager() {
   };
 
   const removeFile = (file: ManagedFile) => {
-    const { storage } = getFirebase();
     if (!storage) {
         toast({ title: "Storage not available", variant: "destructive" });
         return;

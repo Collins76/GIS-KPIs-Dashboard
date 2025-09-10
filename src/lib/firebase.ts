@@ -14,32 +14,13 @@ const firebaseConfig: FirebaseOptions = {
   databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
 };
 
-let app: FirebaseApp | null = null;
-let auth: Auth | null = null;
-let storage: FirebaseStorage | null = null;
-let db: Database | null = null;
-
-function getFirebase() {
-  if (app && auth && storage && db) {
-    return { app, auth, storage, db };
-  }
-
-  if (!firebaseConfig.apiKey) {
-    console.error("Firebase API key is missing. Please check your .env file.");
-    return { app: null, auth: null, storage: null, db: null };
-  }
-  
-  if (getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApp();
-  }
-
-  auth = getAuth(app);
-  storage = getStorage(app);
-  db = getDatabase(app);
-
-  return { app, auth, storage, db };
+let app: FirebaseApp;
+if (getApps().length === 0) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApp();
 }
 
-export { getFirebase };
+export const auth: Auth = getAuth(app);
+export const storage: FirebaseStorage = getStorage(app);
+export const db: Database = getDatabase(app);

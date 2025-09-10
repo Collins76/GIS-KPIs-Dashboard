@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Zap, Check, Shield, Loader2, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { getFirebase } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { addUserSignInActivity } from '@/lib/realtimedb';
 import { weatherData } from '@/lib/data';
@@ -62,7 +62,6 @@ export default function LoginPage() {
     
     const handleGoogleSignIn = async () => {
         setIsSigningIn(true);
-        const { auth } = getFirebase();
         if (!auth) {
             toast({
                 title: "Authentication Not Ready",

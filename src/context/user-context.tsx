@@ -3,7 +3,7 @@
 
 import { createContext, useState, useEffect, ReactNode, useMemo, useRef } from 'react';
 import type { User } from '@/lib/types';
-import { getFirebase } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { addUserSignInActivity, addUserProfileUpdateActivity } from '@/lib/realtimedb';
 import { weatherData } from '@/lib/data';
@@ -40,7 +40,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
 
   useEffect(() => {
-    const { auth } = getFirebase();
     if (!auth) {
         setLoading(false);
         return;

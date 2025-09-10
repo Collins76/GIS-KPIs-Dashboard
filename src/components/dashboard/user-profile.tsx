@@ -27,7 +27,7 @@ import { User, LogOut, Camera, UserCircle, LogIn, ChevronDown } from 'lucide-rea
 import type { User as UserType, Role } from '@/lib/types';
 import { roles, businessUnits } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getFirebase } from '@/lib/firebase';
+import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { UserContext } from '@/context/user-context';
 import { addUserSignOutActivity } from '@/lib/realtimedb';
@@ -105,7 +105,6 @@ export default function UserProfile() {
   };
   
   const handleLogout = async () => {
-    const { auth } = getFirebase();
     if (!auth || !user) {
         toast({ title: "Logout Failed", description: "Firebase not initialized or user not found.", variant: "destructive" });
         return;

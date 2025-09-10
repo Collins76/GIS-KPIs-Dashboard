@@ -1,6 +1,6 @@
 
 
-import { getFirebase } from './firebase';
+import { auth, db } from './firebase';
 import { ref, set, push, serverTimestamp, get, query, orderByChild } from 'firebase/database';
 import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog, Role, KpiCategory, KpiStatus, StatusPost } from './types';
 import { getAuth, signInAnonymously, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
@@ -10,7 +10,6 @@ const DB_REF_NAME = 'activities';
 
 const initAuth = (): Promise<FirebaseUser> => {
     return new Promise((resolve, reject) => {
-        const { auth } = getFirebase();
         if (!auth) {
             return reject(new Error("Firebase auth is not initialized."));
         }
@@ -42,7 +41,6 @@ const initAuth = (): Promise<FirebaseUser> => {
 export const getActivities = async (): Promise<ActivityLog[]> => {
     try {
         await initAuth();
-        const { db } = getFirebase();
         if (!db) {
             throw new Error("Firebase database is not available.");
         }
@@ -75,7 +73,6 @@ export const getActivities = async (): Promise<ActivityLog[]> => {
 };
 
 export const updateActivity = async (id: string, data: Partial<ActivityLog>) => {
-    const { db } = getFirebase();
     if (!db) return;
     const docRef = ref(db, `${DB_REF_NAME}/${id}`);
     // Remove id from data to prevent it from being written to the document
@@ -86,7 +83,6 @@ export const updateActivity = async (id: string, data: Partial<ActivityLog>) => 
 };
 
 export const deleteActivity = async (id: string) => {
-    const { db } = getFirebase();
     if (!db) return;
     const docRef = ref(db, `${DB_REF_NAME}/${id}`);
     await set(docRef, null);
@@ -104,7 +100,6 @@ const sanitizeUserForDB = (user: User) => {
 
 
 export const addUserSignInActivity = async (user: User, weather: WeatherData | null) => {
-  const { db } = getFirebase();
   if (!db || !user) return;
 
   try {
@@ -127,7 +122,6 @@ export const addUserSignInActivity = async (user: User, weather: WeatherData | n
 };
 
 export const addUserSignOutActivity = async (user: User, duration: number) => {
-    const { db } = getFirebase();
     if (!db || !user) return;
   
     try {
@@ -146,7 +140,6 @@ export const addUserSignOutActivity = async (user: User, duration: number) => {
   };
 
 export const addUserProfileUpdateActivity = async (user: User) => {
-  const { db } = getFirebase();
   if (!db || !user) return;
 
   try {
@@ -165,7 +158,6 @@ export const addUserProfileUpdateActivity = async (user: User) => {
 
 
 export const addFileUploadActivity = async (user: User | null, file: AppFile) => {
-    const { db } = getFirebase();
     if (!db || !user || !file) return;
 
     try {
@@ -197,7 +189,6 @@ export const addKpiUpdateActivity = async (
         date: Date | undefined,
     }
 ) => {
-  const { db } = getFirebase();
   if (!db || !user || !kpi) return;
 
   try {
@@ -229,7 +220,6 @@ export const addFilterChangeActivity = async (
     user: User | null,
     filter: { type: string; value: string; tab: string }
 ) => {
-    const { db } = getFirebase();
     if (!db || !user) return;
     try {
         const activitiesRef = ref(db, DB_REF_NAME);
@@ -249,7 +239,6 @@ export const addFilterChangeActivity = async (
 
 // Test function - call this when your dashboard loads
 export async function testDatabaseConnection() {
-  const { db, auth } = getFirebase();
   if (!db || !auth) {
     const message = "Firebase is not properly initialized.";
     console.error(`❌ Database connection failed: ${message}`);
@@ -305,45 +294,24 @@ export async function testDatabaseConnection() {
 
 export const addStatusPost = async (statusData: {status: string; category?: KpiCategory | 'General'}) => {
     try {
-        const { auth, db } = getFirebase();
         const user = auth?.currentUser;
 
         if (!user || !db) {
             throw new Error("Authentication required for status updates");
         }
+        
+        const newPostRef = push(ref(db, 'status_posts'));
 
         // Create status update object
         const statusUpdate = {
-            ...statusData,
-            userId: user.uid,
-            userRole: "GIS Coordinator", // Collins A's role
-            timestamp: Date.now(),
-            date: new Date().toISOString(),
-            location: "Lagos, Nigeria"
+            id: newPostRef.key,
+            username: user.displayName || "Anonymous User",
+            avatar: user.photoURL || `https://i.pravatar.cc/150?u=${user.email}`,
+            status: statusData.status,
+            timestamp: new Date().getTime(),
         };
 
-        // Post to multiple relevant paths
-        const updates: { [key: string]: object } = {};
-        const key = Date.now();
-
-        // Main status update
-        updates[`status_updates/${key}`] = statusUpdate;
-
-        // KPI-specific update if it's business growth related
-        if (statusData.category === 'Business Growth') {
-            updates[`kpis/business_growth/${key}`] = statusUpdate;
-        }
-
-        // User-specific status
-        updates[`users/${user.uid}/status_updates/${key}`] = statusUpdate;
-
-        // Batch update
-        await Promise.all(
-            Object.entries(updates).map(([path, data]) => {
-                const updateRef = ref(db, path);
-                return set(updateRef, data);
-            })
-        );
+        await set(newPostRef, statusUpdate);
 
         console.log("✅ Status posted successfully");
         return { success: true, message: "Status updated successfully" };
@@ -365,7 +333,6 @@ export const addStatusPost = async (statusData: {status: string; category?: KpiC
 export const getStatusPosts = async (): Promise<StatusPost[]> => {
     try {
         await initAuth();
-        const { db } = getFirebase();
         if (!db) {
             throw new Error("Firebase database is not available.");
         }
