@@ -11,14 +11,17 @@ const STATUS_POSTS_REF_NAME = 'status_posts';
 
 class ActivityService {
   private isAuthenticated: boolean = false;
-  private authPromise: Promise<FirebaseUser | null>;
+  private authPromise: Promise<FirebaseUser | null> | null = null;
 
   constructor() {
-    this.authPromise = this.initAuth();
+    // We don't call initAuth here anymore to avoid race conditions.
   }
 
-  async initAuth(): Promise<FirebaseUser | null> {
-    return new Promise((resolve) => {
+  private initAuth(): Promise<FirebaseUser | null> {
+    if (this.authPromise) {
+      return this.authPromise;
+    }
+    this.authPromise = new Promise((resolve) => {
       if (!auth) {
         console.error("❌ Firebase auth is not initialized.");
         return resolve(null);
@@ -47,11 +50,13 @@ class ActivityService {
         }
       });
     });
+    return this.authPromise;
   }
 
   private async ensureAuth() {
+    // This will now be called before every DB operation, ensuring auth is complete.
     if (!this.isAuthenticated) {
-      await this.authPromise;
+      await this.initAuth();
     }
     if (!this.isAuthenticated) {
         throw new Error("Authentication failed and could not be established.");
