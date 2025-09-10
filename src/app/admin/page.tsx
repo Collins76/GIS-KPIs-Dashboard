@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import withAuth from '@/components/auth/with-auth';
 import { getActivities, updateActivity, deleteActivity, testDatabaseConnection } from '@/lib/realtimedb';
@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Trash, Edit, RefreshCw, Database, Home, Wifi } from 'lucide-react';
 import { format } from 'date-fns';
+import { UserContext } from '@/context/user-context';
 
 function AdminPage() {
     const [activities, setActivities] = useState<ActivityLog[]>([]);
@@ -25,6 +26,7 @@ function AdminPage() {
     const [editedContent, setEditedContent] = useState('');
     const { toast } = useToast();
     const router = useRouter();
+    const { user } = useContext(UserContext);
 
     const fetchActivities = async () => {
         setLoading(true);
@@ -35,7 +37,7 @@ function AdminPage() {
             console.error("Failed to fetch activities:", error);
             toast({
                 title: "Error Loading Data",
-                description: "Could not load database records. Please check your internet connection and Realtime Database security rules.",
+                description: error.message || "Could not load database records. Please check your internet connection and Realtime Database security rules.",
                 variant: "destructive",
             });
         } finally {
@@ -44,8 +46,14 @@ function AdminPage() {
     };
 
     useEffect(() => {
-        fetchActivities();
-    }, []);
+        // Only fetch activities if the user is authenticated
+        if (user) {
+            fetchActivities();
+        } else {
+            // If user becomes null (e.g., logged out), don't show loading, maybe clear activities
+            setLoading(false);
+        }
+    }, [user]);
 
     const handleDelete = async (id: string) => {
         try {
