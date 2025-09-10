@@ -1,55 +1,62 @@
 
-
 import { getFirebase } from './firebase';
 import { ref, set, push, serverTimestamp, get, query, orderByChild } from 'firebase/database';
 import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog, Role, KpiCategory, KpiStatus } from './types';
-import { getAuth, signInAnonymously } from 'firebase/auth';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 
 
 const DB_REF_NAME = 'activities';
 
 export const getActivities = async (): Promise<ActivityLog[]> => {
-  const { db } = getFirebase();
-  if (!db) {
+  const { db, auth } = getFirebase();
+  if (!db || !auth) {
     throw new Error("Firebase is not available.");
   }
 
-  try {
-    const auth = getAuth();
-    let user = auth.currentUser;
+  return new Promise((resolve, reject) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      unsubscribe(); // We only need this for the initial auth state check.
 
-    if (!user) {
-      // If no user is signed in, sign in anonymously.
-      const userCredential = await signInAnonymously(auth);
-      user = userCredential.user;
-      console.log("Signed in anonymously:", user.uid);
-    }
-    
-    const activitiesRef = ref(db, DB_REF_NAME);
-    const snapshot = await get(activitiesRef);
+      try {
+        if (!user) {
+          console.log("No user authenticated, attempting anonymous sign-in...");
+          await signInAnonymously(auth);
+          // After anonymous sign-in, onAuthStateChanged will fire again.
+          // To avoid complexity, we can just re-trigger the fetch after a short delay.
+          // A more robust solution might involve re-calling getActivities.
+          // For now, we will proceed assuming the next state change will be handled.
+          // The current implementation will simply try again on the next component render.
+        }
 
-    const activities: ActivityLog[] = [];
-    if (snapshot.exists()) {
-      snapshot.forEach((childSnapshot) => {
-        const data = childSnapshot.val();
-        activities.push({
-          id: childSnapshot.key,
-          ...data,
-          timestamp: new Date(data.timestamp).toISOString(),
-        } as ActivityLog);
-      });
-    }
-    // The snapshot doesn't guarantee order, so we sort here by timestamp.
-    return activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        console.log("User authenticated, fetching activities...");
+        const activitiesRef = ref(db, DB_REF_NAME);
+        const snapshot = await get(activitiesRef);
 
-  } catch (error: any) {
-    console.error("Failed to fetch activities from Realtime Database:", error);
-    if (error.code === 'PERMISSION_DENIED') {
-      throw new Error("Permission denied. Please check Firebase security rules and authentication.");
-    }
-    // Re-throw a more generic error to be caught by the calling component.
-    throw new Error("Could not retrieve activities. This may be a network or permissions issue.");
-  }
+        const activities: ActivityLog[] = [];
+        if (snapshot.exists()) {
+          snapshot.forEach((childSnapshot) => {
+            const data = childSnapshot.val();
+            activities.push({
+              id: childSnapshot.key,
+              ...data,
+              timestamp: new Date(data.timestamp).toISOString(),
+            } as ActivityLog);
+          });
+        }
+        
+        // The snapshot doesn't guarantee order, so we sort here by timestamp.
+        resolve(activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+
+      } catch (error: any) {
+        console.error("Failed to fetch activities from Realtime Database:", error);
+        if (error.code === 'PERMISSION_DENIED') {
+          reject(new Error("Permission denied. Please check Firebase security rules and authentication."));
+        } else {
+           reject(new Error("Could not retrieve activities. This may be a network or permissions issue."));
+        }
+      }
+    });
+  });
 };
 
 export const updateActivity = async (id: string, data: Partial<ActivityLog>) => {
@@ -238,20 +245,27 @@ export async function testDatabaseConnection() {
   try {
     const currentUser = auth.currentUser;
     if (!currentUser) {
-        alert("⚠️ Connection failed: Please sign in first to test the database connection.");
-        return;
+        // Attempt anonymous sign-in if no user
+        await signInAnonymously(auth);
+        const refreshedUser = getAuth().currentUser;
+        if (!refreshedUser) {
+           alert("⚠️ Connection failed: Could not authenticate anonymously.");
+           return;
+        }
+         console.log(`✅ Authenticated anonymously as: ${refreshedUser.uid}`);
+    } else {
+        console.log(`✅ Authenticated as: ${currentUser.email || currentUser.uid}`);
     }
-    console.log(`✅ Authenticated as: ${currentUser.email}`);
     
     // Test writing data
     const testData = {
       activityType: 'test_connection',
       user: {
-          name: currentUser.displayName || "Test User",
-          email: currentUser.email || "test@example.com",
+          name: auth.currentUser?.displayName || "Test User",
+          email: auth.currentUser?.email || "test@example.com",
           role: 'GIS Analyst',
           location: 'CHQ',
-          avatar: currentUser.photoURL || ""
+          avatar: auth.currentUser?.photoURL || ""
       },
       details: {
           test_message: "Dashboard connected successfully!",
