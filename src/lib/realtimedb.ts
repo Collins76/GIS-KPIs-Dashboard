@@ -2,61 +2,75 @@
 import { getFirebase } from './firebase';
 import { ref, set, push, serverTimestamp, get, query, orderByChild } from 'firebase/database';
 import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog, Role, KpiCategory, KpiStatus } from './types';
-import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signInAnonymously, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
 
 const DB_REF_NAME = 'activities';
 
-export const getActivities = async (): Promise<ActivityLog[]> => {
-  const { db, auth } = getFirebase();
-  if (!db || !auth) {
-    throw new Error("Firebase is not available.");
-  }
-
-  return new Promise((resolve, reject) => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      unsubscribe(); // We only need this for the initial auth state check.
-
-      try {
-        if (!user) {
-          console.log("No user authenticated, attempting anonymous sign-in...");
-          await signInAnonymously(auth);
-          // After anonymous sign-in, onAuthStateChanged will fire again.
-          // To avoid complexity, we can just re-trigger the fetch after a short delay.
-          // A more robust solution might involve re-calling getActivities.
-          // For now, we will proceed assuming the next state change will be handled.
-          // The current implementation will simply try again on the next component render.
+const initAuth = (): Promise<FirebaseUser> => {
+    return new Promise((resolve, reject) => {
+        const { auth } = getFirebase();
+        if (!auth) {
+            return reject(new Error("Firebase auth is not initialized."));
         }
 
-        console.log("User authenticated, fetching activities...");
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                console.log('✅ User authenticated:', user.uid);
+                unsubscribe();
+                resolve(user);
+            } else {
+                console.log('🔄 No user found, signing in anonymously...');
+                signInAnonymously(auth)
+                    .then((userCredential) => {
+                        console.log('✅ Anonymous auth successful');
+                        unsubscribe();
+                        resolve(userCredential.user);
+                    })
+                    .catch((error) => {
+                        console.error('❌ Auth failed:', error);
+                        unsubscribe();
+                        reject(error);
+                    });
+            }
+        });
+    });
+};
+
+
+export const getActivities = async (): Promise<ActivityLog[]> => {
+    try {
+        await initAuth();
+        const { db } = getFirebase();
+        if (!db) {
+            throw new Error("Firebase database is not available.");
+        }
+
         const activitiesRef = ref(db, DB_REF_NAME);
         const snapshot = await get(activitiesRef);
 
-        const activities: ActivityLog[] = [];
         if (snapshot.exists()) {
-          snapshot.forEach((childSnapshot) => {
-            const data = childSnapshot.val();
-            activities.push({
-              id: childSnapshot.key,
-              ...data,
-              timestamp: new Date(data.timestamp).toISOString(),
-            } as ActivityLog);
-          });
-        }
-        
-        // The snapshot doesn't guarantee order, so we sort here by timestamp.
-        resolve(activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
-
-      } catch (error: any) {
-        console.error("Failed to fetch activities from Realtime Database:", error);
-        if (error.code === 'PERMISSION_DENIED') {
-          reject(new Error("Permission denied. Please check Firebase security rules and authentication."));
+            const data = snapshot.val();
+            const activities: ActivityLog[] = Object.keys(data).map(key => ({
+                id: key,
+                ...data[key],
+                timestamp: new Date(data[key].timestamp).toISOString(),
+            })).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            
+            return activities;
         } else {
-           reject(new Error("Could not retrieve activities. This may be a network or permissions issue."));
+            console.log("No activities found");
+            return [];
         }
-      }
-    });
-  });
+
+    } catch (error: any) {
+        console.error("Error in getActivities:", error);
+        if (error.code === 'PERMISSION_DENIED') {
+            throw new Error("Permission denied. Please check Firebase security rules and authentication.");
+        } else {
+            throw new Error(`Could not retrieve activities. This may be a network or permissions issue.`);
+        }
+    }
 };
 
 export const updateActivity = async (id: string, data: Partial<ActivityLog>) => {
