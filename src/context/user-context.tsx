@@ -1,7 +1,7 @@
 
 "use client";
 
-import { createContext, useState, useEffect, ReactNode, useMemo, useRef } from 'react';
+import React, { createContext, useState, useEffect, ReactNode, useMemo, useRef } from 'react';
 import type { User } from '@/lib/types';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';

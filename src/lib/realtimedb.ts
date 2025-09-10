@@ -1,5 +1,4 @@
 
-
 import { auth, db } from './firebase';
 import { ref, set, push, serverTimestamp, get, query, orderByChild } from 'firebase/database';
 import type { User, ManagedFile as AppFile, WeatherData, Kpi, ActivityLog, Role, KpiCategory, KpiStatus, StatusPost } from './types';
@@ -9,63 +8,45 @@ import { signInAnonymously, onAuthStateChanged, User as FirebaseUser } from 'fir
 const DB_REF_NAME = 'activities';
 const STATUS_POSTS_REF_NAME = 'status_posts';
 
-class ActivityService {
-  private isAuthenticated: boolean = false;
-  private authPromise: Promise<FirebaseUser | null> | null = null;
+let authPromise: Promise<FirebaseUser | null> | null = null;
 
-  constructor() {
-    // We don't call initAuth here anymore to avoid race conditions.
+function ensureAuth(): Promise<FirebaseUser | null> {
+  if (authPromise) {
+    return authPromise;
   }
-
-  private initAuth(): Promise<FirebaseUser | null> {
-    if (this.authPromise) {
-      return this.authPromise;
+  authPromise = new Promise((resolve, reject) => {
+    if (!auth) {
+      console.error("❌ Firebase auth is not initialized.");
+      return reject(new Error("Firebase auth not initialized"));
     }
-    this.authPromise = new Promise((resolve) => {
-      if (!auth) {
-        console.error("❌ Firebase auth is not initialized.");
-        return resolve(null);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log('✅ Authenticated as:', user.uid);
+        unsubscribe();
+        resolve(user);
+      } else {
+        console.log('🔄 Signing in anonymously...');
+        signInAnonymously(auth)
+          .then((result) => {
+            console.log('✅ Anonymous login successful');
+            unsubscribe();
+            resolve(result.user);
+          })
+          .catch((error) => {
+            console.error('❌ Authentication failed:', error);
+            unsubscribe();
+            reject(error);
+          });
       }
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user) {
-          this.isAuthenticated = true;
-          console.log('✅ Authenticated as:', user.uid);
-          unsubscribe();
-          resolve(user);
-        } else {
-          console.log('🔄 Signing in anonymously...');
-          signInAnonymously(auth)
-            .then((result) => {
-              this.isAuthenticated = true;
-              console.log('✅ Anonymous login successful');
-              unsubscribe();
-              resolve(result.user);
-            })
-            .catch((error) => {
-              console.error('❌ Authentication failed:', error);
-              this.isAuthenticated = false;
-              unsubscribe();
-              resolve(null);
-            });
-        }
-      });
     });
-    return this.authPromise;
-  }
+  });
+  return authPromise;
+}
 
-  private async ensureAuth() {
-    // This will now be called before every DB operation, ensuring auth is complete.
-    if (!this.isAuthenticated) {
-      await this.initAuth();
-    }
-    if (!this.isAuthenticated) {
-        throw new Error("Authentication failed and could not be established.");
-    }
-  }
 
-  async getActivities(): Promise<ActivityLog[]> {
+export async function getActivities(): Promise<ActivityLog[]> {
     try {
-      await this.ensureAuth();
+      await ensureAuth();
       const activitiesRef = ref(db, DB_REF_NAME);
       const snapshot = await get(query(activitiesRef, orderByChild('timestamp')));
       
@@ -83,11 +64,11 @@ class ActivityService {
       console.error('❌ Error fetching activities:', error);
       throw new Error(`Failed to get activities: ${error.message}`);
     }
-  }
+}
 
-  async addActivity(activityType: string, activityData: Omit<ActivityLog, 'id' | 'activityType' | 'timestamp'>) {
+async function addActivity(activityType: string, activityData: Omit<ActivityLog, 'id' | 'activityType' | 'timestamp'>) {
     try {
-      await this.ensureAuth();
+      await ensureAuth();
       const newActivityRef = push(ref(db, DB_REF_NAME));
       await set(newActivityRef, {
         ...activityData,
@@ -99,26 +80,29 @@ class ActivityService {
       console.error(`❌ Error adding activity (${activityType}):`, error);
       throw error;
     }
-  }
+}
 
-  async updateActivity(id: string, data: Partial<ActivityLog>) {
-    await this.ensureAuth();
+export async function updateActivity(id: string, data: Partial<ActivityLog>) {
+    await ensureAuth();
     const docRef = ref(db, `${DB_REF_NAME}/${id}`);
     if ('id' in data) {
         delete data.id;
     }
-    await set(docRef, data);
-  }
+    // The data passed to set should not contain the ID.
+    const updateData = { ...data };
+    delete (updateData as any).id;
+    await set(docRef, updateData);
+}
 
-  async deleteActivity(id: string) {
-    await this.ensureAuth();
+export async function deleteActivity(id: string) {
+    await ensureAuth();
     const docRef = ref(db, `${DB_REF_NAME}/${id}`);
     await set(docRef, null);
-  }
+}
 
-  async getStatusPosts(): Promise<StatusPost[]> {
+export async function getStatusPosts(): Promise<StatusPost[]> {
     try {
-      await this.ensureAuth();
+      await ensureAuth();
       const statusPostsRef = ref(db, STATUS_POSTS_REF_NAME);
       const postsQuery = query(statusPostsRef, orderByChild('timestamp'));
       const snapshot = await get(postsQuery);
@@ -136,67 +120,61 @@ class ActivityService {
         console.error("Error in getStatusPosts:", error);
         throw new Error(`Could not retrieve status posts. This may be a network or permissions issue.`);
     }
-  }
+}
 
-  async addStatusPost(statusData: { status: string, user: User }) {
+export async function addStatusPost(statusData: { status: string, user: User }) {
     try {
-      await this.ensureAuth();
-      if (!auth.currentUser) throw new Error("Authentication required.");
+        await ensureAuth();
+        if (!auth.currentUser) throw new Error("Authentication required.");
 
-      const newPostRef = push(ref(db, STATUS_POSTS_REF_NAME));
+        const newPostRef = push(ref(db, STATUS_POSTS_REF_NAME));
 
-      const statusUpdate = {
-        id: newPostRef.key,
-        username: statusData.user.name,
-        avatar: statusData.user.avatar,
-        status: statusData.status,
-        timestamp: new Date().getTime(),
-      };
-      
-      await set(newPostRef, statusUpdate);
-      return true;
+        const statusUpdate = {
+            id: newPostRef.key,
+            username: statusData.user.name,
+            avatar: statusData.user.avatar,
+            status: statusData.status,
+            timestamp: new Date().getTime(), // Use client-side timestamp
+        };
+        
+        await set(newPostRef, statusUpdate);
+        return true;
     } catch (error: any) {
        console.error("❌ Error posting status:", error);
        throw error;
     }
-  }
-
-    async testDatabaseConnection() {
-        try {
-            await this.ensureAuth();
-            const currentUser = auth.currentUser;
-            if (!currentUser) throw new Error("Authentication failed.");
-
-            const testData = {
-                user: {
-                    name: currentUser.displayName || "Test User",
-                    email: currentUser.email || "test@example.com",
-                    role: 'GIS Analyst',
-                    location: 'CHQ',
-                    avatar: currentUser.photoURL || ""
-                },
-                details: {
-                    test_message: "Dashboard connected successfully!",
-                    dashboard_version: "GIS_KPI_v1.0_RTDB_Class",
-                },
-            };
-
-            await this.addActivity('test_connection', testData);
-            console.log("✅ Data written successfully.");
-            alert("🎉 Database connection successful! A test record has been written to 'activities'.");
-        } catch (error: any) {
-            console.error("❌ Database connection failed:", error);
-            alert("⚠️ Connection failed: " + error.message);
-        }
-    }
-
 }
 
-// Instantiate and export the service
-export const activityService = new ActivityService();
+export async function testDatabaseConnection() {
+    try {
+        await ensureAuth();
+        const currentUser = auth.currentUser;
+        if (!currentUser) throw new Error("Authentication failed.");
+
+        const testData = {
+            user: {
+                name: currentUser.displayName || "Test User",
+                email: currentUser.email || "test@example.com",
+                role: 'GIS Analyst',
+                location: 'CHQ',
+                avatar: currentUser.photoURL || ""
+            },
+            details: {
+                test_message: "Dashboard connected successfully!",
+                dashboard_version: "GIS_KPI_v1.0_Functional",
+            },
+        };
+
+        await addActivity('test_connection', testData);
+        console.log("✅ Data written successfully.");
+        alert("🎉 Database connection successful! A test record has been written to 'activities'.");
+    } catch (error: any) {
+        console.error("❌ Database connection failed:", error);
+        alert("⚠️ Connection failed: " + error.message);
+    }
+}
 
 
-// Wrapper functions to maintain compatibility with existing code
 const sanitizeUserForDB = (user: User) => ({
     name: user.name || "Anonymous",
     email: user.email || "no-email@example.com",
@@ -204,9 +182,6 @@ const sanitizeUserForDB = (user: User) => ({
     location: user.location || "CHQ",
     avatar: user.avatar || "",
 });
-
-export const updateActivity = (id: string, data: Partial<ActivityLog>) => activityService.updateActivity(id, data);
-export const deleteActivity = (id: string) => activityService.deleteActivity(id);
 
 export const addUserSignInActivity = (user: User, weather: WeatherData | null) => {
     const activityData = {
@@ -216,7 +191,7 @@ export const addUserSignInActivity = (user: User, weather: WeatherData | null) =
         temperature: weather.temp,
       } : null,
     };
-    return activityService.addActivity('user_signin', activityData);
+    return addActivity('user_signin', activityData);
 };
 
 export const addUserSignOutActivity = (user: User, duration: number) => {
@@ -224,14 +199,14 @@ export const addUserSignOutActivity = (user: User, duration: number) => {
         user: sanitizeUserForDB(user),
         duration: Math.round(duration),
     };
-    return activityService.addActivity('user_signout', activityData);
+    return addActivity('user_signout', activityData);
 };
 
 export const addUserProfileUpdateActivity = (user: User) => {
     const activityData = {
         user: sanitizeUserForDB(user)
     };
-    return activityService.addActivity('profile_update', activityData);
+    return addActivity('profile_update', activityData);
 };
 
 export const addFileUploadActivity = (user: User, file: AppFile) => {
@@ -244,7 +219,7 @@ export const addFileUploadActivity = (user: User, file: AppFile) => {
             url: file.url,
         },
     };
-    return activityService.addActivity('file_upload', activityData);
+    return addActivity('file_upload', activityData);
 };
 
 export const addKpiUpdateActivity = (user: User, kpi: Kpi, filters: any) => {
@@ -263,7 +238,7 @@ export const addKpiUpdateActivity = (user: User, kpi: Kpi, filters: any) => {
         date: filters.date ? filters.date.toISOString() : null,
       },
     };
-    return activityService.addActivity('kpi_update', activityData);
+    return addActivity('kpi_update', activityData);
 };
 
 export const addFilterChangeActivity = (user: User, filter: any) => {
@@ -271,11 +246,5 @@ export const addFilterChangeActivity = (user: User, filter: any) => {
         user: sanitizeUserForDB(user),
         filter_interaction: { ...filter },
     };
-    return activityService.addActivity('filter_change', activityData);
+    return addActivity('filter_change', activityData);
 };
-
-export const testDatabaseConnection = () => activityService.testDatabaseConnection();
-
-export const addStatusPost = (statusData: { status: string, user: User }) => activityService.addStatusPost(statusData);
-
-export const getStatusPosts = () => activityService.getStatusPosts();

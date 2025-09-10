@@ -4,7 +4,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import withAuth from '@/components/auth/with-auth';
-import { activityService, updateActivity, deleteActivity, testDatabaseConnection } from '@/lib/realtimedb';
+import { getActivities, updateActivity, deleteActivity, testDatabaseConnection } from '@/lib/realtimedb';
 import type { ActivityLog } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -31,7 +31,7 @@ function AdminPage() {
     const fetchActivities = async () => {
         setLoading(true);
         try {
-            const fetchedActivities = await activityService.getActivities();
+            const fetchedActivities = await getActivities();
             setActivities(fetchedActivities);
         } catch (error: any) {
             console.error("Failed to fetch activities:", error);
@@ -73,9 +73,7 @@ function AdminPage() {
         if (!selectedActivity) return;
         try {
             const parsedData = JSON.parse(editedContent);
-            // The document ID cannot be part of the data payload when updating.
-            delete parsedData.id;
-
+            
             await updateActivity(selectedActivity.id, parsedData);
             toast({ title: "Success", description: "Record updated successfully." });
             setEditModalOpen(false);
