@@ -30,7 +30,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { getFirebase } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { UserContext } from '@/context/user-context';
-import { addUserProfileUpdateActivity, addUserSignOutActivity } from '@/lib/realtimedb';
+import { addUserSignOutActivity } from '@/lib/realtimedb';
 
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -83,7 +83,7 @@ export default function UserProfile() {
     if (editedUser) {
         const finalUser = {...editedUser, avatar: previewAvatar || editedUser.avatar};
         setUser(finalUser);
-        addUserProfileUpdateActivity(finalUser);
+        // addUserProfileUpdateActivity(finalUser); // This line is removed
         setProfileModalOpen(false);
         toast({ title: "Profile updated successfully!" });
     }

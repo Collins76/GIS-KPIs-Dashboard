@@ -1,11 +1,11 @@
 
 "use client";
 
-import { createContext, useState, useEffect, ReactNode, useMemo } from 'react';
+import { createContext, useState, useEffect, ReactNode, useMemo, useRef } from 'react';
 import type { User } from '@/lib/types';
 import { getFirebase } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { addUserSignInActivity } from '@/lib/realtimedb';
+import { addUserSignInActivity, addUserProfileUpdateActivity } from '@/lib/realtimedb';
 import { weatherData } from '@/lib/data';
 
 interface UserContextType {
@@ -35,6 +35,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUserState] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastLoggedInEmail, setLastLoggedInEmail] = useState<string | null>(null);
+  const previousUserRef = useRef<User | null>(null);
+
 
   useEffect(() => {
     const { auth } = getFirebase();
@@ -66,7 +68,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
                 profile = createProfileFromFirebaseUser(firebaseUser);
             }
             
-            setUser(profile);
+            setUserState(profile); // Use internal state setter
             
              // Log sign-in activity only when a new user logs in
              if (firebaseUser.email !== lastLoggedInEmail) {
@@ -77,7 +79,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
         } else {
             // User is signed out.
-            setUser(null);
+            setUserState(null); // Use internal state setter
             setLastLoggedInEmail(null);
         }
         setLoading(false);
@@ -87,6 +89,16 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, [lastLoggedInEmail]);
   
+  useEffect(() => {
+    // Check for profile updates to log them
+    const previousUser = previousUserRef.current;
+    if (previousUser && user && JSON.stringify(previousUser) !== JSON.stringify(user)) {
+        addUserProfileUpdateActivity(user);
+    }
+    // Update the ref to the current user for the next render
+    previousUserRef.current = user;
+  }, [user]);
+
 
   const setUser = (userToSet: User | null) => {
     setUserState(userToSet);
