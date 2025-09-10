@@ -40,7 +40,7 @@ import { cn } from '@/lib/utils';
 import KpiUserPerformanceChart from './kpi-user-performance-chart';
 import RoleBasedView from './role-based-view';
 import TrendsComparisonChart from './trends-comparison-chart';
-import { addKpiUpdateActivity, addFilterChangeActivity } from '@/lib/firestore';
+import { addKpiUpdateActivity, addFilterChangeActivity } from '@/lib/realtimedb';
 import { UserContext } from '@/context/user-context';
 
 

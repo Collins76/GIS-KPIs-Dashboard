@@ -30,7 +30,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { getFirebase } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import { UserContext } from '@/context/user-context';
-import { addUserProfileUpdateActivity, addUserSignOutActivity } from '@/lib/firestore';
+import { addUserProfileUpdateActivity, addUserSignOutActivity } from '@/lib/realtimedb';
 
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -199,7 +199,7 @@ export default function UserProfile() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="role" className="text-right">Role</Label>
-                <Select value={editedUser.role} onValuechange={(value) => setEditedUser({...editedUser, role: value as Role})}>
+                <Select value={editedUser.role} onValueChange={(value) => setEditedUser({...editedUser, role: value as Role})}>
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
@@ -210,7 +210,7 @@ export default function UserProfile() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="location" className="text-right">Location</Label>
-                <Select value={editedUser.location} onValuechange={(value) => setEditedUser({...editedUser, location: value})}>
+                <Select value={editedUser.location} onValueChange={(value) => setEditedUser({...editedUser, location: value})}>
                     <SelectTrigger className="col-span-3">
                       <SelectValue placeholder="Select a location" />
                     </SelectTrigger>

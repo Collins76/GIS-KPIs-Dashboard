@@ -2,7 +2,7 @@
 import { initializeApp, getApps, getApp, FirebaseOptions, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
 import { getStorage, FirebaseStorage } from "firebase/storage";
-import { getFirestore, Firestore } from "firebase/firestore";
+import { getDatabase, Database } from "firebase/database";
 
 const firebaseConfig: FirebaseOptions = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,12 +11,13 @@ const firebaseConfig: FirebaseOptions = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
 };
 
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let storage: FirebaseStorage | null = null;
-let db: Firestore | null = null;
+let db: Database | null = null;
 
 function getFirebase() {
   if (app && auth && storage && db) {
@@ -36,7 +37,7 @@ function getFirebase() {
 
   auth = getAuth(app);
   storage = getStorage(app);
-  db = getFirestore(app);
+  db = getDatabase(app);
 
   return { app, auth, storage, db };
 }

@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Progress } from '@/components/ui/progress';
 import { getFirebase } from '@/lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject, UploadTask } from 'firebase/storage';
-import { addFileUploadActivity } from '@/lib/firestore';
+import { addFileUploadActivity } from '@/lib/realtimedb';
 import type { User, ManagedFile as ManagedFileType } from '@/lib/types';
 import { UserContext } from '@/context/user-context';
 

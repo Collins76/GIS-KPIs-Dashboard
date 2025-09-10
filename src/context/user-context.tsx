@@ -5,7 +5,7 @@ import { createContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import type { User } from '@/lib/types';
 import { getFirebase } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { addUserSignInActivity } from '@/lib/firestore';
+import { addUserSignInActivity } from '@/lib/realtimedb';
 import { weatherData } from '@/lib/data';
 
 interface UserContextType {

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getFirebase } from '@/lib/firebase';
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { addUserSignInActivity } from '@/lib/firestore';
+import { addUserSignInActivity } from '@/lib/realtimedb';
 import { weatherData } from '@/lib/data';
 import { UserContext } from '@/context/user-context';
 import type { User } from '@/lib/types';

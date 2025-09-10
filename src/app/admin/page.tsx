@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import withAuth from '@/components/auth/with-auth';
-import { getActivities, updateActivity, deleteActivity, testDatabaseConnection } from '@/lib/firestore';
+import { getActivities, updateActivity, deleteActivity, testDatabaseConnection } from '@/lib/realtimedb';
 import type { ActivityLog } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -35,7 +35,7 @@ function AdminPage() {
             console.error("Failed to fetch activities:", error);
             toast({
                 title: "Error Loading Data",
-                description: "Could not load database records. Please check your internet connection and Firestore security rules.",
+                description: "Could not load database records. Please check your internet connection and Realtime Database security rules.",
                 variant: "destructive",
             });
         } finally {
