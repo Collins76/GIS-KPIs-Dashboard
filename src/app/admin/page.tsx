@@ -31,11 +31,11 @@ function AdminPage() {
         try {
             const fetchedActivities = await getActivities();
             setActivities(fetchedActivities);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Failed to fetch activities:", error);
             toast({
-                title: "Error",
-                description: "Failed to load database records.",
+                title: "Error Loading Data",
+                description: "Could not load database records. Please check your internet connection and Firestore security rules.",
                 variant: "destructive",
             });
         } finally {

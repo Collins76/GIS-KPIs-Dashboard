@@ -10,24 +10,33 @@ const DB_COLLECTION_NAME = 'dashboard_updates';
 
 export const getActivities = async (): Promise<ActivityLog[]> => {
   const { db } = getFirebase();
-  if (!db) return [];
+  if (!db) {
+    console.error("Firestore database is not available.");
+    return [];
+  }
 
-  const querySnapshot = await getDocs(collection(db, DB_COLLECTION_NAME));
-  const activities: ActivityLog[] = [];
-  querySnapshot.forEach((doc) => {
-    const data = doc.data();
-    // Firestore Timestamps need to be converted to JS Dates.
-    // This handles cases where the timestamp might be missing or in an incorrect format.
-    const timestampStr = data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : new Date().toISOString();
-    
-    activities.push({
-      id: doc.id,
-      ...data,
-      timestamp: timestampStr,
-    } as ActivityLog);
-  });
-  // Sort by most recent first
-  return activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  try {
+      const querySnapshot = await getDocs(collection(db, DB_COLLECTION_NAME));
+      const activities: ActivityLog[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        // Firestore Timestamps need to be converted to JS Dates.
+        // This handles cases where the timestamp might be missing or in an incorrect format.
+        const timestampStr = data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : new Date().toISOString();
+        
+        activities.push({
+          id: doc.id,
+          ...data,
+          timestamp: timestampStr,
+        } as ActivityLog);
+      });
+      // Sort by most recent first
+      return activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  } catch (error) {
+      console.error("Failed to fetch activities from Firestore:", error);
+      // Re-throw the error to be caught by the calling component
+      throw new Error("Could not retrieve activities. This may be a network or permissions issue.");
+  }
 };
 
 export const updateActivity = async (id: string, data: Partial<ActivityLog>) => {
