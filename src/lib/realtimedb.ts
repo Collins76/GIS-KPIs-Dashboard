@@ -262,3 +262,5 @@ export async function testDatabaseConnection() {
     alert("⚠️ Connection failed: " + error.message + "\n\nPlease check your Realtime Database security rules and internet connection.");
   }
 }
+
+    
