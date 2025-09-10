@@ -72,7 +72,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
             
              // Log sign-in activity only when a new user logs in
              if (firebaseUser.email !== lastLoggedInEmail) {
-                addUserSignInActivity(profile, weatherData.find(d => d.isToday) || null);
+                // Add a small delay to ensure backend auth state is settled before writing to DB
+                setTimeout(() => {
+                  addUserSignInActivity(profile, weatherData.find(d => d.isToday) || null);
+                }, 1000);
                 localStorage.setItem('gis-signin-time', new Date().toISOString());
                 setLastLoggedInEmail(firebaseUser.email);
             }
