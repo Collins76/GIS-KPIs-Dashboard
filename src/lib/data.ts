@@ -50,7 +50,7 @@ export const kpis: Kpi[] = [
   { id: 'ANLST-02', role: 'GIS Analyst', title: 'Perform quality assurance checks on all incoming and existing GIS data to ensure accuracy and completeness.', category: 'Operational Process', target: '20', metric: 'Error Rate < 2%', dataSource: 'QA Checklists', progress: 0, status: 'Not Started', weight: 15, targetType: 'Percentage', frequency: 'Monthly', startDate: '2025-01-01', endDate: '2025-12-31' },
   { id: 'ANLST-03', role: 'GIS Analyst', title: 'Full integration of GIS data to ensure 100% accuracy in capturing all IE network assets.', category: 'Operational Process', target: '100', metric: 'Sync Rate', dataSource: 'Field App Logs', progress: 0, status: 'Not Started', weight: 10, targetType: 'Percentage', frequency: 'Monthly', startDate: '2025-01-01', endDate: '2025-12-31' },
   { id: 'ANLST-04', role: 'GIS Analyst', title: 'Resolve 100% of GIS technical issues within 24 hours.', category: 'Customer', target: '100', metric: 'Response Time', dataSource: 'Email/Helpdesk', progress: 0, status: 'Not Started', weight: 15, targetType: 'Percentage', frequency: 'Weekly', startDate: '2025-01-01', endDate: '2025-12-31' },
-  { id: 'ANLST-05', role: 'GIS Analyst', title: 'Identifies and implement one outstanding new technologies to improve network efficiency and reliability.', category: 'Business Growth', target: '1', metric: 'Scripts Developed', dataSource: 'Git Repo', progress: 0, status: 'Not Started', weight: 10, targetType: 'Number', frequency: 'Annually', startDate: '2025-01-01', endDate: '2025-12-31' },
+  { id: 'ANLST-05', role: 'GIS Analyst', title: 'Identifies and implement one outstanding new technologies to improve network efficiency and reliability.', category: 'Business Growth', target: '1', metric: 'Scripts Developed', dataSource: 'Git Repo', progress: 0, status: 'Not Started', weight: 20, targetType: 'Number', frequency: 'Annually', startDate: '2025-01-01', endDate: '2025-12-31' },
 ];
 
 
@@ -86,3 +86,6 @@ export const initialWeatherData: WeatherData[] = [
 
 export const weatherData: WeatherData[] = initialWeatherData;
 
+
+
+    
