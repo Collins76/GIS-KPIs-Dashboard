@@ -1,0 +1,14 @@
+{
+  "apphosting": {
+    "backendId": "studio",
+    "ignore": [
+      "node_modules",
+      ".git",
+      ".agents",
+      ".idx",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "functions"
+    ]
+  }
+}

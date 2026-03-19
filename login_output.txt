@@ -1,0 +1,1 @@
+[36m[1mi [22m[39m The Firebase CLIΓÇÖs MCP server feature can optionally make use of Gemini in Firebase. Learn more about Gemini in Firebase and how it uses your data: https://firebase.google.com/docs/gemini-in-firebase#how-gemini-in-firebase-uses-your-data
